@@ -4,6 +4,8 @@ shusky_overlays := \
 	google-base/zuma-emulator.dtbo \
 	google-base/zuma-hybrid.dtbo \
 	google-base/zuma-ripcurrent.dtbo \
+	zuma-husky-proto1.dtbo \
+	zuma-husky-proto1_1.dtbo \
 
 shusky_dtbs := google-base/zuma-a0.dtb
 

@@ -29,6 +29,8 @@ MKDTIMG_DTBOS="
 FILES="
 google-base/zuma-a0.dtb
 google-base/zuma-ripcurrent.dtbo
+zuma-husky-proto1.dtbo
+zuma-husky-proto1_1.dtbo
 "
 
 MODULES_LIST=private/devices/google/shusky/vendor_boot_modules.shusky
