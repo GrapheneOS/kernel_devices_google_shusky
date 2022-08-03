@@ -5,7 +5,7 @@ KERNEL_DIR="aosp-bringup"
 # Compute the path of this project relative to KERNEL_DIR
 DEVICE_MODULES_REL_DIR=$(rel_path ${DEVICE_MODULES_DIR} ${KERNEL_DIR})
 
-GKI_FRAGMENT_DEFCONFIG=../boot/dts/google/devices/shusky/../shusky_gki.fragment
+GKI_FRAGMENT_DEFCONFIG=../boot/dts/google/devices/shusky/../../shusky_gki.fragment
 
 . ${ROOT_DIR}/${DEVICE_MODULES_DIR}/build.config.zuma
 
@@ -22,15 +22,15 @@ BUILD_DTBO_IMG=1
 MKDTIMG_FLAGS="--page_size=4096 --id=/:board_id --rev=/:board_rev"
 # These paths need to be relative to KERNEL_DIR.
 MKDTIMG_DTBOS="
-../private/devices/google/shusky/dts/google-base/*.dtbo
-../private/devices/google/shusky/dts/*.dtbo
+../private/devices/google/shusky/dts/google-dts-base/*.dtbo
+../private/devices/google/shusky/dts/google/*.dtbo
 "
 
 FILES="
-google-base/zuma-a0.dtb
-google-base/zuma-ripcurrent.dtbo
-zuma-husky-proto1.dtbo
-zuma-husky-proto1_1.dtbo
+google-dts-base/zuma-a0.dtb
+google-dts-base/zuma-ripcurrent.dtbo
+google/zuma-husky-proto1.dtbo
+google/zuma-husky-proto1_1.dtbo
 "
 
 MODULES_LIST=private/devices/google/shusky/vendor_boot_modules.shusky

@@ -6,4 +6,4 @@
  *
  */
 
-#include "google-base/zuma-ripcurrent-display.dtsi"
+#include "../google-dts-base/zuma-ripcurrent-display.dtsi"

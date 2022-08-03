@@ -170,7 +170,7 @@
 
 		maxim,psy-type-unknown;
 		maxim,fg-data {
-			#include "google-base/gs101-raven-battery-data.dtsi"
+			#include "../google-dts-base/gs101-raven-battery-data.dtsi"
 		};
 	};
 

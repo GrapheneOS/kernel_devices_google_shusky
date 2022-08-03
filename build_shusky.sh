@@ -12,7 +12,7 @@ export LTO=${LTO:-thin}
 export BUILD_CONFIG=private/devices/google/shusky/build.config.shusky
 
 if [ -z "${GKI_PREBUILTS_DIR}" ]; then
-  CORE_KERNEL_FRAGMENT_DEFCONFIG=../boot/dts/google/devices/shusky/../shusky_modified_gki.fragment \
+  CORE_KERNEL_FRAGMENT_DEFCONFIG=../boot/dts/google/devices/shusky/../../shusky_modified_gki.fragment \
   GKI_BUILD_CONFIG=private/google-modules/soc/gs/build.config.zuma.gki \
   build/build.sh "$@"
 else
