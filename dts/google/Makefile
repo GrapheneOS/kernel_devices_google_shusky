@@ -6,6 +6,8 @@ shusky_overlays := \
 	../google-dts-base/zuma-ripcurrent.dtbo \
 	zuma-husky-proto1.dtbo \
 	zuma-husky-proto1_1.dtbo \
+	zuma-shiba-proto1.dtbo \
+	zuma-shiba-proto1_1.dtbo
 
 shusky_dtbs := ../google-dts-base/zuma-a0.dtb
 
