@@ -3,7 +3,7 @@
 shusky_overlays := \
 	../google-dts-base/zuma-emulator.dtbo \
 	../google-dts-base/zuma-hybrid.dtbo \
-	../google-dts-base/zuma-ripcurrent.dtbo \
+	zuma-ripcurrent.dtbo \
 	zuma-husky-proto1.dtbo \
 	zuma-husky-proto1_1.dtbo \
 	zuma-shiba-proto1.dtbo \
