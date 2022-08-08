@@ -36,6 +36,7 @@ google/zuma-husky-proto1_1.dtbo
 MODULES_LIST=private/devices/google/shusky/vendor_boot_modules.shusky
 
 EXT_MODULES+="
+private/google-modules/bms/misc
 private/google-modules/soc/gs
 private/google-modules/aoc
 private/google-modules/aoc/alsa
