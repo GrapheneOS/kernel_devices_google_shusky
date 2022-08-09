@@ -14,3 +14,4 @@
 #include "zuma-shusky-wcharger.dtsi"
 #include "zuma-shusky-gsa-gsc.dtsi"
 #include "zuma-shiba-display.dtsi"
+#include "zuma-shiba-audio.dtsi"

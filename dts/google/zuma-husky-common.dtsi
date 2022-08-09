@@ -14,3 +14,4 @@
 #include "zuma-shusky-wcharger.dtsi"
 #include "zuma-shusky-gsa-gsc.dtsi"
 #include "zuma-husky-display.dtsi"
+#include "zuma-husky-audio.dtsi"
