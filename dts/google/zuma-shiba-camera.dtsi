@@ -184,6 +184,9 @@
 };
 
 / {
+	fragment@lwiscamera {
+		target-path = "/";
+		__overlay__ {
 			/* REAR CAMERA BOITATA */
 			sensor0: sensor@0 {
 				compatible = "google,lwis-i2c-device";

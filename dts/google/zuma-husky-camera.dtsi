@@ -184,7 +184,9 @@
 };
 
 / {
-
+	fragment@lwiscamera {
+		target-path = "/";
+		__overlay__ {
 			/* REAR CAMERA BOITATA */
 			sensor0: sensor@0 {
 				compatible = "google,lwis-i2c-device";
@@ -780,7 +782,7 @@
 
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
-				enable-gpios = <&s2mpg15_gpio 4 GPIO_ACTIVE_HIGH>
+				enable-gpios = <&s2mpg15_gpio 4 GPIO_ACTIVE_HIGH>;
 
 				/* Power up sequence */
 				power-up-seqs =
