@@ -8,6 +8,13 @@
 
 #include "zuma-shusky-display.dtsi"
 
+&drmdsim0 {
+	google_bigsurf: panel@0 {
+		compatible = "google,bigsurf";
+		label = "google-bigsurf";
+	};
+};
+
 &drmdsim1 {
 	status = "disabled";
 };
