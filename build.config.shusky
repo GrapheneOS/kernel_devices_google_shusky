@@ -33,7 +33,9 @@ google/zuma-husky-proto1.dtbo
 google/zuma-husky-proto1_1.dtbo
 "
 
-MODULES_LIST=private/devices/google/shusky/vendor_boot_modules.shusky
+# Concatenate vendor_boot_modules.zuma (platform common) and vendor_boot_modules.shusky (device specified) into one file
+`cat private/google-modules/soc/gs/vendor_boot_modules.zuma private/devices/google/shusky/vendor_boot_modules.shusky > private/devices/google/shusky/.vendor_boot_modules.concatenated`
+MODULES_LIST=private/devices/google/shusky/.vendor_boot_modules.concatenated
 
 EXT_MODULES+="
 private/google-modules/soc/gs

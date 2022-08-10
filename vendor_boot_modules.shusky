@@ -1,1 +1,4 @@
-../../../google-modules/soc/gs/vendor_boot_modules.zuma
+#
+# shusky specific modules loaded during first stage init from vendor_boot
+# (platform common modules are from vendor_boot_modules.zuma)
+#
