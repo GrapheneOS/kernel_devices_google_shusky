@@ -1131,6 +1131,141 @@
 				periodic-io-thread-priority = <99>;
 			};
 
+			/* Actuator CORNERFOLK for BOITATA */
+			actuator3: actuator@3 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0xC>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo4-supply = <&slg51002_ldo4>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"ldo4";
+				power-up-seq-types =
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<0
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"ldo4",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0>;
+
+				/* Thread priority */
+				periodic-io-thread-priority = <99>;
+			};
+
+			/* Actuator CORNERFOLK for OKSOKO */
+			actuator4: actuator@4 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-oksoko";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_3>;
+				i2c-addr = <0xF>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo4-supply = <&slg51002_ldo4>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"ldo4";
+				power-up-seq-types =
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<0
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"ldo4",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0>;
+
+				/* Thread priority */
+				periodic-io-thread-priority = <99>;
+			};
+
+			/* Actuator CORNERFOLK for SANDWORM */
+			actuator5: actuator@5 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-sandworm";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_3>;
+				i2c-addr = <0xF>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo4-supply = <&slg51002_ldo4>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"ldo4";
+				power-up-seq-types =
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<0
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"ldo4",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0>;
+
+				/* Thread priority */
+				periodic-io-thread-priority = <99>;
+			};
+
 			/* Ois GARGOYLE for NAGUAL*/
 			ois0: ois@0 {
 				compatible = "google,lwis-i2c-device";
@@ -1290,6 +1425,58 @@
 					<0
 					 0
 					 0
+					 0>;
+
+				/* Thread priority */
+				periodic-io-thread-priority = <99>;
+			};
+
+			/* Ois DJINN for BOITATA*/
+			ois3: ois@3 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "ois-djinn";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0x24>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <32>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				gpio1-supply = <&slg51002_gpio1>;
+				gpio2-supply = <&slg51002_gpio2>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"gpio1",
+					"gpio2";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<1000
+					 1000
+					 1000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"gpio2",
+					"gpio1",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<5000
+					 4000
 					 0>;
 
 				/* Thread priority */
