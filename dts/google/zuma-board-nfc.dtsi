@@ -47,6 +47,10 @@
 		reset-gpios = <&gph1 6 GPIO_ACTIVE_HIGH>;
 		irq-gpios = <&gpa7 6 GPIO_ACTIVE_HIGH>;
 		pidle-gpios = <&gph1 3 GPIO_ACTIVE_HIGH>;
+
+		pmu_clk_pad = <0x3e84>;
+		st,extpad_control_en;
+
 		status = "ok";
 	};
 };
