@@ -1,4 +1,0 @@
-# SPDX-License-Identifier: GPL-2.0-only
-
-# Concatenated vendor_boot_modules files
-.vendor_boot_modules.concatenated

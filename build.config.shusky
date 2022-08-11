@@ -34,8 +34,13 @@ google/zuma-husky-proto1_1.dtbo
 "
 
 # Concatenate vendor_boot_modules.zuma (platform common) and vendor_boot_modules.shusky (device specified) into one file
-`cat private/google-modules/soc/gs/vendor_boot_modules.zuma private/devices/google/shusky/vendor_boot_modules.shusky > private/devices/google/shusky/.vendor_boot_modules.concatenated`
-MODULES_LIST=private/devices/google/shusky/.vendor_boot_modules.concatenated
+POST_KERNEL_BUILD_CMDS="concat_vendor_boot_modules"
+function concat_vendor_boot_modules() {
+  cat ${DEVICE_MODULES_DIR}/vendor_boot_modules.zuma \
+    private/devices/google/shusky/vendor_boot_modules.shusky > \
+    ${OUT_DIR}/vendor_boot_modules.concat
+  MODULES_LIST=${OUT_DIR}/vendor_boot_modules.concat
+}
 
 EXT_MODULES+="
 private/google-modules/soc/gs
