@@ -43,6 +43,7 @@ function concat_vendor_boot_modules() {
 }
 
 EXT_MODULES+="
+private/google-modules/bms/misc
 private/google-modules/soc/gs
 private/google-modules/aoc
 private/google-modules/aoc/alsa
