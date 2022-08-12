@@ -5,15 +5,8 @@
  * Copyright 2022 Google LLC
  */
 
-#include "../google-dts-base/zuma-common.dtsi"
+#include "zuma-board.dtsi"
 
-#include "zuma-ripcurrent-camera-pmic.dtsi"
-#include "zuma-shiba-camera.dtsi"
-#include "zuma-shusky-usb.dtsi"
-#include "zuma-shusky-battery.dtsi"
-#include "zuma-shusky-charging.dtsi"
-#include "zuma-shusky-usecases.dtsi"
-#include "zuma-shusky-wcharger.dtsi"
-#include "zuma-shusky-gsa-gsc.dtsi"
-#include "zuma-shiba-display.dtsi"
 #include "zuma-shiba-audio.dtsi"
+#include "zuma-shiba-camera.dtsi"
+#include "zuma-shiba-display.dtsi"

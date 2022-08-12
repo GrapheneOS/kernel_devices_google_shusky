@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Board-common device tree source.
+ *
+ * Copyright 2022 Google LLC
+ */
+
+#include "../google-dts-base/zuma-common.dtsi"
+
+#include "zuma-board-pcie.dtsi"
+#include "zuma-ripcurrent-camera-pmic.dtsi"
+#include "zuma-ripcurrent-cp-s5300-sit.dtsi"
+#include "zuma-shusky-usb.dtsi"
+#include "zuma-shusky-battery.dtsi"
+#include "zuma-shusky-charging.dtsi"
+#include "zuma-shusky-usecases.dtsi"
+#include "zuma-shusky-wcharger.dtsi"
+#include "zuma-shusky-gsa-gsc.dtsi"
+
+
