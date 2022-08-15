@@ -6,4 +6,8 @@
  *
  */
 
-#include "zuma-ripcurrent-display.dtsi"
+#include "zuma-shusky-display.dtsi"
+
+&drmdsim1 {
+	status = "disabled";
+};
