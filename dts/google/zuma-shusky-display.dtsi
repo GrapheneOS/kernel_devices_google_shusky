@@ -8,6 +8,19 @@
 
 #include <dt-bindings/gpio/gpio.h>
 
+&dsim_modes {
+	dsim-modes {
+		1080x2400 {
+			mode-name = "1080x2400";
+			pmsk = <
+				0x2 0x87 0x2 0x1755 /* p m s k */
+				>;
+			hs-clk = <830>;
+			esc-clk = <20>;
+		};
+	};
+};
+
 &drmdsim0 {
 	#address-cells = <1>;
 	#size-cells = <0>;
