@@ -17,6 +17,15 @@
         };
 };
 
+&pinctrl_12 {
+        ese1_spi_miso: ese1-spi-miso {
+                samsung,pins ="gpp21-6";
+                samsung,pin-pud = <EXYNOS_PIN_PULL_DOWN>;
+                samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
+                samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
+        };
+};
+
 &spi12_bus {
         samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
         samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_NONE>;
@@ -33,7 +42,7 @@
         #size-cells = <0>;
         status = "okay";
         pinctrl-names = "default";
-        pinctrl-0 = <&spi12_bus &spi12_cs &ese1_spi_rst>;
+        pinctrl-0 = <&spi12_bus &spi12_cs &ese1_spi_rst &ese1_spi_miso>;
         cs-gpios = <&gpp21 7 GPIO_ACTIVE_HIGH>;
 
         ese1: ese@0 {
