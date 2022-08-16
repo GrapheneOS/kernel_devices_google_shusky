@@ -42,6 +42,12 @@ function concat_vendor_boot_modules() {
   MODULES_LIST=${OUT_DIR}/vendor_boot_modules.concat
 }
 
+VENDOR_RAMDISK_CMDS="modify_vendor_ramdisk"
+function modify_vendor_ramdisk() {
+  ln -f init.recovery.ripcurrent.rc init.recovery.husky.rc
+  ln -f init.recovery.ripcurrent.rc init.recovery.shiba.rc
+}
+
 EXT_MODULES+="
 private/google-modules/bms/misc
 private/google-modules/soc/gs
