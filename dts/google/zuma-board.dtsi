@@ -10,6 +10,7 @@
 #include "zuma-board-pcie.dtsi"
 #include "zuma-board-wlan.dtsi"
 #include "zuma-board-cp-s5300-sit.dtsi"
+#include "zuma-board-bluetooth.dtsi"
 #include "zuma-ripcurrent-camera-pmic.dtsi"
 #include "zuma-shusky-usb.dtsi"
 #include "zuma-shusky-battery.dtsi"
