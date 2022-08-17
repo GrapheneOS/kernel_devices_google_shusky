@@ -55,6 +55,11 @@
 	regulator-max-microvolt = <1800000>;
 };
 
+&s_ldo26_reg {
+	regulator-min-microvolt = <3300000>;
+	regulator-max-microvolt = <3300000>;
+};
+
 &pinctrl_11 {
 	hsi2c1_bus: hsi2c1-bus {
 		samsung,pin-pud = <EXYNOS_PIN_PULL_UP>;
@@ -962,6 +967,58 @@
 				enable-gpios =
 					<&gpp8 2 GPIO_ACTIVE_HIGH
 					 &gpp24 0 GPIO_ACTIVE_LOW>;
+			};
+
+			tof0: tof@0 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "tof-vl53l8";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0x29>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				/* VIO 1.8V */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				/* VADD 3.3V */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
+
+				/* XAPC_MCLK8: GPP15[0] */
+				reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26",
+					"reset";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"gpio";
+				power-up-seq-delays-us =
+					<1000
+					 1000
+					 1000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"reset",
+					"s2mpg15_ldo26",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"gpio",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<1000
+					 1000
+					 1000>;
 			};
 		};
 	};
