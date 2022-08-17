@@ -10,3 +10,4 @@
 #include "zuma-shiba-audio.dtsi"
 #include "zuma-shiba-camera.dtsi"
 #include "zuma-shiba-display.dtsi"
+#include "zuma-shusky-haptics.dtsi"

@@ -32,6 +32,7 @@
 #include "zuma-ripcurrent-nfc.dtsi"
 #include "zuma-ripcurrent-ese.dtsi"
 #include "zuma-board-pcie.dtsi"
+#include "zuma-ripcurrent-haptics.dtsi"
 
 / {
 	board_id = <0x40101>;
