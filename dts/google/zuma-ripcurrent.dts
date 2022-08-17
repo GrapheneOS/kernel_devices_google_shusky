@@ -27,10 +27,10 @@
 #include "zuma-board-wlan.dtsi"
 #include "zuma-board-cp-s5300-sit.dtsi"
 #include "zuma-board-bluetooth.dtsi"
+#include "zuma-board-ese.dtsi"
+#include "zuma-board-nfc.dtsi"
 #include "zuma-ripcurrent-audio.dtsi"
 #include "zuma-ripcurrent-gps.dtsi"
-#include "zuma-ripcurrent-nfc.dtsi"
-#include "zuma-ripcurrent-ese.dtsi"
 #include "zuma-board-pcie.dtsi"
 
 / {
