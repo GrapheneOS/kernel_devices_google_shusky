@@ -114,13 +114,10 @@ static const unsigned char FHD_PPS_SETTING[DSC_PPS_SIZE] = {
 
 static const u8 unlock_cmd_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 lock_cmd_f0[]   = { 0xF0, 0xA5, 0xA5 };
-static const u8 display_off[] = { 0x28 };
-static const u8 display_on[] = { 0x29 };
-static const u8 sleep_in[] = { 0x10 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
 
 static const struct exynos_dsi_cmd hk3_lp_cmds[] = {
-	EXYNOS_DSI_CMD0(display_off),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
 	/* Fixed TE: sync on */
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x51),
@@ -137,33 +134,33 @@ static const struct exynos_dsi_cmd hk3_lp_cmds[] = {
 static DEFINE_EXYNOS_CMD_SET(hk3_lp);
 
 static const struct exynos_dsi_cmd hk3_lp_off_cmds[] = {
-	EXYNOS_DSI_CMD0(display_off),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
 };
 
 static const struct exynos_dsi_cmd hk3_lp_low_cmds[] = {
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
 	/* AOD High Mode, 50nit */
-	EXYNOS_DSI_CMD_SEQ(0x53, 0x24),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24),
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x52, 0x94),
 	/* AOD Low Mode, 10nit */
 	EXYNOS_DSI_CMD_SEQ(0x94, 0x01, 0x07, 0x6A, 0x02),
 	/* temporary solution to avoid black screen */
-	EXYNOS_DSI_CMD_SEQ(0x51, 0x00, 0x01),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x01),
 	EXYNOS_DSI_CMD(lock_cmd_f0, 34),
-	EXYNOS_DSI_CMD0(display_on),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
 };
 
 static const struct exynos_dsi_cmd hk3_lp_high_cmds[] = {
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
 	/* AOD High Mode, 50nit */
-	EXYNOS_DSI_CMD_SEQ(0x53, 0x24),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24),
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x52, 0x94),
 	/* AOD High Mode, 50nit */
 	EXYNOS_DSI_CMD_SEQ(0x94, 0x00, 0x07, 0x6A, 0x02),
 	/* temporary solution to avoid black screen */
-	EXYNOS_DSI_CMD_SEQ(0x51, 0x00, 0x01),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x01),
 	EXYNOS_DSI_CMD(lock_cmd_f0, 34),
-	EXYNOS_DSI_CMD0(display_on),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
 };
 
 static const struct exynos_binned_lp hk3_binned_lp[] = {
@@ -728,9 +725,9 @@ static void hk3_set_nolp_mode(struct exynos_panel *ctx,
 	u32 delay_us = mult_frac(1000, 1020, vrefresh);
 
 	/* clear the brightness level (temporary solution) */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0x51, 0x00, 0x00);
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x00);
 
-	EXYNOS_DCS_WRITE_TABLE(ctx, display_off);
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_OFF);
 	/* AOD low mode setting off */
 	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
 	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x52, 0x94);
@@ -743,14 +740,14 @@ static void hk3_set_nolp_mode(struct exynos_panel *ctx,
 	hk3_change_frequency(ctx, pmode);
 
 	usleep_range(delay_us, delay_us + 10);
-	EXYNOS_DCS_WRITE_TABLE(ctx, display_on);
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	dev_info(ctx->dev, "exit LP mode\n");
 }
 
 static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 	/* Enable TE*/
-	EXYNOS_DSI_CMD_SEQ(0x35),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_ON),
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
 
 	/* TSP SYNC Enable (Auto Set) */
@@ -764,9 +761,9 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 	EXYNOS_DSI_CMD0(freq_update),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
 	/* CASET: 1343 */
-	EXYNOS_DSI_CMD_SEQ(0x2A, 0x00, 0x00, 0x05, 0x3F),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_COLUMN_ADDRESS, 0x00, 0x00, 0x05, 0x3F),
 	/* PASET: 2991 */
-	EXYNOS_DSI_CMD_SEQ(0x2B, 0x00, 0x00, 0x0B, 0xAF),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_PAGE_ADDRESS, 0x00, 0x00, 0x0B, 0xAF),
 };
 static DEFINE_EXYNOS_CMD_SET(hk3_init);
 
@@ -810,7 +807,7 @@ static int hk3_enable(struct drm_panel *panel)
 	if (pmode->exynos_mode.is_lp_mode)
 		exynos_panel_set_lp_mode(ctx, pmode);
 	else if (needs_reset || (ctx->panel_state == PANEL_STATE_BLANK))
-		EXYNOS_DCS_WRITE_TABLE(ctx, display_on);
+		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	return 0;
 }
@@ -834,10 +831,10 @@ static int hk3_disable(struct drm_panel *panel)
 	spanel->hw_vrefresh = 60;
 	spanel->hw_idle_vrefresh = 0;
 
-	EXYNOS_DCS_WRITE_TABLE_DELAY(ctx, 20, display_off);
+	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 20, MIPI_DCS_SET_DISPLAY_OFF);
 
 	if (ctx->panel_state == PANEL_STATE_OFF)
-		EXYNOS_DCS_WRITE_TABLE_DELAY(ctx, 100, sleep_in);
+		EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 100, MIPI_DCS_ENTER_SLEEP_MODE);
 
 	return 0;
 }
