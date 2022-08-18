@@ -1156,6 +1156,79 @@ static const u32 hk3_bl_range[] = {
 };
 
 static const struct exynos_panel_mode hk3_modes[] = {
+#ifdef PANEL_FACTORY_BUILD
+	{
+		/* 1344x2992 @ 10Hz */
+		.mode = {
+			.name = "1344x2992x10",
+			.clock = 44846,
+			.hdisplay = 1344,
+			.hsync_start = 1344 + 80, // add hfp
+			.hsync_end = 1344 + 80 + 24, // add hsa
+			.htotal = 1344 + 80 + 24 + 36, // add hbp
+			.vdisplay = 2992,
+			.vsync_start = 2992 + 12, // add vfp
+			.vsync_end = 2992 + 12 + 4, // add vsa
+			.vtotal = 2992 + 12 + 4 + 14, // add vbp
+			.flags = 0,
+			.width_mm = 70,
+			.height_mm = 155,
+		},
+		.exynos_mode = {
+			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
+			.vblank_usec = 120,
+			.bpc = 8,
+			.dsc = {
+				.enabled = true,
+				.dsc_count = 2,
+				.slice_count = 2,
+				.slice_height = 187,
+			},
+			.underrun_param = &underrun_param,
+		},
+		.te2_timing = {
+			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
+			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
+		},
+		.idle_mode = IDLE_MODE_UNSUPPORTED,
+	},
+	{
+		/* 1344x2992 @ 30Hz */
+		.mode = {
+			.name = "1344x2992x30",
+			.clock = 134539,
+			.hdisplay = 1344,
+			.hsync_start = 1344 + 80, // add hfp
+			/* change hsa and hbp to avoid conflicting to LP mode 30Hz */
+			.hsync_end = 1344 + 80 + 22, // add hsa
+			.htotal = 1344 + 80 + 24 + 38, // add hbp
+			.vdisplay = 2992,
+			.vsync_start = 2992 + 12, // add vfp
+			.vsync_end = 2992 + 12 + 4, // add vsa
+			.vtotal = 2992 + 12 + 4 + 14, // add vbp
+			.flags = 0,
+			.width_mm = 70,
+			.height_mm = 155,
+		},
+		.exynos_mode = {
+			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
+			.vblank_usec = 120,
+			.bpc = 8,
+			.dsc = {
+				.enabled = true,
+				.dsc_count = 2,
+				.slice_count = 2,
+				.slice_height = 187,
+			},
+			.underrun_param = &underrun_param,
+		},
+		.te2_timing = {
+			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
+			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
+		},
+		.idle_mode = IDLE_MODE_UNSUPPORTED,
+	},
+#endif
 	{
 		/* 1344x2992 @ 60Hz */
 		.mode = {
