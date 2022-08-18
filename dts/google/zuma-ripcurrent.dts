@@ -29,8 +29,8 @@
 #include "zuma-board-bluetooth.dtsi"
 #include "zuma-board-ese.dtsi"
 #include "zuma-board-nfc.dtsi"
+#include "zuma-board-gps.dtsi"
 #include "zuma-ripcurrent-audio.dtsi"
-#include "zuma-ripcurrent-gps.dtsi"
 #include "zuma-board-pcie.dtsi"
 
 / {
