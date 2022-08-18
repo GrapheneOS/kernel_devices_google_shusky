@@ -179,6 +179,35 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 };
 static DEFINE_EXYNOS_CMD_SET(bigsurf_init);
 
+static void bigsurf_update_irc(struct exynos_panel *ctx,
+				enum exynos_hbm_mode hbm_mode,
+				int vrefresh)
+{
+	if (IS_HBM_ON_IRC_OFF(hbm_mode)) {
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x5F, 0x01);
+		if (vrefresh == 120) {
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
+			EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x02);
+		} else {
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x30);
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x01, 0x00);
+		}
+	} else {
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x5F, 0x00);
+		if (vrefresh == 120) {
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
+		} else {
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x30);
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x00, 0x00);
+		}
+	}
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCC, 0x30);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCE, 0x01);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCC, 0x00);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCE, 0x00);
+}
+
 static void bigsurf_change_frequency(struct exynos_panel *ctx,
 				    const struct exynos_panel_mode *pmode)
 {
@@ -187,9 +216,13 @@ static void bigsurf_change_frequency(struct exynos_panel *ctx,
 	if (!ctx || (vrefresh != 60 && vrefresh != 120))
 		return;
 
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, (vrefresh == 120) ? 0x00 : 0x30);
-	if (vrefresh == 60)
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x00, 0x00);
+	if (!IS_HBM_ON(ctx->hbm_mode)) {
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, (vrefresh == 120) ? 0x00 : 0x30);
+		if (vrefresh == 60)
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x00, 0x00);
+	} else {
+		bigsurf_update_irc(ctx, ctx->hbm_mode, vrefresh);
+	}
 
 	dev_dbg(ctx->dev, "%s: change to %uhz\n", __func__, vrefresh);
 }
@@ -234,14 +267,17 @@ static int bigsurf_enable(struct drm_panel *panel)
 }
 
 static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
-				 enum exynos_hbm_mode mode)
+				 enum exynos_hbm_mode hbm_mode)
 {
-	if (ctx->hbm_mode == mode)
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	int vrefresh = drm_mode_vrefresh(&pmode->mode);
+
+	if (ctx->hbm_mode == hbm_mode)
 		return;
 
-	/* TODO: implement IRC */
+	bigsurf_update_irc(ctx, hbm_mode, vrefresh);
 
-	ctx->hbm_mode = mode;
+	ctx->hbm_mode = hbm_mode;
 	dev_info(ctx->dev, "hbm_on=%d hbm_ircoff=%d\n", IS_HBM_ON(ctx->hbm_mode),
 		 IS_HBM_ON_IRC_OFF(ctx->hbm_mode));
 }
