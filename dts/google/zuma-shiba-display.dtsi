@@ -13,6 +13,18 @@
 		compatible = "google,bigsurf";
 		label = "google-bigsurf";
 	};
+	panel@2 {
+		compatible = "google,shoreline";
+		label = "google-shoreline";
+		channel = <0>;
+		//touch = <&spitouch>;
+
+		/* reset, power */
+		reset-gpios = <&gpa6 0 GPIO_ACTIVE_HIGH>;
+		vci-supply = <&m_ldo14_reg>;
+		vddi-supply = <&s_bucka_reg>;
+		vddd-supply = <&m_ldo22_reg>;
+	};
 };
 
 &drmdsim1 {
