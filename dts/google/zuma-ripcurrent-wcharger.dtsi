@@ -86,4 +86,11 @@
 		};
 
 	};
+
+	st_wlc98@61 {
+		dev-name = "st_wlc98";
+		compatible = "st_wlc98";
+		reg = <0x61>;
+		status = "ok";
+	};
 };
