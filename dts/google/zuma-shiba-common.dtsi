@@ -11,3 +11,4 @@
 #include "zuma-shiba-camera.dtsi"
 #include "zuma-shiba-display.dtsi"
 #include "zuma-shusky-haptics.dtsi"
+#include "zuma-shiba-touch.dtsi"
