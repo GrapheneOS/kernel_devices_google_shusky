@@ -183,9 +183,19 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 				enum exynos_hbm_mode hbm_mode,
 				int vrefresh)
 {
+	if (!IS_HBM_ON(hbm_mode)) {
+		dev_info(ctx->dev, "hbm is off, skip update irc\n");
+		return;
+	}
+
 	if (IS_HBM_ON_IRC_OFF(hbm_mode)) {
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x5F, 0x01);
 		if (vrefresh == 120) {
+			if (ctx->hbm.local_hbm.enabled) {
+				EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+				EXYNOS_DCS_WRITE_SEQ(ctx, 0x6F, 0x04);
+				EXYNOS_DCS_WRITE_SEQ(ctx, 0xC0, 0x76);
+			}
 			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
 			EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x02);
 		} else {
@@ -195,6 +205,11 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 	} else {
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x5F, 0x00);
 		if (vrefresh == 120) {
+			if (ctx->hbm.local_hbm.enabled) {
+				EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+				EXYNOS_DCS_WRITE_SEQ(ctx, 0x6F, 0x04);
+				EXYNOS_DCS_WRITE_SEQ(ctx, 0xC0, 0x75);
+			}
 			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
 		} else {
 			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x30);
@@ -266,6 +281,40 @@ static int bigsurf_enable(struct drm_panel *panel)
 	return 0;
 }
 
+static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
+{
+	u16 brightness;
+
+	if (ctx->current_mode->exynos_mode.is_lp_mode) {
+		const struct exynos_panel_funcs *funcs;
+
+		funcs = ctx->desc->exynos_panel_func;
+		if (funcs && funcs->set_binned_lp)
+			funcs->set_binned_lp(ctx, br);
+		return 0;
+	}
+
+	if (!br) {
+		// turn off panel and set brightness directly.
+		return exynos_dcs_set_brightness(ctx, 0);
+	}
+
+	if (ctx->hbm.local_hbm.enabled) {
+		u16 level = br * 4;
+		u8 val1 = level >> 8;
+		u8 val2 = level & 0xff;
+
+		/* LHBM DBV value write */
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x6F, 0x4C);
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0xDF, val1, val2, val1, val2, val1, val2);
+	}
+
+	brightness = (br & 0xff) << 8 | br >> 8;
+
+	return exynos_dcs_set_brightness(ctx, brightness);
+}
+
 static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
 				 enum exynos_hbm_mode hbm_mode)
 {
@@ -280,6 +329,43 @@ static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
 	ctx->hbm_mode = hbm_mode;
 	dev_info(ctx->dev, "hbm_on=%d hbm_ircoff=%d\n", IS_HBM_ON(ctx->hbm_mode),
 		 IS_HBM_ON_IRC_OFF(ctx->hbm_mode));
+}
+
+static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
+				       bool local_hbm_en)
+{
+	const struct exynos_panel_mode *pmode;
+	int vrefresh;
+
+	if (ctx->hbm.local_hbm.enabled == local_hbm_en)
+		return;
+
+	pmode = ctx->current_mode;
+	if (unlikely(pmode == NULL)) {
+		dev_err(ctx->dev, "%s: unknown current mode\n", __func__);
+		return;
+	}
+
+	vrefresh = drm_mode_vrefresh(&pmode->mode);
+	if (local_hbm_en) {
+		/* Add check to turn on LHBM @ 120hz only to comply with HW requirement */
+		if (vrefresh != 120) {
+			dev_err(ctx->dev, "unexpected mode `%s` while enabling LHBM, give up\n",
+				pmode->mode.name);
+			return;
+		}
+	}
+
+	ctx->hbm.local_hbm.enabled = local_hbm_en;
+
+	if (local_hbm_en) {
+		if (IS_HBM_ON(ctx->hbm_mode))
+			bigsurf_update_irc(ctx, ctx->hbm_mode, vrefresh);
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x87, 0x05);
+	} else {
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x87, 0x00);
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
+	}
 }
 
 static void bigsurf_mode_set(struct exynos_panel *ctx,
@@ -493,11 +579,12 @@ static const struct drm_panel_funcs bigsurf_drm_funcs = {
 };
 
 static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
-	.set_brightness = exynos_panel_set_brightness,
+	.set_brightness = bigsurf_set_brightness,
 	.set_lp_mode = exynos_panel_set_lp_mode,
 	.set_nolp_mode = bigsurf_set_nolp_mode,
 	.set_binned_lp = exynos_panel_set_binned_lp,
 	.set_hbm_mode = bigsurf_set_hbm_mode,
+	.set_local_hbm_mode = bigsurf_set_local_hbm_mode,
 	.set_dimming_on = bigsurf_set_dimming_on,
 	.is_mode_seamless = bigsurf_is_mode_seamless,
 	.mode_set = bigsurf_mode_set,
