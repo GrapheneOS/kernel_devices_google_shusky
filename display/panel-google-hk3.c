@@ -65,6 +65,8 @@ struct hk3_panel {
 	u32 auto_mode_vrefresh;
 	/** @force_changeable_te: force changeable TE (instead of fixed) during early exit */
 	bool force_changeable_te;
+	/** @hw_acl_enabled: whether automatic current limiting is enabled */
+	bool hw_acl_enabled;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -700,8 +702,10 @@ static void hk3_write_display_mode(struct exynos_panel *ctx,
 	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY, val);
 }
 
+#define HK3_ACL_THRESHOLD_DBV 3917
 static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 {
+	int ret;
 	u16 brightness;
 
 	if (ctx->current_mode->exynos_mode.is_lp_mode) {
@@ -714,8 +718,19 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 	}
 
 	brightness = (br & 0xff) << 8 | br >> 8;
+	ret = exynos_dcs_set_brightness(ctx, brightness);
+	if (!ret) {
+		struct hk3_panel *spanel = to_spanel(ctx);
+		bool enable_acl = (br >= HK3_ACL_THRESHOLD_DBV && IS_HBM_ON(ctx->hbm_mode));
 
-	return exynos_dcs_set_brightness(ctx, brightness);
+		if (spanel->hw_acl_enabled != enable_acl) {
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, enable_acl ? 0x01 : 0x00);
+			spanel->hw_acl_enabled = enable_acl;
+			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
+		}
+	}
+
+	return ret;
 }
 
 static void hk3_set_nolp_mode(struct exynos_panel *ctx,
@@ -830,6 +845,7 @@ static int hk3_disable(struct drm_panel *panel)
 	bitmap_clear(spanel->hw_feat, 0, FEAT_MAX);
 	spanel->hw_vrefresh = 60;
 	spanel->hw_idle_vrefresh = 0;
+	spanel->hw_acl_enabled = false;
 
 	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 20, MIPI_DCS_SET_DISPLAY_OFF);
 
@@ -1276,6 +1292,7 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 
 	spanel->base.op_hz = 120;
 	spanel->hw_vrefresh = 60;
+	spanel->hw_acl_enabled = false;
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
