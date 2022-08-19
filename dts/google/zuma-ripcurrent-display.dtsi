@@ -9,17 +9,8 @@
 #include "zuma-shusky-display.dtsi"
 
 &drmdsim0 {
-	panel@2 {
-		compatible = "google,hk3";
-		label = "google-hk3";
-		channel = <0>;
-		//touch = <&spitouch>;
-
-		/* reset, power */
-		reset-gpios = <&gpa6 0 GPIO_ACTIVE_HIGH>;
-		vci-supply = <&m_ldo14_reg>;
-		vddi-supply = <&s_bucka_reg>;
-		vddd-supply = <&m_ldo22_reg>;
+	panel@0 {
+		touch = <&spitouch>;
 	};
 };
 
@@ -28,7 +19,6 @@
 		compatible = "google,hk3";
 		label = "google-hk3";
 		channel = <0>;
-		//touch = <&spitouch>;
 
 		/* reset, power */
 		reset-gpios = <&gpp10 0 GPIO_ACTIVE_HIGH>;
