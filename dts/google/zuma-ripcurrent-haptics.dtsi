@@ -111,8 +111,8 @@
 	cs40l26a@42 {
 		compatible = "cirrus,cs40l26a";
 		reg = <0x42>;
-		dev-name = "cs40l26a";  /* sysfs folder name */
-		input-device-name = "cs40l26_input";    /* input device name */
+		dev-name = "cs40l26a-dual";  /* sysfs folder name */
+		input-device-name = "cs40l26_dual_input";    /* input device name */
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&hapt_amp1_irq &hapt_amp1_rst &hapt_amp_trig>;
@@ -144,8 +144,8 @@
 	cs40l26a@43 {
 		compatible = "cirrus,cs40l26a";
 		reg = <0x43>;
-		dev-name = "cs40l26a-dual";  /* sysfs folder name */
-		input-device-name = "cs40l26_dual_input";    /* input device name */
+		dev-name = "cs40l26a";  /* sysfs folder name */
+		input-device-name = "cs40l26_input";    /* input device name */
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&hapt_amp2_irq &hapt_amp2_rst>;
