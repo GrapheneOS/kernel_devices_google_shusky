@@ -137,4 +137,11 @@
 		pca9468,google_cpm = <&google_cpm>;
 	};
 
+	st_wc: st_wc68@65 {
+		dev-name = "st_wc68";
+		compatible = "st_wc68";
+		reg = <0x65>;
+		status = "ok";
+	};
+
 };
