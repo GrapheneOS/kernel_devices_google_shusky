@@ -17,8 +17,6 @@
 #include "samsung/panel/panel-samsung-drv.h"
 
 #define BIGSURF_DDIC_ID_LEN 8
-#define BIGSURF_MIPI_STREAM_2C MIPI_DCS_WRITE_MEMORY_START
-
 
 /**
  * struct bigsurf_panel - panel specific runtime info
@@ -44,22 +42,18 @@ static const struct exynos_dsi_cmd bigsurf_lp_off_cmds[] = {
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_low_cmds[] = {
+	EXYNOS_DSI_CMD_SEQ(0x5A, 0x00),
 	/* 10 nit */
-	EXYNOS_DSI_CMD_SEQ_DELAY(9, MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
 					0x00, 0x00, 0x00, 0x00, 0x03, 0x33),
-	/* 2Ch needs to be sent twice in next 2 vsync */
-	EXYNOS_DSI_CMD_SEQ_DELAY(9, BIGSURF_MIPI_STREAM_2C),
-	EXYNOS_DSI_CMD_SEQ(BIGSURF_MIPI_STREAM_2C),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
+	EXYNOS_DSI_CMD_SEQ(0x5A, 0x00),
 	/* 50 nit */
-	EXYNOS_DSI_CMD_SEQ_DELAY(9, MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
 					0x00, 0x00, 0x00, 0x00, 0x0F, 0xFE),
-	/* 2Ch needs to be sent twice in next 2 vsync */
-	EXYNOS_DSI_CMD_SEQ_DELAY(9, BIGSURF_MIPI_STREAM_2C),
-	EXYNOS_DSI_CMD_SEQ(BIGSURF_MIPI_STREAM_2C),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
 };
 
@@ -114,6 +108,18 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0xB0),
 	EXYNOS_DSI_CMD_SEQ(0xBA, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x08),
+	EXYNOS_DSI_CMD_SEQ(0xBB, 0x01, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x18),
+	EXYNOS_DSI_CMD_SEQ(0xBB, 0x01, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x1C),
+	EXYNOS_DSI_CMD_SEQ(0xBB, 0x01, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x01),
+	EXYNOS_DSI_CMD_SEQ(0xBE, 0x47),
+
+	/* Disable the Black insertion in AoD */
+	EXYNOS_DSI_CMD_SEQ(0xC0, 0x44),
+
 	/* CMD2, Page1 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x01),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x05),
@@ -157,6 +163,7 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_SCANLINE, 0x00, 0x00),
 	/* b/241726710, long write 0x35 as a WA */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_ON, 0x00, 0x20),
+	EXYNOS_DSI_CMD_SEQ(0x5A, 0x01),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x20),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_COLUMN_ADDRESS, 0x00, 0x00, 0x04, 0x37),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_PAGE_ADDRESS, 0x00, 0x00, 0x09, 0x5F),
@@ -183,7 +190,7 @@ static void bigsurf_change_frequency(struct exynos_panel *ctx,
 
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, (vrefresh == 120) ? 0x00 : 0x30);
 	if (vrefresh == 60)
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x00);
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x00, 0x00);
 
 	dev_dbg(ctx->dev, "%s: change to %uhz\n", __func__, vrefresh);
 }
@@ -195,13 +202,11 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 		return;
 
 	/* exit AOD */
-	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 34, MIPI_DCS_EXIT_IDLE_MODE);
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_EXIT_IDLE_MODE);
+	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 0x5A, 0x01);
 
 	bigsurf_change_frequency(ctx, pmode);
 
-	/* 2Ch needs to be sent twice in next 2 vsync */
-	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 34, BIGSURF_MIPI_STREAM_2C);
-	EXYNOS_DCS_WRITE_SEQ(ctx, BIGSURF_MIPI_STREAM_2C);
 	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	dev_info(ctx->dev, "exit LP mode\n");
