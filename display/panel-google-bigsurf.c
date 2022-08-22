@@ -58,9 +58,9 @@ static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, bigsurf_lp_off_cmds),
-	/* rising = 0, falling = 48 */
-	BINNED_LP_MODE_TIMING("low", 648, bigsurf_lp_low_cmds, 0, 48),
-	BINNED_LP_MODE_TIMING("high", 3789, bigsurf_lp_high_cmds, 0, 48),
+	/* rising = 0, falling = 32 */
+	BINNED_LP_MODE_TIMING("low", 648, bigsurf_lp_low_cmds, 0, 32),
+	BINNED_LP_MODE_TIMING("high", 3789, bigsurf_lp_high_cmds, 0, 32),
 };
 
 static const struct exynos_dsi_cmd bigsurf_off_cmds[] = {
@@ -178,6 +178,37 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ_DELAY(120, MIPI_DCS_EXIT_SLEEP_MODE)
 };
 static DEFINE_EXYNOS_CMD_SET(bigsurf_init);
+
+static void bigsurf_update_te2(struct exynos_panel *ctx)
+{
+	struct exynos_panel_te2_timing timing;
+	u8 width = 0x20; /* default width */
+	u32 rising = 0, falling;
+	int ret;
+
+	if (!ctx)
+		return;
+
+	ret = exynos_panel_get_current_mode_te2(ctx, &timing);
+	if (!ret) {
+		falling = timing.falling_edge;
+		if (falling >= timing.rising_edge) {
+			rising = timing.rising_edge;
+			width = falling - rising;
+		} else {
+			dev_warn(ctx->dev, "invalid timing, use default setting\n");
+		}
+	} else if (ret == -EAGAIN) {
+		dev_dbg(ctx->dev, "Panel is not ready, use default setting\n");
+	} else {
+		return;
+	}
+
+	dev_dbg(ctx->dev, "TE2 updated: rising= 0x%x, width= 0x%x", rising, width);
+
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_TEAR_SCANLINE, 0x00, rising);
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_TEAR_ON, 0x00, width);
+}
 
 static void bigsurf_update_irc(struct exynos_panel *ctx,
 				enum exynos_hbm_mode hbm_mode,
@@ -491,7 +522,7 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		},
 		.te2_timing = {
 			.rising_edge = 0,
-			.falling_edge = 48,
+			.falling_edge = 32,
 		},
 	},
 	{
@@ -519,7 +550,7 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		},
 		.te2_timing = {
 			.rising_edge = 0,
-			.falling_edge = 48,
+			.falling_edge = 32,
 		},
 	},
 };
@@ -590,6 +621,9 @@ static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
 	.mode_set = bigsurf_mode_set,
 	.panel_init = bigsurf_panel_init,
 	.get_panel_rev = bigsurf_get_panel_rev,
+	.get_te2_edges = exynos_panel_get_te2_edges,
+	.configure_te2_edges = exynos_panel_configure_te2_edges,
+	.update_te2 = bigsurf_update_te2,
 	.read_id = bigsurf_read_id,
 };
 
