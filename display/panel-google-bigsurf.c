@@ -522,7 +522,6 @@ const struct exynos_panel_desc google_bigsurf = {
 	.lp_cmd_set = &bigsurf_lp_cmd_set,
 	.binned_lp = bigsurf_binned_lp,
 	.num_binned_lp = ARRAY_SIZE(bigsurf_binned_lp),
-	.is_panel_idle_supported = true,
 	.panel_func = &bigsurf_drm_funcs,
 	.exynos_panel_func = &bigsurf_exynos_funcs,
 };
