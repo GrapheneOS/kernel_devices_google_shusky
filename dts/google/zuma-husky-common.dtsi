@@ -12,3 +12,4 @@
 #include "zuma-husky-display.dtsi"
 #include "zuma-husky-touch.dtsi"
 #include "zuma-shusky-haptics.dtsi"
+#include "zuma-ripcurrent-uwb.dtsi"
