@@ -38,7 +38,8 @@ static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
 static DEFINE_EXYNOS_CMD_SET(bigsurf_lp);
 
 static const struct exynos_dsi_cmd bigsurf_lp_off_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
+					0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_low_cmds[] = {
@@ -46,7 +47,6 @@ static const struct exynos_dsi_cmd bigsurf_lp_low_cmds[] = {
 	/* 10 nit */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
 					0x00, 0x00, 0x00, 0x00, 0x03, 0x33),
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
@@ -54,7 +54,6 @@ static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 	/* 50 nit */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
 					0x00, 0x00, 0x00, 0x00, 0x0F, 0xFE),
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
 };
 
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
@@ -203,11 +202,9 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 
 	/* exit AOD */
 	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_EXIT_IDLE_MODE);
-	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 0x5A, 0x01);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0x5A, 0x01);
 
 	bigsurf_change_frequency(ctx, pmode);
-
-	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	dev_info(ctx->dev, "exit LP mode\n");
 }
