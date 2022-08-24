@@ -524,6 +524,17 @@ const struct exynos_panel_desc google_bigsurf = {
 	.num_binned_lp = ARRAY_SIZE(bigsurf_binned_lp),
 	.panel_func = &bigsurf_drm_funcs,
 	.exynos_panel_func = &bigsurf_exynos_funcs,
+	.reset_timing_ms = {1, 1, 20},
+	.reg_ctrl_enable = {
+		{PANEL_REG_ID_VDDI, 0},
+		{PANEL_REG_ID_VCI, 0},
+		{PANEL_REG_ID_VDDD, 10},
+	},
+	.reg_ctrl_disable = {
+		{PANEL_REG_ID_VDDD, 0},
+		{PANEL_REG_ID_VCI, 0},
+		{PANEL_REG_ID_VDDI, 0},
+	},
 };
 
 static const struct of_device_id exynos_panel_of_match[] = {
