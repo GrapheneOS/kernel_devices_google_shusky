@@ -206,8 +206,8 @@ static void bigsurf_update_te2(struct exynos_panel *ctx)
 
 	dev_dbg(ctx->dev, "TE2 updated: rising= 0x%x, width= 0x%x", rising, width);
 
-	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_TEAR_SCANLINE, 0x00, rising);
-	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_TEAR_ON, 0x00, width);
+	EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_TEAR_SCANLINE, 0x00, rising);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_SET_TEAR_ON, 0x00, width);
 }
 
 static void bigsurf_update_irc(struct exynos_panel *ctx,
@@ -220,38 +220,38 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 	}
 
 	if (IS_HBM_ON_IRC_OFF(hbm_mode)) {
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0x5F, 0x01);
+		EXYNOS_DCS_BUF_ADD(ctx, 0x5F, 0x01);
 		if (vrefresh == 120) {
 			if (ctx->hbm.local_hbm.enabled) {
-				EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
-				EXYNOS_DCS_WRITE_SEQ(ctx, 0x6F, 0x04);
-				EXYNOS_DCS_WRITE_SEQ(ctx, 0xC0, 0x76);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+				EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x04);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x76);
 			}
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
-			EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x02);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x02);
 		} else {
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x30);
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x01, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x01, 0x00);
 		}
 	} else {
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0x5F, 0x00);
+		EXYNOS_DCS_BUF_ADD(ctx, 0x5F, 0x00);
 		if (vrefresh == 120) {
 			if (ctx->hbm.local_hbm.enabled) {
-				EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
-				EXYNOS_DCS_WRITE_SEQ(ctx, 0x6F, 0x04);
-				EXYNOS_DCS_WRITE_SEQ(ctx, 0xC0, 0x75);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+				EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x04);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x75);
 			}
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x00);
 		} else {
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x30);
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x00, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x00, 0x00);
 		}
 	}
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCC, 0x30);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCE, 0x01);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCC, 0x00);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xCE, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xCC, 0x30);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xCE, 0x01);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xCC, 0x00);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCE, 0x00);
 }
 
 static void bigsurf_change_frequency(struct exynos_panel *ctx,
@@ -280,8 +280,8 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 		return;
 
 	/* exit AOD */
-	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_EXIT_IDLE_MODE);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0x5A, 0x01);
+	EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_EXIT_IDLE_MODE);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x5A, 0x01);
 
 	bigsurf_change_frequency(ctx, pmode);
 
@@ -336,9 +336,9 @@ static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 		u8 val2 = level & 0xff;
 
 		/* LHBM DBV value write */
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0x6F, 0x4C);
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0xDF, val1, val2, val1, val2, val1, val2);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+		EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x4C);
+		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xDF, val1, val2, val1, val2, val1, val2);
 	}
 
 	brightness = (br & 0xff) << 8 | br >> 8;
