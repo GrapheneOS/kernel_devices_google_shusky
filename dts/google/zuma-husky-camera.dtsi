@@ -803,27 +803,36 @@
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
 				enable-gpios = <&s2mpg15_gpio 4 GPIO_ACTIVE_HIGH>;
+				/* Make front AF can be powered up alone */
+				gpio3-supply = <&slg51002_gpio3>;
+
 
 				/* Power up sequence */
 				power-up-seqs =
 					"s2mpg15_ldo12",
+					"gpio3",
 					"enable";
 				power-up-seq-types =
+					"regulator",
 					"regulator",
 					"gpio";
 				power-up-seq-delays-us =
 					<1000
+					 500
 					 0>;
 
 				/* Power down sequence */
 				power-down-seqs =
 					"enable",
+					"gpio3",
 					"s2mpg15_ldo12";
 				power-down-seq-types =
 					"gpio",
+					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<0
+					 0
 					 0>;
 
 				/* Thread priority */
