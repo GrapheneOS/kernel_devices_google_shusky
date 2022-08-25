@@ -24,6 +24,21 @@
                 samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
                 samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
         };
+        ese1_spi_mosi_default: ese1-spi-mosi-default {
+                samsung,pins ="gpp21-5";
+                samsung,pin-pud = <EXYNOS_PIN_PULL_DOWN>;
+                samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
+                samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
+                samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
+                samsung,pin-val = <0>;
+        };
+        ese1_spi_mosi_func: ese1-spi-mosi-func {
+                samsung,pins ="gpp21-5";
+                samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+                samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
+                samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
+                samsung,pin-function = <EXYNOS_PIN_FUNC_2>;
+        };
 };
 
 &spi12_bus {
@@ -41,8 +56,6 @@
         #address-cells = <1>;
         #size-cells = <0>;
         status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&spi12_bus &spi12_cs &ese1_spi_rst &ese1_spi_miso>;
         cs-gpios = <&gpp21 7 GPIO_ACTIVE_HIGH>;
 
         ese1: ese@0 {
@@ -50,8 +63,10 @@
                 reg = <0>;
                 spi-max-frequency = <8000000>;
                 esereset-gpio = <&gph1 5 GPIO_ACTIVE_HIGH>;
-                power_mode = "ST54J";
-
+                power_mode = "ST54L";
+                pinctrl-names = "default","func";
+                pinctrl-0 = <&spi12_bus &spi12_cs &ese1_spi_rst &ese1_spi_miso &ese1_spi_mosi_default>;
+                pinctrl-1 = <&spi12_bus &spi12_cs &ese1_spi_rst &ese1_spi_miso &ese1_spi_mosi_func>;
                 controller-data {
                         cs-gpio = <&gpp21 7 GPIO_ACTIVE_HIGH>;
                         cs-clock-delay = <10>;
