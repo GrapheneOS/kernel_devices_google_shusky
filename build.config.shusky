@@ -70,5 +70,9 @@ private/google-modules/video/gchips
 private/google-modules/power/reset
 private/google-modules/wlan/bcm4398
 private/google-modules/bluetooth/broadcom
-private/google-modules/uwb
 "
+
+UWB_MODULE="private/google-modules/uwb"
+if [ -d "${ROOT_DIR}/${UWB_MODULE}" ]; then
+EXT_MODULES+=${UWB_MODULE}
+fi
