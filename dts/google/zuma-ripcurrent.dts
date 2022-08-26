@@ -34,6 +34,7 @@
 #include "zuma-board-pcie.dtsi"
 #include "zuma-ripcurrent-haptics.dtsi"
 #include "zuma-ripcurrent-uwb.dtsi"
+#include "zuma-ripcurrent-thermal.dtsi"
 
 / {
 	board_id = <0x40101>;
