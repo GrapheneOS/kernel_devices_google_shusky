@@ -67,6 +67,8 @@ struct hk3_panel {
 	bool force_changeable_te;
 	/** @hw_acl_enabled: whether automatic current limiting is enabled */
 	bool hw_acl_enabled;
+	/** @hw_za_enabled: whether zonal attenuation is enabled */
+	bool hw_za_enabled;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -702,7 +704,64 @@ static void hk3_write_display_mode(struct exynos_panel *ctx,
 	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY, val);
 }
 
-#define HK3_ACL_THRESHOLD_DBV 3917
+#define HK3_OPR_VAL_LEN 2
+#define HK3_MAX_OPR_VAL 0x3FF
+/* Get OPR (on pixel ratio), the unit is percent */
+static int hk3_get_opr(struct exynos_panel *ctx, u8 *opr)
+{
+	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
+	u8 buf[HK3_OPR_VAL_LEN] = {0};
+	u16 val;
+	int ret;
+
+	DPU_ATRACE_BEGIN(__func__);
+	EXYNOS_DCS_WRITE_TABLE(ctx, unlock_cmd_f0);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0xE7, 0x91);
+	ret = mipi_dsi_dcs_read(dsi, 0x91, buf, HK3_OPR_VAL_LEN);
+	EXYNOS_DCS_WRITE_TABLE(ctx, lock_cmd_f0);
+	DPU_ATRACE_END(__func__);
+
+	if (ret != HK3_OPR_VAL_LEN) {
+		dev_warn(ctx->dev, "Failed to read OPR (%d)\n", ret);
+		return ret;
+	}
+
+	val = (buf[0] << 8) | buf[1];
+	*opr = DIV_ROUND_CLOSEST(val * 100, HK3_MAX_OPR_VAL);
+	dev_dbg(ctx->dev, "%s: %u (0x%X)\n", __func__, *opr, val);
+
+	return 0;
+}
+
+#define HK3_ZA_THRESHOLD_OPR 80
+static void hk3_update_za(struct exynos_panel *ctx)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+	bool enable_za = false;
+	u8 opr;
+
+	if (spanel->hw_acl_enabled) {
+		if (!hk3_get_opr(ctx, &opr)) {
+			enable_za = (opr > HK3_ZA_THRESHOLD_OPR);
+		} else {
+			dev_warn(ctx->dev, "Unable to update za\n");
+			return;
+		}
+	}
+
+	if (spanel->hw_za_enabled != enable_za) {
+		EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x01, 0x6C, 0x92);
+		/* LP setting - 0x21: 7.5%, 0x00: off */
+		EXYNOS_DCS_BUF_ADD(ctx, 0x92, enable_za ? 0x21 : 0x00);
+		EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+
+		spanel->hw_za_enabled = enable_za;
+		dev_info(ctx->dev, "%s: %s\n", __func__, enable_za ? "on" : "off");
+	}
+}
+
+#define HK3_ACL_ZA_THRESHOLD_DBV 3917
 static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 {
 	int ret;
@@ -721,12 +780,15 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 	ret = exynos_dcs_set_brightness(ctx, brightness);
 	if (!ret) {
 		struct hk3_panel *spanel = to_spanel(ctx);
-		bool enable_acl = (br >= HK3_ACL_THRESHOLD_DBV && IS_HBM_ON(ctx->hbm_mode));
+		bool enable_acl = (br >= HK3_ACL_ZA_THRESHOLD_DBV && IS_HBM_ON(ctx->hbm_mode));
 
 		if (spanel->hw_acl_enabled != enable_acl) {
+			/* ACL setting - 0x01: 5%, 0x00: off */
 			EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, enable_acl ? 0x01 : 0x00);
 			spanel->hw_acl_enabled = enable_acl;
 			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
+
+			hk3_update_za(ctx);
 		}
 	}
 
@@ -846,6 +908,7 @@ static int hk3_disable(struct drm_panel *panel)
 	spanel->hw_vrefresh = 60;
 	spanel->hw_idle_vrefresh = 0;
 	spanel->hw_acl_enabled = false;
+	spanel->hw_za_enabled = false;
 
 	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 20, MIPI_DCS_SET_DISPLAY_OFF);
 
@@ -914,6 +977,8 @@ static void hk3_commit_done(struct exynos_panel *ctx)
 		return;
 
 	hk3_update_idle_state(ctx);
+
+	hk3_update_za(ctx);
 }
 
 static void hk3_set_hbm_mode(struct exynos_panel *ctx,
@@ -1293,6 +1358,7 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 	spanel->base.op_hz = 120;
 	spanel->hw_vrefresh = 60;
 	spanel->hw_acl_enabled = false;
+	spanel->hw_za_enabled = false;
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
