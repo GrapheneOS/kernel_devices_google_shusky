@@ -13,3 +13,4 @@
 #include "zuma-shusky-haptics.dtsi"
 #include "zuma-shiba-touch.dtsi"
 #include "zuma-shusky-thermal.dtsi"
+#include "zuma-shiba-ldaf.dtsi"
