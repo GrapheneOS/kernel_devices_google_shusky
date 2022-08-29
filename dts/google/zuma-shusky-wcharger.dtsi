@@ -72,7 +72,7 @@
 		pinctrl-0 = <&wc_irq &wc_en>;
 
 		idt,gpio_wlc_en = <&gph1 4 GPIO_ACTIVE_LOW>;
-		/* idt,gpio_qi_vbus_en = <PP1800_L14S_ALIVE>; always high after boot */
+		idt,gpio_qi_vbus_en = <&s2mpg14_gpio 5 GPIO_ACTIVE_HIGH>;
 		idt,gpio_qien = <&gph1 4 GPIO_ACTIVE_LOW>;
 		idt,irq_gpio = <&gpa8 1 GPIO_ACTIVE_LOW>;
 
