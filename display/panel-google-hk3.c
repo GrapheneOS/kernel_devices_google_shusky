@@ -844,6 +844,35 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 };
 static DEFINE_EXYNOS_CMD_SET(hk3_init);
 
+static void hk3_lhbm_luminance_opr_setting(struct exynos_panel *ctx)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+	bool is_ns_mode = test_bit(FEAT_OP_NS, spanel->feat);
+
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0xF9, 0x95);
+	/* DBV setting */
+	EXYNOS_DCS_BUF_ADD(ctx, 0x95, 0x00, 0x40, 0x0C, 0x01, 0x90, 0x33, 0x06, 0x60,
+				0xCC, 0x11, 0x92, 0x7F);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x71, 0xC6, 0x00, 0x00, 0x19);
+	/* 120Hz base (HS) offset */
+	EXYNOS_DCS_BUF_ADD(ctx, 0x6C, 0x9C, 0x9F, 0x59, 0x58, 0x50, 0x2F, 0x2B, 0x2E);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x71, 0xC6, 0x00, 0x00, 0x6A);
+	/* 60Hz base (NS) offset */
+	EXYNOS_DCS_BUF_ADD(ctx, 0x6C, 0xA0, 0xA7, 0x57, 0x5C, 0x52, 0x37, 0x37, 0x40);
+
+	/* Target frequency */
+	EXYNOS_DCS_BUF_ADD(ctx, 0x60, is_ns_mode ? 0x18 : 0x00);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, freq_update);
+	/* Opposite setting of target frequency */
+	EXYNOS_DCS_BUF_ADD(ctx, 0x60, is_ns_mode ? 0x00 : 0x18);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, freq_update);
+	/* Target frequency */
+	EXYNOS_DCS_BUF_ADD(ctx, 0x60, is_ns_mode ? 0x18 : 0x00);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, freq_update);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+}
+
 static int hk3_enable(struct drm_panel *panel)
 {
 	struct exynos_panel *ctx = container_of(panel, struct exynos_panel, panel);
@@ -871,6 +900,8 @@ static int hk3_enable(struct drm_panel *panel)
 	if (needs_reset) {
 		EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 120, MIPI_DCS_EXIT_SLEEP_MODE);
 		exynos_panel_send_cmd_set(ctx, &hk3_init_cmd_set);
+		if (ctx->panel_rev == PANEL_REV_PROTO1)
+			hk3_lhbm_luminance_opr_setting(ctx);
 	}
 
 	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
@@ -1345,6 +1376,9 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &hk3_init_cmd_set, "init");
 	debugfs_create_bool("force_changeable_te", 0644, ctx->debugfs_entry,
 				&spanel->force_changeable_te);
+
+	if (ctx->panel_rev == PANEL_REV_PROTO1)
+		hk3_lhbm_luminance_opr_setting(ctx);
 }
 
 static int hk3_panel_probe(struct mipi_dsi_device *dsi)
