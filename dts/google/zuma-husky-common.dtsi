@@ -13,3 +13,4 @@
 #include "zuma-husky-touch.dtsi"
 #include "zuma-shusky-haptics.dtsi"
 #include "zuma-ripcurrent-uwb.dtsi"
+#include "zuma-shusky-thermal.dtsi"
