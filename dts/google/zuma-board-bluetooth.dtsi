@@ -37,6 +37,17 @@
 	};
 };
 
+&pinctrl_12 {
+	bt_ble_dbo_le: bt-ble-dbo-le {
+		samsung,pins ="gpp24-3";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_UP>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
+		samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
+		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
+	};
+};
+
 &serial_18 {
 	status = "okay";
 };
@@ -44,11 +55,12 @@
 &odm {
 	btbcm: btbcm {
 		compatible = "goog,nitrous";
-		pinctrl-0 = <&bt_reg_on &bt_dev_wake &bt_host_wake>;
+		pinctrl-0 = <&bt_reg_on &bt_dev_wake &bt_host_wake &bt_ble_dbo_le>;
 		pinctrl-names = "default";
 		shutdown-gpios = <&gpn8 0 GPIO_ACTIVE_HIGH>;
 		host-wakeup-gpios = <&gpn6 0 GPIO_ACTIVE_HIGH>;
 		device-wakeup-gpios = <&gpn9 0 GPIO_ACTIVE_HIGH>;
+		bt-ble-dbo-le-gpios =<&gpp24 3 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 	};
 };
