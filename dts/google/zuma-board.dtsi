@@ -14,6 +14,7 @@
 #include "zuma-board-ese.dtsi"
 #include "zuma-board-nfc.dtsi"
 #include "zuma-board-gps.dtsi"
+#include "zuma-board-udfps.dtsi"
 #include "zuma-ripcurrent-camera-pmic.dtsi"
 #include "zuma-shusky-usb.dtsi"
 #include "zuma-shusky-battery.dtsi"
