@@ -37,6 +37,7 @@
 #include "zuma-ripcurrent-uwb.dtsi"
 #include "zuma-ripcurrent-thermal.dtsi"
 #include "zuma-ripcurrent-sbbm.dtsi"
+#include "zuma-ripcurrent-bcl.dtsi"
 
 / {
 	board_id = <0x40101>;
