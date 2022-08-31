@@ -8,14 +8,14 @@
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/samsung.h>
-#include <dt-bindings/pinctrl/gs101.h>
+#include <dt-bindings/pinctrl/zuma.h>
 
 &pinctrl_1 {
 	bt_reg_on: bt-reg-on {
 		samsung,pins ="gpn8-0";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_2_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 		samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
 		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_NONE>;
 	};
@@ -23,7 +23,7 @@
 		samsung,pins ="gpn9-0";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_2_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 		samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
 		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
 	};
@@ -31,7 +31,7 @@
 		samsung,pins ="gpn6-0";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_F>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_DOWN>;
-		samsung,pin-drv = <GS101_PIN_DRV_2_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 		samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
 		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
 	};

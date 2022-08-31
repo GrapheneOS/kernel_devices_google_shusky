@@ -9,7 +9,7 @@
 /plugin/;
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
-#include <dt-bindings/pinctrl/gs101.h>
+#include <dt-bindings/pinctrl/zuma.h>
 #include <dt-bindings/pinctrl/samsung.h>
 
 #include "../google-dts-base/zuma-common.dtsi"

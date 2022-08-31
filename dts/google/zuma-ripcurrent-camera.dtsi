@@ -64,7 +64,7 @@
 		samsung,pins = "gpp2-0", "gpp2-1";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_2_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 	};
 
 	hsi2c2_bus: hsi2c2-bus {
@@ -75,7 +75,7 @@
 		samsung,pins = "gpp4-0", "gpp4-1";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_2_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 	};
 
 	hsi2c3_bus: hsi2c3-bus {
@@ -86,7 +86,7 @@
 		samsung,pins = "gpp6-0", "gpp6-1";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_2_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 	};
 
 	hsi2c4_bus: hsi2c4-bus {
@@ -97,20 +97,20 @@
 		samsung,pins = "gpp8-0", "gpp8-1";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_2_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 	};
 
 	sensor_mclk1_out: sensor-mclk1-out {
-		samsung,pin-drv = <GS101_PIN_DRV_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
 	};
 	sensor_mclk1_fn: sensor-mclk1-fn {
-		samsung,pin-drv = <GS101_PIN_DRV_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
 	};
 	sensor_mclk4_out: sensor-mclk4-out {
-		samsung,pin-drv = <GS101_PIN_DRV_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
 	};
 	sensor_mclk4_fn: sensor-mclk4-fn {
-		samsung,pin-drv = <GS101_PIN_DRV_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
 	};
 };
 

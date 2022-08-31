@@ -137,14 +137,14 @@
 		samsung,pins = "gpn1-0";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
 	};
 
 	cs35l41_cs3: cs35l41-cs3 {
 		samsung,pins = "gpn2-0";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-		samsung,pin-drv = <GS101_PIN_DRV_5_MA>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
 	};
 };
 
