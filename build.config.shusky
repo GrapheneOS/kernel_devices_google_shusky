@@ -51,6 +51,7 @@ function modify_vendor_ramdisk() {
 EXT_MODULES+="
 private/google-modules/bms/misc
 private/google-modules/soc/gs
+private/google-modules/amplifiers/audiometrics
 private/google-modules/aoc
 private/google-modules/aoc/alsa
 private/google-modules/amplifiers/cs35l41
