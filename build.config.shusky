@@ -29,6 +29,8 @@ google-dts-base/zuma-a0.dtb
 google/zuma-ripcurrent.dtbo
 google/zuma-husky-proto1.dtbo
 google/zuma-husky-proto1_1.dtbo
+google/zuma-shiba-proto1.dtbo
+google/zuma-shiba-proto1_1.dtbo
 "
 
 # Concatenate vendor_kernel_boot_modules.zuma (platform common) and vendor_kernel_boot_modules.shusky (device specified) into one file
