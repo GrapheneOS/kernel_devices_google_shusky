@@ -8,6 +8,13 @@
 
 #include "../google-dts-base/zuma-fts-touch.dtsi"
 
+&spi_20 {
+	status = "okay";
+	dma-mode;
+	dmas = <&pdma1 18 &pdma1 19>;
+	swap-mode = <1>;
+};
+
 &spitouch {
 	st,dchip_id = /bits/ 8 <0x36 0x40>;
 	st,max-coords = <1343 2991>;
