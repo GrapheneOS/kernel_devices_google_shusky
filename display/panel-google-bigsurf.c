@@ -498,8 +498,9 @@ static const struct drm_dsc_config bigsurf_dsc_cfg = {
 
 static const struct exynos_panel_mode bigsurf_modes[] = {
 	{
-		/* 1440x3120 @ 60Hz */
+		/* 1080x2400 @ 60Hz */
 		.mode = {
+			.name = "1080x2400x60",
 			.clock = 168498,
 			.hdisplay = 1080,
 			.hsync_start = 1080 + 32, // add hfp
@@ -516,6 +517,7 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
+			.te_usec = 8545,
 			.bpc = 8,
 			BIGSURF_DSC_CONFIG,
 			.underrun_param = &underrun_param,
@@ -526,8 +528,9 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		},
 	},
 	{
-		/* 1440x3120 @ 120Hz */
+		/* 1080x2400 @ 120Hz */
 		.mode = {
+			.name = "1080x2400x120",
 			.clock = 336996,
 			.hdisplay = 1080,
 			.hsync_start = 1080 + 32, // add hfp
@@ -544,6 +547,7 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
+			.te_usec = 202,
 			.bpc = 8,
 			BIGSURF_DSC_CONFIG,
 			.underrun_param = &underrun_param,
