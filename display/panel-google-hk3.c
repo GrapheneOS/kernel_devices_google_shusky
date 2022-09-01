@@ -40,6 +40,52 @@ enum hk3_panel_feature {
 };
 
 /**
+ * enum hk3_lhbm_brt - local hbm brightness
+ * @LHBM_R_COARSE: red coarse
+ * @LHBM_GB_COARSE: green and blue coarse
+ * @LHBM_R_FINE: red fine
+ * @LHBM_G_FINE: green fine
+ * @LHBM_B_FINE: blue fine
+ * @LHBM_BRT_LEN: local hbm brightness array length
+ */
+enum hk3_lhbm_brt {
+	LHBM_R_COARSE = 0,
+	LHBM_GB_COARSE,
+	LHBM_R_FINE,
+	LHBM_G_FINE,
+	LHBM_B_FINE,
+	LHBM_BRT_LEN
+};
+#define LHBM_BRT_CMD_LEN (LHBM_BRT_LEN + 1)
+
+/**
+ * enum hk3_lhbm_brt_overdrive_group - lhbm brightness overdrive group number
+ * @LHBM_OVERDRIVE_GRP_0_NIT: group number for 0 nit
+ * @LHBM_OVERDRIVE_GRP_6_NIT: group number for 0-6 nits
+ * @LHBM_OVERDRIVE_GRP_50_NIT: group number for 6-50 nits
+ * @LHBM_OVERDRIVE_GRP_300_NIT: group number for 50-300 nits
+ * @LHBM_OVERDRIVE_GRP_MAX: maximum group number
+ */
+enum hk3_lhbm_brt_overdrive_group {
+	LHBM_OVERDRIVE_GRP_0_NIT = 0,
+	LHBM_OVERDRIVE_GRP_6_NIT,
+	LHBM_OVERDRIVE_GRP_50_NIT,
+	LHBM_OVERDRIVE_GRP_300_NIT,
+	LHBM_OVERDRIVE_GRP_MAX
+};
+
+struct hk3_lhbm_ctl {
+	/** @brt_normal: normal LHBM brightness parameters */
+	u8 brt_normal[LHBM_BRT_LEN];
+	/** @brt_overdrive: overdrive LHBM brightness parameters */
+	u8 brt_overdrive[LHBM_OVERDRIVE_GRP_MAX][LHBM_BRT_LEN];
+	/** @overdrived: whether LHBM is overdrived */
+	bool overdrived;
+	/** @hist_roi_configured: whether LHBM histogram configuration is done */
+	bool hist_roi_configured;
+};
+
+/**
  * struct hk3_panel - panel specific runtime info
  *
  * This struct maintains hk3 panel specific runtime info, any fixed details about panel should
@@ -73,6 +119,9 @@ struct hk3_panel {
 	bool hw_za_enabled;
 	/** @force_za_off: force to turn off zonal attenuation */
 	bool force_za_off;
+	/** @lhbm_ctl: lhbm brightness control */
+	struct hk3_lhbm_ctl lhbm_ctl;
+
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -123,6 +172,8 @@ static const unsigned char FHD_PPS_SETTING[DSC_PPS_SIZE] = {
 static const u8 unlock_cmd_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 lock_cmd_f0[]   = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
+static const u8 lhbm_brightness_index[] = { 0xB0, 0x03, 0x21, 0x95 };
+static const u8 lhbm_brightness_reg = 0x95;
 
 static const struct exynos_dsi_cmd hk3_lp_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
@@ -774,12 +825,42 @@ static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 	return true;
 }
 
+static void hk3_update_lhbm_hist_config(struct exynos_panel *ctx)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+	struct hk3_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	const struct drm_display_mode *mode;
+	int d = 766, r = 115;
+
+	if (ctl->hist_roi_configured)
+		return;
+
+	if (!pmode) {
+		dev_err(ctx->dev, "no current mode set\n");
+		return;
+	}
+	mode = &pmode->mode;
+	if (mode->hdisplay == 1008) {
+		d = 575;
+		r = 87;
+	}
+	if (!exynos_drm_connector_set_lhbm_hist(&ctx->exynos_connector,
+		mode->hdisplay, mode->vdisplay, d, r)) {
+		ctl->hist_roi_configured = true;
+		dev_info(ctx->dev, "configure lhbm hist: %d %d %d %d\n",
+			mode->hdisplay, mode->vdisplay, d, r);
+	}
+}
+
 static int hk3_atomic_check(struct exynos_panel *ctx, struct drm_atomic_state *state)
 {
 	struct drm_connector *conn = &ctx->exynos_connector.base;
 	struct drm_connector_state *new_conn_state = drm_atomic_get_new_connector_state(state, conn);
 	struct drm_crtc_state *old_crtc_state, *new_crtc_state;
 	struct hk3_panel *spanel = to_spanel(ctx);
+
+	hk3_update_lhbm_hist_config(ctx);
 
 	if (!ctx->current_mode || drm_mode_vrefresh(&ctx->current_mode->mode) == 120 ||
 	    !new_conn_state || !new_conn_state->crtc)
@@ -1066,6 +1147,7 @@ static int hk3_enable(struct drm_panel *panel)
 	struct exynos_panel *ctx = container_of(panel, struct exynos_panel, panel);
 	const struct exynos_panel_mode *pmode = ctx->current_mode;
 	const struct drm_display_mode *mode;
+	struct hk3_panel *spanel = to_spanel(ctx);
 	const bool needs_reset = !is_panel_enabled(ctx);
 	bool is_fhd;
 
@@ -1105,6 +1187,7 @@ static int hk3_enable(struct drm_panel *panel)
 	else if (needs_reset || (ctx->panel_state == PANEL_STATE_BLANK))
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
+	spanel->lhbm_ctl.hist_roi_configured = false;
 	return 0;
 }
 
@@ -1243,6 +1326,65 @@ static void hk3_set_dimming_on(struct exynos_panel *ctx,
 	hk3_write_display_mode(ctx, &pmode->mode);
 }
 
+static void hk3_set_local_hbm_brightness(struct exynos_panel *ctx, bool is_first_stage)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+	struct hk3_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	const u8 *brt;
+	enum hk3_lhbm_brt_overdrive_group group = LHBM_OVERDRIVE_GRP_MAX;
+	static u8 cmd[LHBM_BRT_CMD_LEN];
+	int i;
+
+	dev_info(ctx->dev, "set LHBM brightness at %s stage\n", is_first_stage ? "1st" : "2nd");
+	if (is_first_stage) {
+		u32 gray = exynos_drm_connector_get_lhbm_gray_level(&ctx->exynos_connector);
+		u32 dbv = exynos_panel_get_brightness(ctx);
+		u32 normal_dbv_max = ctx->desc->brt_capability->normal.level.max;
+		u32 normal_nit_max = ctx->desc->brt_capability->normal.nits.max;
+		u32 luma = 0;
+
+		if (gray < 15) {
+			group = LHBM_OVERDRIVE_GRP_0_NIT;
+		} else {
+			if (dbv <= normal_dbv_max)
+				luma = panel_cmn_calc_gamma_2_2_luminance(dbv, normal_dbv_max,
+				normal_nit_max);
+			else
+				luma = panel_cmn_calc_linear_luminance(dbv, 700, -1271);
+			luma = panel_cmn_calc_gamma_2_2_luminance(gray, 255, luma);
+
+			if (luma < 6)
+				group = LHBM_OVERDRIVE_GRP_6_NIT;
+			else if (luma < 50)
+				group = LHBM_OVERDRIVE_GRP_50_NIT;
+			else if (luma < 300)
+				group = LHBM_OVERDRIVE_GRP_300_NIT;
+			else
+				group = LHBM_OVERDRIVE_GRP_MAX;
+		}
+		dev_dbg(ctx->dev, "check LHBM overdrive condition | gray=%u dbv=%u luma=%u\n",
+			gray, dbv, luma);
+	}
+
+	if (group < LHBM_OVERDRIVE_GRP_MAX) {
+		brt = ctl->brt_overdrive[group];
+		ctl->overdrived = true;
+	} else {
+		brt = ctl->brt_normal;
+		ctl->overdrived = false;
+	}
+	cmd[0] = lhbm_brightness_reg;
+	for (i = 0; i < LHBM_BRT_LEN; i++)
+		cmd[i+1] = brt[i];
+	dev_dbg(ctx->dev, "set %s brightness: [%d] %*ph\n",
+		ctl->overdrived ? "overdrive" : "normal",
+		ctl->overdrived ? group : -1, LHBM_BRT_LEN, brt);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, lhbm_brightness_index);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, cmd);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+}
+
 static void hk3_set_local_hbm_mode(struct exynos_panel *ctx,
 				 bool local_hbm_en)
 {
@@ -1250,6 +1392,18 @@ static void hk3_set_local_hbm_mode(struct exynos_panel *ctx,
 
 	/* TODO: LHBM Position & Size */
 	hk3_write_display_mode(ctx, &pmode->mode);
+
+	if (local_hbm_en)
+		hk3_set_local_hbm_brightness(ctx, true);
+
+}
+
+static void hk3_set_local_hbm_mode_post(struct exynos_panel *ctx)
+{
+	const struct hk3_panel *spanel = to_spanel(ctx);
+
+	if (spanel->lhbm_ctl.overdrived)
+		hk3_set_local_hbm_brightness(ctx, false);
 }
 
 static void hk3_mode_set(struct exynos_panel *ctx,
@@ -1663,6 +1817,103 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 	},
 };
 
+static void hk3_calc_lhbm_od_brightness(u8 n_fine, u8 n_coarse,
+	u8 *o_fine, u8 *o_coarse,
+	u8 fine_offset_0, u8 fine_offset_1,
+	u8 coarse_offset_0, u8 coarse_offset_1)
+{
+	if (((int)n_fine + (int)fine_offset_0) <= 0xFF) {
+		*o_coarse = n_coarse + coarse_offset_0;
+		*o_fine = n_fine + fine_offset_0;
+	} else {
+		*o_coarse = n_coarse + coarse_offset_1;
+		*o_fine = n_fine - fine_offset_1;
+	}
+}
+
+static void hk3_lhbm_brightness_init(struct exynos_panel *ctx)
+{
+	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
+	struct hk3_panel *spanel = to_spanel(ctx);
+	struct hk3_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	int ret;
+	u8 g_coarse, b_coarse;
+	u8 *p_norm = ctl->brt_normal;
+	u8 *p_over;
+	enum hk3_lhbm_brt_overdrive_group grp;
+
+	EXYNOS_DCS_WRITE_TABLE(ctx, unlock_cmd_f0);
+	EXYNOS_DCS_WRITE_TABLE(ctx, lhbm_brightness_index);
+	ret = mipi_dsi_dcs_read(dsi, lhbm_brightness_reg, p_norm, LHBM_BRT_LEN);
+	EXYNOS_DCS_WRITE_TABLE(ctx, lock_cmd_f0);
+	if (ret != LHBM_BRT_LEN) {
+		dev_err(ctx->dev, "failed to read lhbm brightness ret=%d\n", ret);
+		return;
+	}
+	dev_dbg(ctx->dev, "lhbm normal brightness: %*ph\n", LHBM_BRT_LEN, p_norm);
+
+	/* 0 nit */
+	grp = LHBM_OVERDRIVE_GRP_0_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x00, 0x00, 0x01, 0x01);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x00, 0x00, 0x10, 0x10);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0x5C, 0x79, 0x01, 0x02);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	/* 0 - 6 nits */
+	grp = LHBM_OVERDRIVE_GRP_6_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x63, 0x7A, 0x00, 0x01);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x70, 0x80, 0x00, 0x10);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0x90, 0x43, 0x00, 0x01);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	/* 6 - 100 nits */
+	grp = LHBM_OVERDRIVE_GRP_50_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x45, 0x8F, 0x00, 0x01);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x55, 0x98, 0x00, 0x10);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0x75, 0x58, 0x00, 0x01);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	/* 100 - 300 nits */
+	grp = LHBM_OVERDRIVE_GRP_300_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x44, 0xA2, 0x00, 0x01);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x41, 0xAC, 0x00, 0x10);
+	hk3_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0x55, 0x78, 0x00, 0x01);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	for (grp = 0; grp < LHBM_OVERDRIVE_GRP_MAX; grp++) {
+		dev_dbg(ctx->dev, "lhbm overdrive brightness[%d]: %*ph\n",
+			grp, LHBM_BRT_LEN, ctl->brt_overdrive[grp]);
+	}
+}
+
 static void hk3_panel_init(struct exynos_panel *ctx)
 {
 	struct dentry *csroot = ctx->debugfs_cmdset_entry;
@@ -1679,6 +1930,7 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 #ifdef PANEL_FACTORY_BUILD
 	ctx->panel_idle_enabled = false;
 #endif
+	hk3_lhbm_brightness_init(ctx);
 }
 
 static int hk3_panel_probe(struct mipi_dsi_device *dsi)
@@ -1713,6 +1965,7 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.set_hbm_mode = hk3_set_hbm_mode,
 	.set_dimming_on = hk3_set_dimming_on,
 	.set_local_hbm_mode = hk3_set_local_hbm_mode,
+	.set_local_hbm_mode_post = hk3_set_local_hbm_mode_post,
 	.is_mode_seamless = hk3_is_mode_seamless,
 	.mode_set = hk3_mode_set,
 	.panel_init = hk3_panel_init,
@@ -1782,6 +2035,8 @@ const struct exynos_panel_desc google_hk3 = {
 	.no_lhbm_rr_constraints = true,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
+	.lhbm_effective_delay_frames = 1,
+	.lhbm_post_cmd_delay_frames = 1,
 	.reset_timing_ms = {1, 1, 5},
 	.reg_ctrl_enable = {
 		{PANEL_REG_ID_VDDI, 1},
