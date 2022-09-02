@@ -13,6 +13,7 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 	status = "okay";
+	swap-mode = <1>;
 
 	bcm4775@0 {
 		compatible = "ssp-spi,bcm4775";
