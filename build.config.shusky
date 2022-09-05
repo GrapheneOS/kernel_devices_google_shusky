@@ -61,6 +61,7 @@ private/google-modules/aoc/usb
 private/google-modules/amplifiers/cs35l41
 private/google-modules/amplifiers/cs40l26
 private/google-modules/bms
+private/google-modules/hdcp/samsung
 private/google-modules/display
 private/devices/google/shusky/display
 private/google-modules/edgetpu/rio/drivers/edgetpu
