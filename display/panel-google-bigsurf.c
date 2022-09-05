@@ -34,6 +34,7 @@ struct bigsurf_panel {
 static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
 	/* enter AOD */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_ENTER_IDLE_MODE),
+	EXYNOS_DSI_CMD_SEQ(0x5A, 0x00),
 };
 static DEFINE_EXYNOS_CMD_SET(bigsurf_lp);
 
@@ -43,14 +44,12 @@ static const struct exynos_dsi_cmd bigsurf_lp_off_cmds[] = {
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_low_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(0x5A, 0x00),
 	/* 10 nit */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
 					0x00, 0x00, 0x00, 0x00, 0x03, 0x33),
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(0x5A, 0x00),
 	/* 50 nit */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
 					0x00, 0x00, 0x00, 0x00, 0x0F, 0xFE),
@@ -145,6 +144,8 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xF9, 0x04),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x1E),
 	EXYNOS_DSI_CMD_SEQ(0xFB, 0x0F),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0D),
+	EXYNOS_DSI_CMD_SEQ(0xFB, 0x80),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0F),
 	EXYNOS_DSI_CMD_SEQ(0xF5, 0x20),
 	/* CMD3, Page2 */
@@ -162,7 +163,7 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_SCANLINE, 0x00, 0x00),
 	/* b/241726710, long write 0x35 as a WA */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_ON, 0x00, 0x20),
-	EXYNOS_DSI_CMD_SEQ(0x5A, 0x01),
+	EXYNOS_DSI_CMD_SEQ(0x5A, 0x04),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x20),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_COLUMN_ADDRESS, 0x00, 0x00, 0x04, 0x37),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_PAGE_ADDRESS, 0x00, 0x00, 0x09, 0x5F),
@@ -281,7 +282,7 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 
 	/* exit AOD */
 	EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_EXIT_IDLE_MODE);
-	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x5A, 0x01);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x5A, 0x04);
 
 	bigsurf_change_frequency(ctx, pmode);
 
