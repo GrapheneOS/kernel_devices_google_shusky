@@ -32,6 +32,8 @@ struct bigsurf_panel {
 #define to_spanel(ctx) container_of(ctx, struct bigsurf_panel, base)
 
 static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
+	/* disable dimming */
+	EXYNOS_DSI_CMD_SEQ(0x53, 0x20),
 	/* enter AOD */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_ENTER_IDLE_MODE),
 	EXYNOS_DSI_CMD_SEQ(0x5A, 0x00),
@@ -274,6 +276,22 @@ static void bigsurf_change_frequency(struct exynos_panel *ctx,
 	dev_dbg(ctx->dev, "%s: change to %uhz\n", __func__, vrefresh);
 }
 
+static void bigsurf_set_dimming_on(struct exynos_panel *ctx,
+				 bool dimming_on)
+{
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+
+	if (pmode->exynos_mode.is_lp_mode) {
+		dev_warn(ctx->dev, "in lp mode, skip to update\n");
+		return;
+	}
+
+	ctx->dimming_on = dimming_on;
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
+					ctx->dimming_on ? 0x28 : 0x20);
+	dev_dbg(ctx->dev, "%s dimming_on=%d\n", __func__, dimming_on);
+}
+
 static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 				  const struct exynos_panel_mode *pmode)
 {
@@ -282,7 +300,9 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 
 	/* exit AOD */
 	EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_EXIT_IDLE_MODE);
-	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x5A, 0x04);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x5A, 0x04);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
+					ctx->dimming_on ? 0x28 : 0x20);
 
 	bigsurf_change_frequency(ctx, pmode);
 
@@ -428,15 +448,6 @@ static void bigsurf_get_panel_rev(struct exynos_panel *ctx, u32 id)
 	const u8 sub = (build_code & 0x0C) >> 2;
 
 	exynos_panel_get_panel_rev(ctx, main | sub);
-}
-
-static void bigsurf_set_dimming_on(struct exynos_panel *ctx,
-				 bool dimming_on)
-{
-	ctx->dimming_on = dimming_on;
-	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
-					ctx->dimming_on ? 0x28 : 0x20);
-	dev_dbg(ctx->dev, "%s dimming_on=%d\n", __func__, dimming_on);
 }
 
 static int bigsurf_read_id(struct exynos_panel *ctx)
