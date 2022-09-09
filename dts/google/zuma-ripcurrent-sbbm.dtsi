@@ -18,11 +18,12 @@
 		__overlay__ {
 			sbb_mux: sbb-mux {
 				compatible = "google,sbb-mux";
-				gpios = <&gpp10 2 0>, <&gpp0 0 0>, <&gpp19 2 0>;
+				gpios = <&gpp10 2 0>, <&gpp16 3 0>, <&gpp0 0 0>, <&gpp19 2 0>;
 				gpio_names = "C1_T0__KIBBLE1_TRIG_0",
+						"C1_T1__KIBBLE1_TRIG_1",
 						"C1_T2__KIBBLE1_TRIG_2",
 						"C1_T3__KIBBLE1_TRIG_3";
-				default_signals = "gp_region_0",
+				default_signals = "gp_region_0", "gp_region_1",
 							"gp_region_2", "gp_region_3";
 			};
 		};
