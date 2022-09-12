@@ -515,7 +515,11 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 	} else { /* manual */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x21);
 		if (test_bit(FEAT_OP_NS, spanel->feat)) {
-			if (vrefresh == 10)
+			if (vrefresh == 1)
+				val = 0x1F;
+			else if (vrefresh == 5)
+				val = 0x1E;
+			else if (vrefresh == 10)
 				val = 0x1B;
 			else if (vrefresh == 30)
 				val = 0x19;
@@ -523,7 +527,11 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 				/* 60Hz */
 				val = 0x18;
 		} else {
-			if (vrefresh == 10)
+			if (vrefresh == 1)
+				val = 0x07;
+			else if (vrefresh == 5)
+				val = 0x06;
+			else if (vrefresh == 10)
 				val = 0x03;
 			else if (vrefresh == 30)
 				val = 0x02;
@@ -1204,6 +1212,76 @@ static const u32 hk3_bl_range[] = {
 
 static const struct exynos_panel_mode hk3_modes[] = {
 #ifdef PANEL_FACTORY_BUILD
+	{
+		/* 1344x2992 @ 1Hz */
+		.mode = {
+			.name = "1344x2992x1",
+			.clock = 4485,
+			.hdisplay = 1344,
+			.hsync_start = 1344 + 80, // add hfp
+			.hsync_end = 1344 + 80 + 24, // add hsa
+			.htotal = 1344 + 80 + 24 + 36, // add hbp
+			.vdisplay = 2992,
+			.vsync_start = 2992 + 12, // add vfp
+			.vsync_end = 2992 + 12 + 4, // add vsa
+			.vtotal = 2992 + 12 + 4 + 14, // add vbp
+			.flags = 0,
+			.width_mm = 70,
+			.height_mm = 155,
+		},
+		.exynos_mode = {
+			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
+			.vblank_usec = 120,
+			.bpc = 8,
+			.dsc = {
+				.enabled = true,
+				.dsc_count = 2,
+				.slice_count = 2,
+				.slice_height = 187,
+			},
+			.underrun_param = &underrun_param,
+		},
+		.te2_timing = {
+			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
+			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
+		},
+		.idle_mode = IDLE_MODE_UNSUPPORTED,
+	},
+	{
+		/* 1344x2992 @ 5Hz */
+		.mode = {
+			.name = "1344x2992x5",
+			.clock = 22423,
+			.hdisplay = 1344,
+			.hsync_start = 1344 + 80, // add hfp
+			.hsync_end = 1344 + 80 + 24, // add hsa
+			.htotal = 1344 + 80 + 24 + 36, // add hbp
+			.vdisplay = 2992,
+			.vsync_start = 2992 + 12, // add vfp
+			.vsync_end = 2992 + 12 + 4, // add vsa
+			.vtotal = 2992 + 12 + 4 + 14, // add vbp
+			.flags = 0,
+			.width_mm = 70,
+			.height_mm = 155,
+		},
+		.exynos_mode = {
+			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
+			.vblank_usec = 120,
+			.bpc = 8,
+			.dsc = {
+				.enabled = true,
+				.dsc_count = 2,
+				.slice_count = 2,
+				.slice_height = 187,
+			},
+			.underrun_param = &underrun_param,
+		},
+		.te2_timing = {
+			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
+			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
+		},
+		.idle_mode = IDLE_MODE_UNSUPPORTED,
+	},
 	{
 		/* 1344x2992 @ 10Hz */
 		.mode = {
