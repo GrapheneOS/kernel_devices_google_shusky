@@ -169,7 +169,7 @@
 	cs35l41_1: cs35l41@0 {
 		#sound-dai-cells = <1>;
 		compatible = "cirrus,cs35l41";
-		spi-max-frequency = <25000000>;
+		spi-max-frequency = <10000000>;
 		reg = <0>;
 
 		status = "okay";
@@ -210,7 +210,7 @@
 		#sound-dai-cells = <1>;
 		sound-name-prefix = "R";
 		compatible = "cirrus,cs35l41";
-		spi-max-frequency = <25000000>;
+		spi-max-frequency = <10000000>;
 		reg = <1>;
 
 		status = "okay";
@@ -251,7 +251,7 @@
 		#sound-dai-cells = <1>;
 		sound-name-prefix = "E";
 		compatible = "cirrus,cs35l41";
-		spi-max-frequency = <25000000>;
+		spi-max-frequency = <10000000>;
 		reg = <2>;
 
 		status = "okay";
