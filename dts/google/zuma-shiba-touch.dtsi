@@ -35,6 +35,15 @@
 	goodix,udfps-y = <1717>;
 	goodix,sleep-enable;
 
+	goodix,panel_map = <&google_bigsurf 0>,
+			<&google_shoreline 1>;
+
+	goodix,firmware_names = "goodix_firmware.bin",
+			"goodix_firmware.bin";
+
+	goodix,config_names = "goodix_cfg_group_bigsurf.bin",
+			"goodix_cfg_group_shoreline.bin";
+
 	goog,touch_offload_id = /bits/ 8 <'s' 'b' '3' '0'>;
 	goog,display-resolution = /bits/ 16 <1080 2400>;
 	goog,channel-num = /bits/ 16 <16 36>;
