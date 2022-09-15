@@ -13,7 +13,7 @@
 		compatible = "google,bigsurf";
 		label = "google-bigsurf";
 	};
-	panel@2 {
+	google_shoreline: panel@2 {
 		compatible = "google,shoreline";
 		label = "google-shoreline";
 		channel = <0>;
