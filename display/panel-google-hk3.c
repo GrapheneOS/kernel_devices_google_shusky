@@ -1171,7 +1171,7 @@ static int hk3_set_op_hz(struct exynos_panel *ctx, unsigned int hz)
 	struct hk3_panel *spanel = to_spanel(ctx);
 	u32 vrefresh = drm_mode_vrefresh(&ctx->current_mode->mode);
 
-	if (vrefresh > hz) {
+	if (vrefresh > hz || (hz != 60 && hz != 120)) {
 		dev_err(ctx->dev, "invalid op_hz=%d for vrefresh=%d\n",
 			hz, vrefresh);
 		return -EINVAL;
@@ -1182,8 +1182,12 @@ static int hk3_set_op_hz(struct exynos_panel *ctx, unsigned int hz)
 		set_bit(FEAT_OP_NS, spanel->feat);
 	else
 		clear_bit(FEAT_OP_NS, spanel->feat);
-	hk3_update_panel_feat(ctx, NULL, false);
-	dev_info(ctx->dev, "set op_hz at %d\n", hz);
+
+	if (is_panel_active(ctx))
+		hk3_update_panel_feat(ctx, NULL, false);
+	dev_info(ctx->dev, "%s op_hz at %d\n",
+		is_panel_active(ctx) ? "set" : "cache", hz);
+
 	return 0;
 }
 
