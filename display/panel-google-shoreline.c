@@ -78,9 +78,18 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_COLUMN_ADDRESS, 0x00, 0x00, 0x04, 0x37),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_PAGE_ADDRESS, 0x00, 0x00, 0x09, 0x5F),
 
+	/* TE Settings */
+	EXYNOS_DSI_CMD0(test_key_on_f0),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x01, 0xB9), /* global para  */
+	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31), /* TE Select - HS 120Hz/HS 60Hz */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x10, 0xB9), /* Global para */
+	EXYNOS_DSI_CMD_SEQ(0xB9, 0x00, 0x20, 0x00, 0x0C), /* TE Width */
+
+
 	/* Frequency select - 60hz in HS mode */
 	EXYNOS_DSI_CMD_SEQ(0x60, 0x08, 0x00), // 60Hz HS
 	EXYNOS_DSI_CMD0(freq_update),
+	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
 
@@ -111,7 +120,7 @@ static const struct exynos_dsi_cmd shoreline_mode_hs_60_cmds[] = {
 static DEFINE_EXYNOS_CMD_SET(shoreline_mode_hs_60);
 
 static const struct exynos_dsi_cmd shoreline_mode_hs_120_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(0x60, 0x08, 0x00), // 120Hz NS
+	EXYNOS_DSI_CMD_SEQ(0x60, 0x08, 0x00), // 120Hz HS
 	EXYNOS_DSI_CMD0(freq_update), // Freq Update
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_mode_hs_120);
@@ -191,85 +200,20 @@ static void shoreline_lhbm_gamma_write(struct exynos_panel *ctx)
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
-static void shoreline_get_te2_setting(struct exynos_panel_te2_timing *timing,
-				      u8 *setting)
-{
-	u8 delay_low_byte, delay_high_byte;
-	u8 width_low_byte, width_high_byte;
-	u32 rising, falling;
-
-	if (!timing || !setting)
-		return;
-
-	rising = timing->rising_edge;
-	falling = timing->falling_edge;
-
-	delay_low_byte = rising & 0xFF;
-	delay_high_byte = (rising >> 8) & 0xF;
-	width_low_byte = (falling - rising) & 0xFF;
-	width_high_byte = ((falling - rising) >> 8) & 0xF;
-
-	setting[0] = (delay_high_byte << 4) | width_high_byte;
-	setting[1] = delay_low_byte;
-	setting[2] = width_low_byte;
-}
-
 static void shoreline_update_te2(struct exynos_panel *ctx)
 {
-	struct exynos_panel_te2_timing timing;
-	u8 setting[2][4] = {
-		{0xCB, 0x00, 0x00, 0x30}, /* normal 60Hz */
-		{0xCB, 0x00, 0x00, 0x30}, /* normal 120Hz */
+	u8 setting[2][5] = {
+		{0xB9, 0x12, 0xD0, 0x00, 0x40}, /* HS 60Hz */
+		{0xB9, 0x09, 0x60, 0x00, 0x40}, /* HS 120Hz */
 	};
-	u8 lp_setting[4] = {0xCB, 0x00, 0x00, 0x10}; /* lp low/high */
-	int ret, i;
 
 	if (!ctx)
 		return;
 
-	/* normal mode */
-	for (i = 0; i < 2; i++) {
-		timing.rising_edge = ctx->te2.mode_data[i].timing.rising_edge;
-		timing.falling_edge = ctx->te2.mode_data[i].timing.falling_edge;
-
-		shoreline_get_te2_setting(&timing, &setting[i][1]);
-
-		dev_dbg(ctx->dev, "TE2 updated normal %dHz: 0xcb %#02x %#02x %#02x\n",
-			(i == 0) ? 60 : 120,
-			setting[i][1], setting[i][2], setting[i][3]);
-	}
-
-	/* LP mode */
-	if (ctx->current_mode->exynos_mode.is_lp_mode) {
-		ret = exynos_panel_get_current_mode_te2(ctx, &timing);
-		if (!ret)
-			shoreline_get_te2_setting(&timing, &lp_setting[1]);
-		else if (ret == -EAGAIN)
-			dev_dbg(ctx->dev,
-				"Panel is not ready, use default setting\n");
-		else
-			return;
-
-		dev_dbg(ctx->dev, "TE2 updated LP: 0xcb %#02x %#02x %#02x\n",
-			lp_setting[1], lp_setting[2], lp_setting[3]);
-	}
-
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x28, 0xF2); /* global para  */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xF2, 0xCC); /* global para 10bit */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x26, 0xF2); /* global para */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xF2, 0x03, 0x14); /* TE2 on */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0xAF, 0xCB); /* global para */
-	EXYNOS_DCS_WRITE_TABLE(ctx, setting[0]); /* 60Hz control */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x01, 0x2F, 0xCB); /* global para */
-	EXYNOS_DCS_WRITE_TABLE(ctx, setting[1]); /* 90Hz control */
-	if (ctx->current_mode->exynos_mode.is_lp_mode) {
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x01, 0xAF, 0xCB); /* global para */
-		EXYNOS_DCS_WRITE_TABLE(ctx, lp_setting); /* HLPM mode */
-	}
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x28, 0xF2); /* global para */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xF2, 0xC4); /* global para 8bit */
-	EXYNOS_DCS_WRITE_TABLE(ctx, freq_update); /* LTPS update */
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x26, 0xB9); /* global para */
+	EXYNOS_DCS_WRITE_TABLE(ctx, setting[0]); /* TE2 Width - 60HZ HS */
+	EXYNOS_DCS_WRITE_TABLE(ctx, setting[1]); /* TE2 Width - 120HZ HS */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
