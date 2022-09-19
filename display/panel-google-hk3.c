@@ -65,6 +65,8 @@ struct hk3_panel {
 	u32 auto_mode_vrefresh;
 	/** @force_changeable_te: force changeable TE (instead of fixed) during early exit */
 	bool force_changeable_te;
+	/** @force_changeable_te2: force changeable TE (instead of fixed) for monitoring refresh rate */
+	bool force_changeable_te2;
 	/** @hw_acl_enabled: whether automatic current limiting is enabled */
 	bool hw_acl_enabled;
 	/** @hw_za_enabled: whether zonal attenuation is enabled */
@@ -181,7 +183,7 @@ static u8 hk3_get_te2_option(struct exynos_panel *ctx)
 {
 	struct hk3_panel *spanel = to_spanel(ctx);
 
-	if (!ctx || !ctx->current_mode)
+	if (!ctx || !ctx->current_mode || spanel->force_changeable_te2)
 		return HK3_TE2_CHANGEABLE;
 
 	if (ctx->current_mode->exynos_mode.is_lp_mode ||
@@ -1562,6 +1564,8 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &hk3_init_cmd_set, "init");
 	debugfs_create_bool("force_changeable_te", 0644, ctx->debugfs_entry,
 				&spanel->force_changeable_te);
+	debugfs_create_bool("force_changeable_te2", 0644, ctx->debugfs_entry,
+				&spanel->force_changeable_te2);
 	debugfs_create_bool("force_za_off", 0644, ctx->debugfs_entry,
 				&spanel->force_za_off);
 }
