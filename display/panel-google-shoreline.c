@@ -84,11 +84,6 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31), /* TE Select - HS 120Hz/HS 60Hz */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x10, 0xB9), /* Global para */
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x00, 0x20, 0x00, 0x0C), /* TE Width */
-
-
-	/* Frequency select - 60hz in HS mode */
-	EXYNOS_DSI_CMD_SEQ(0x60, 0x08, 0x00), // 60Hz HS
-	EXYNOS_DSI_CMD0(freq_update),
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
@@ -104,24 +99,6 @@ static const struct exynos_dsi_cmd shoreline_lhbm_location_cmds[] = {
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_lhbm_location);
-
-static const struct exynos_dsi_cmd shoreline_mode_ns_60_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(0x60, 0x18, 0x00), // 60Hz NS
-	EXYNOS_DSI_CMD0(freq_update), // Freq Update
-};
-static DEFINE_EXYNOS_CMD_SET(shoreline_mode_ns_60);
-
-static const struct exynos_dsi_cmd shoreline_mode_hs_60_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(0x60, 0x08, 0x00), // 60Hz HS
-	EXYNOS_DSI_CMD0(freq_update), // Freq Update
-};
-static DEFINE_EXYNOS_CMD_SET(shoreline_mode_hs_60);
-
-static const struct exynos_dsi_cmd shoreline_mode_hs_120_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(0x60, 0x08, 0x00), // 120Hz HS
-	EXYNOS_DSI_CMD0(freq_update), // Freq Update
-};
-static DEFINE_EXYNOS_CMD_SET(shoreline_mode_hs_120);
 
 #define LHBM_GAMMA_CMD_SIZE 6
 /**
@@ -221,37 +198,12 @@ static void shoreline_change_frequency(struct exynos_panel *ctx,
 	if (!ctx || (vrefresh != 60 && vrefresh != 120))
 		return;
 
+	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0x60, (vrefresh == 120) ? 0x00 : 0x08, 0x00);
 	EXYNOS_DCS_WRITE_TABLE(ctx, freq_update);
+	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 
 	dev_dbg(ctx->dev, "frequency changed to %uhz\n", vrefresh);
-}
-
-static int shoreline_set_op_hz(struct exynos_panel *ctx, unsigned int hz)
-{
-	const unsigned int vrefresh = drm_mode_vrefresh(&ctx->current_mode->mode);
-
-	if ((vrefresh > hz) || ((hz != 60) && (hz != 120))) {
-		dev_err(ctx->dev, "invalid op_hz=%u for vrefresh=%u\n",
-			hz, vrefresh);
-		return -EINVAL;
-	}
-
-	ctx->op_hz = hz;
-	if (ctx->op_hz == 60) {
-		exynos_panel_send_cmd_set(ctx,
-			&shoreline_mode_ns_60_cmd_set);
-	} else {
-		if (vrefresh == 60) {
-			exynos_panel_send_cmd_set(ctx,
-				&shoreline_mode_hs_60_cmd_set);
-		} else {
-			exynos_panel_send_cmd_set(ctx,
-				&shoreline_mode_hs_120_cmd_set);
-		}
-	}
-	dev_info(ctx->dev, "set op_hz at %u\n", hz);
-	return 0;
 }
 
 static void shoreline_update_wrctrld(struct exynos_panel *ctx)
@@ -612,7 +564,6 @@ static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.get_te2_edges = exynos_panel_get_te2_edges,
 	.configure_te2_edges = exynos_panel_configure_te2_edges,
 	.update_te2 = shoreline_update_te2,
-	.set_op_hz = shoreline_set_op_hz,
 	.read_id = shoreline_read_id,
 };
 
