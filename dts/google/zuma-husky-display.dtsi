@@ -12,6 +12,7 @@
 	google_hk3: panel@0 {
 		compatible = "google,hk3";
 		label = "google-hk3";
+		touch = <&spitouch>;
 	};
 };
 
