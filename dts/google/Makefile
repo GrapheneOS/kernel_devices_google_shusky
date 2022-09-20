@@ -13,7 +13,13 @@ shusky_overlays := \
 	zuma-husky-pvt1.dtbo \
 	zuma-husky-mp.dtbo \
 	zuma-shiba-proto1.dtbo \
-	zuma-shiba-proto1_1.dtbo
+	zuma-shiba-proto1-wingboard.dtbo \
+	zuma-shiba-proto1_1.dtbo \
+	zuma-shiba-evt1.dtbo \
+	zuma-shiba-evt1_1.dtbo \
+	zuma-shiba-dvt1.dtbo \
+	zuma-shiba-pvt1.dtbo \
+	zuma-shiba-mp.dtbo
 
 shusky_dtbs := ../google-dts-base/zuma-a0.dtb
 
