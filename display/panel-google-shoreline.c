@@ -567,43 +567,43 @@ static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.read_id = shoreline_read_id,
 };
 
-const struct brightness_capability shoreline_brightness_capability = {
+static const struct brightness_capability shoreline_brightness_capability = {
 	.normal = {
 		.nits = {
 			.min = 2,
-			.max = 500,
+			.max = 800,
 		},
 		.level = {
-			.min = 4,
+			.min = 2,
 			.max = 2047,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 50,
+			.max = 67,
 		},
 	},
 	.hbm = {
 		.nits = {
-			.min = 550,
-			.max = 1000,
+			.min = 800,
+			.max = 1200,
 		},
 		.level = {
 			.min = 2048,
 			.max = 4095,
 		},
 		.percentage = {
-			.min = 50,
+			.min = 67,
 			.max = 100,
 		},
 	},
 };
 
-const struct exynos_panel_desc google_shoreline = {
+static const struct exynos_panel_desc google_shoreline = {
 	.dsc_pps = PPS_SETTING,
 	.dsc_pps_len = ARRAY_SIZE(PPS_SETTING),
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
-	.min_brightness = 4,
+	.min_brightness = 2,
 	.dft_brightness = 1023,
 	.brt_capability = &shoreline_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
