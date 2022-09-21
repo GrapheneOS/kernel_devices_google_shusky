@@ -257,8 +257,8 @@ static void hk3_update_te2(struct exynos_panel *ctx)
 
 static inline bool is_auto_mode_allowed(struct exynos_panel *ctx)
 {
-	/* don't want to enable auto mode/early exit during hbm or dimming on */
-	if (IS_HBM_ON(ctx->hbm_mode) || ctx->dimming_on)
+	/* don't want to enable auto mode/early exit during dimming on */
+	if (ctx->dimming_on)
 		return false;
 
 	if (ctx->idle_delay_ms) {
@@ -280,12 +280,12 @@ static u32 hk3_get_min_idle_vrefresh(struct exynos_panel *ctx,
 	if ((min_idle_vrefresh < 0) || !is_auto_mode_allowed(ctx))
 		return 0;
 
-	if (min_idle_vrefresh <= 10)
+	if (min_idle_vrefresh <= 1)
+		min_idle_vrefresh = 1;
+	else if (min_idle_vrefresh <= 10)
 		min_idle_vrefresh = 10;
 	else if (min_idle_vrefresh <= 30)
 		min_idle_vrefresh = 30;
-	else if (min_idle_vrefresh <= 60)
-		min_idle_vrefresh = 60;
 	else
 		return 0;
 
@@ -448,35 +448,45 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 		} else {
 			/* initial frequency */
 			EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x92, 0xBD);
-			if (vrefresh == 60)
+			if (vrefresh == 60) {
 				val = test_bit(FEAT_HBM, spanel->feat) ? 0x01 : 0x02;
-			else
+			} else {
+				if (vrefresh != 120)
+					dev_warn(ctx->dev, "%s: unsupported init freq %d (hs)\n",
+						 __func__, vrefresh);
+				/* 120Hz */
 				val = 0x00;
+			}
 			EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, val);
 		}
 		/* target frequency */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x12, 0xBD);
 		if (test_bit(FEAT_OP_NS, spanel->feat)) {
-			if (idle_vrefresh == 10) {
-				val = test_bit(FEAT_HBM, spanel->feat) ? 0x0A : 0x14;
-				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, val);
-			} else {
-				/* 30Hz */
+			if (idle_vrefresh == 30) {
 				val = test_bit(FEAT_HBM, spanel->feat) ? 0x02 : 0x04;
-				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, val);
-			}
-		} else {
-			if (idle_vrefresh == 10) {
-				val = test_bit(FEAT_HBM, spanel->feat) ? 0x0B : 0x16;
-				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, val);
-			} else if (idle_vrefresh == 30) {
-				val = test_bit(FEAT_HBM, spanel->feat) ? 0x03 : 0x06;
-				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, val);
+			} else if (idle_vrefresh == 10) {
+				val = test_bit(FEAT_HBM, spanel->feat) ? 0x0A : 0x14;
 			} else {
-				/* 60Hz */
-				val = test_bit(FEAT_HBM, spanel->feat) ? 0x01 : 0x02;
-				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, val);
+				if (idle_vrefresh != 1)
+					dev_warn(ctx->dev, "%s: unsupported target freq %d (ns)\n",
+						 __func__, idle_vrefresh);
+				/* 1Hz */
+				val = test_bit(FEAT_HBM, spanel->feat) ? 0x76 : 0xEC;
 			}
+			EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, val);
+		} else {
+			if (idle_vrefresh == 30) {
+				val = test_bit(FEAT_HBM, spanel->feat) ? 0x03 : 0x06;
+			} else if (idle_vrefresh == 10) {
+				val = test_bit(FEAT_HBM, spanel->feat) ? 0x0B : 0x16;
+			} else {
+				if (idle_vrefresh != 1)
+					dev_warn(ctx->dev, "%s: unsupported target freq %d (hs)\n",
+						 __func__, idle_vrefresh);
+				/* 1Hz */
+				val = test_bit(FEAT_HBM, spanel->feat) ? 0x77 : 0xEE;
+			}
+			EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, val);
 		}
 		/* step setting */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x9E, 0xBD);
@@ -493,58 +503,92 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 		}
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0xAE, 0xBD);
 		if (test_bit(FEAT_OP_NS, spanel->feat)) {
-			if (idle_vrefresh == 10)
-				/* 60Hz -> 10Hz idle */
-				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x01, 0x00, 0x00);
-			else
+			if (idle_vrefresh == 30) {
 				/* 60Hz -> 30Hz idle */
 				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, 0x00);
+			} else if (idle_vrefresh == 10) {
+				/* 60Hz -> 10Hz idle */
+				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x01, 0x00, 0x00);
+			} else {
+				if (idle_vrefresh != 1)
+					dev_warn(ctx->dev, "%s: unsupported freq step to %d (ns)\n",
+						 __func__, idle_vrefresh);
+				/* 60Hz -> 1Hz idle */
+				EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x01, 0x03, 0x00);
+			}
 		} else {
 			if (vrefresh == 60) {
-				if (idle_vrefresh == 10)
-					/* 60Hz -> 10Hz idle */
-					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x01, 0x01, 0x00);
-				else
+				if (idle_vrefresh == 30) {
 					/* 60Hz -> 30Hz idle */
 					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x01, 0x00, 0x00);
+				} else if (idle_vrefresh == 10) {
+					/* 60Hz -> 10Hz idle */
+					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x01, 0x01, 0x00);
+				} else {
+					if (idle_vrefresh != 1)
+						dev_warn(ctx->dev, "%s: unsupported freq step to %d (hs)\n",
+							 __func__, vrefresh);
+					/* 60Hz -> 1Hz idle */
+					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x01, 0x01, 0x03);
+				}
 			} else {
-				if (idle_vrefresh == 10)
+				if (vrefresh != 120)
+					dev_warn(ctx->dev, "%s: unsupported freq step from %d (hs)\n",
+						 __func__, vrefresh);
+				if (idle_vrefresh == 30) {
+					/* 120Hz -> 30Hz idle */
+					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, 0x00);
+				} else if (idle_vrefresh == 10) {
 					/* 120Hz -> 10Hz idle */
 					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x03, 0x00);
-				else
-					/* 120Hz -> 60Hz/30Hz idle */
-					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x00, 0x00);
+				} else {
+					if (idle_vrefresh != 1)
+						dev_warn(ctx->dev, "%s: unsupported freq step to %d (hs)\n",
+						 __func__, idle_vrefresh);
+					/* 120Hz -> 1Hz idle */
+					EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x01, 0x03);
+				}
 			}
 		}
 		EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0xA3);
 	} else { /* manual */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x21);
 		if (test_bit(FEAT_OP_NS, spanel->feat)) {
-			if (vrefresh == 1)
+			if (vrefresh == 1) {
 				val = 0x1F;
-			else if (vrefresh == 5)
+			} else if (vrefresh == 5) {
 				val = 0x1E;
-			else if (vrefresh == 10)
+			} else if (vrefresh == 10) {
 				val = 0x1B;
-			else if (vrefresh == 30)
+			} else if (vrefresh == 30) {
 				val = 0x19;
-			else
+			} else {
+				if (vrefresh != 60)
+					dev_warn(ctx->dev,
+						 "%s: unsupported manual freq %d (ns)\n",
+						 __func__, vrefresh);
 				/* 60Hz */
 				val = 0x18;
+			}
 		} else {
-			if (vrefresh == 1)
+			if (vrefresh == 1) {
 				val = 0x07;
-			else if (vrefresh == 5)
+			} else if (vrefresh == 5) {
 				val = 0x06;
-			else if (vrefresh == 10)
+			} else if (vrefresh == 10) {
 				val = 0x03;
-			else if (vrefresh == 30)
+			} else if (vrefresh == 30) {
 				val = 0x02;
-			else if (vrefresh == 60)
+			} else if (vrefresh == 60) {
 				val = 0x01;
-			else
+			} else {
+				if (vrefresh != 120)
+					dev_warn(ctx->dev,
+						 "%s: unsupported manual freq %d (hs)\n",
+						 __func__, vrefresh);
 				/* 120Hz */
 				val = 0x00;
+			}
 		}
 		EXYNOS_DCS_BUF_ADD(ctx, 0x60, val);
 	}
@@ -1043,20 +1087,21 @@ static int hk3_disable(struct drm_panel *panel)
  * - trigger early exit by command if it's changeable TE, which could result in
  *   fast 120 Hz boost and seeing 120 Hz TE earlier
  */
-static void hk3_update_idle_state(struct exynos_panel *ctx)
+static bool hk3_update_idle_state(struct exynos_panel *ctx)
 {
 	s64 delta_us;
 	struct hk3_panel *spanel = to_spanel(ctx);
+	bool updated = false;
 
 	ctx->panel_idle_vrefresh = 0;
 	if (!test_bit(FEAT_FRAME_AUTO, spanel->feat))
-		return;
+		return false;
 
 	delta_us = ktime_us_delta(ktime_get(), ctx->last_commit_ts);
 	if (delta_us < EARLY_EXIT_THRESHOLD_US) {
 		dev_dbg(ctx->dev, "skip early exit. %lldus since last commit\n",
 			delta_us);
-		return;
+		return false;
 	}
 
 	/* triggering early exit causes a switch to 120hz */
@@ -1070,6 +1115,7 @@ static void hk3_update_idle_state(struct exynos_panel *ctx)
 	if (ctx->idle_delay_ms) {
 		const struct exynos_panel_mode *pmode = ctx->current_mode;
 		hk3_update_refresh_mode(ctx, pmode, 0);
+		updated = true;
 	} else if (spanel->force_changeable_te) {
 		dev_dbg(ctx->dev, "sending early exit out cmd\n");
 		EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
@@ -1078,6 +1124,8 @@ static void hk3_update_idle_state(struct exynos_panel *ctx)
 	}
 
 	DPU_ATRACE_END(__func__);
+
+	return updated;
 }
 
 static void hk3_commit_done(struct exynos_panel *ctx)
@@ -1085,7 +1133,8 @@ static void hk3_commit_done(struct exynos_panel *ctx)
 	if (!ctx->current_mode)
 		return;
 
-	hk3_update_idle_state(ctx);
+	if (hk3_update_idle_state(ctx))
+		hk3_update_te2(ctx);
 
 	hk3_update_za(ctx);
 }
@@ -1418,7 +1467,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
 			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
 		},
-		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
+		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
 	{
 		.mode = {
@@ -1487,7 +1536,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
 			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
 		},
-		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
+		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
 };
 
@@ -1666,7 +1715,7 @@ const struct exynos_panel_desc google_hk3 = {
 	.lp_cmd_set = &hk3_lp_cmd_set,
 	.binned_lp = hk3_binned_lp,
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
-	.is_panel_idle_supported = true,
+	.is_panel_idle_supported = false,
 	.no_lhbm_rr_constraints = true,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
