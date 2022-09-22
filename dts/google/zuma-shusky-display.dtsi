@@ -78,3 +78,11 @@
 		reset-gpios = <&gpp10 0 GPIO_ACTIVE_HIGH>;
 	};
 };
+
+&m_ldo14_reg {
+	/delete-property/ regulator-always-on;
+};
+
+&m_ldo22_reg {
+	/delete-property/ regulator-always-on;
+};
