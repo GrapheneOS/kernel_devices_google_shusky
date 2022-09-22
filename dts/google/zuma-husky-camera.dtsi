@@ -51,8 +51,8 @@
 };
 
 &s_ldo12_reg {
-	regulator-min-microvolt = <1800000>;
-	regulator-max-microvolt = <1800000>;
+	regulator-min-microvolt = <1850000>;
+	regulator-max-microvolt = <1850000>;
 };
 
 &s_ldo26_reg {
