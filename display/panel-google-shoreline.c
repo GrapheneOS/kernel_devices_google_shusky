@@ -98,10 +98,8 @@ static const struct exynos_dsi_cmd shoreline_lhbm_location_cmds[] = {
 
 	/* global para */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x09, 0x6D),
-	/* Circle location */
-	EXYNOS_DSI_CMD_SEQ(0x6D, 0xC7, 0x4C, 0x65),
-	/* Circle Size */
-	EXYNOS_DSI_CMD_SEQ(0x68, 0xC4, 0xB0, 0xFF),
+	/* Size and Location */
+	EXYNOS_DSI_CMD_SEQ(0x6D, 0xC6, 0xE3, 0x65),
 
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
