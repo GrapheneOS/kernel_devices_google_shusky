@@ -663,20 +663,20 @@ const struct brightness_capability bigsurf_brightness_capability = {
 		},
 		.percentage = {
 			.min = 0,
-			.max = 60,
+			.max = 67,
 		},
 	},
 	.hbm = {
 		.nits = {
 			.min = 800,
-			.max = 1000,
+			.max = 1200,
 		},
 		.level = {
 			.min = 3790,
 			.max = 4094,
 		},
 		.percentage = {
-			.min = 60,
+			.min = 67,
 			.max = 100,
 		},
 	},
