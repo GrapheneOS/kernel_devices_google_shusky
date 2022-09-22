@@ -33,6 +33,10 @@ struct bigsurf_panel {
 #define to_spanel(ctx) container_of(ctx, struct bigsurf_panel, base)
 
 static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
+	/* Disable the Black insertion in AoD */
+	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0xC0, 0x44),
+
 	/* disable dimming */
 	EXYNOS_DSI_CMD_SEQ(0x53, 0x20),
 	/* enter AOD */
@@ -121,9 +125,6 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x01),
 	EXYNOS_DSI_CMD_SEQ(0xBE, 0x47),
 
-	/* Disable the Black insertion in AoD */
-	EXYNOS_DSI_CMD_SEQ(0xC0, 0x44),
-
 	/* CMD2, Page1 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x01),
 	/* FFC Off */
@@ -140,6 +141,10 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x05),
 	EXYNOS_DSI_CMD_SEQ(0xC5, 0x15, 0x15, 0x15, 0xDD),
+
+	/* Idle delay frame */
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0E),
+	EXYNOS_DSI_CMD_SEQ(0xD2, 0x00),
 
 	/* CMD2, Page7 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x07),
@@ -274,11 +279,8 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x00, 0x00);
 		}
 	}
-	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
-	EXYNOS_DCS_BUF_ADD(ctx, 0xCC, 0x30);
-	EXYNOS_DCS_BUF_ADD(ctx, 0xCE, 0x01);
-	EXYNOS_DCS_BUF_ADD(ctx, 0xCC, 0x00);
-	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCE, 0x00);
+	/* Empty command is for flush */
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x00);
 }
 
 static void bigsurf_change_frequency(struct exynos_panel *ctx,
@@ -323,6 +325,8 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 		return;
 
 	/* exit AOD */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x54);
 	EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_EXIT_IDLE_MODE);
 	EXYNOS_DCS_BUF_ADD(ctx, 0x5A, 0x04);
 	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
@@ -361,10 +365,15 @@ static int bigsurf_enable(struct drm_panel *panel)
 	bigsurf_change_frequency(ctx, pmode);
 	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
 
-	if (!pmode->exynos_mode.is_lp_mode)
+	if (!pmode->exynos_mode.is_lp_mode) {
+		/* Gamma update setting */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
+		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCC, 0x10);
+		usleep_range(9000, 9100);
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
-	else
+	} else {
 		exynos_panel_set_lp_mode(ctx, pmode);
+	}
 
 	return 0;
 }
