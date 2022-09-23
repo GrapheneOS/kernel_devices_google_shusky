@@ -25,7 +25,7 @@
 
 	repeater_tune2 {
 		tune_name = "usb2_tx_adjust_port1";
-		tune_value = <0x70 0x5d 0x0 0xff>;
+		tune_value = <0x70 0x53 0x0 0xff>;
 	};
 
 	repeater_tune3 {
