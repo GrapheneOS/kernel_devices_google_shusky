@@ -296,35 +296,35 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 		(IS_HBM_ON(exynos_panel->hbm_mode) != IS_HBM_ON(mode));
 	const bool irc_update =
 		(IS_HBM_ON_IRC_OFF(exynos_panel->hbm_mode) != IS_HBM_ON_IRC_OFF(mode));
+	static const u8 cyc[2][6] = {
+		{0xBD, 0x01, 0x01, 0x03, 0x03, 0x03}, /* Normal EM CYC */
+		{0xBD, 0x01, 0x00, 0x01, 0x01, 0x01}, /* HBM EM CYC */
+	};
+
+	if (!hbm_update && !irc_update)
+		return;
 
 	exynos_panel->hbm_mode = mode;
 
+	EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_on_f0);
+
 	if (hbm_update) {
-		if (mode) {
-			EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_on_f0);
-			/* global para */
-			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x28, 0xF2);
-			/* global para 10bit */
-			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xF2, 0xCC);
-			/* global para */
-			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x02, 0x33, 0x65);
-			/* 1 pulse setting */
-			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x65, 0x01);
-			/* global para */
-			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x28, 0xF2);
-			/* global para 8bit */
-			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xF2, 0xC4);
-			EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_off_f0);
-		}
-		shoreline_update_wrctrld(exynos_panel);
+		/* CYC Set */
+		EXYNOS_DCS_WRITE_TABLE(exynos_panel, cyc[IS_HBM_ON(mode)]);
+		/* Update Key */
+		EXYNOS_DCS_WRITE_TABLE(exynos_panel, freq_update);
 	}
 
-	if (irc_update) {
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xF0, 0x5A, 0x5A);
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x03, 0x8F);
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x8F, IS_HBM_ON_IRC_OFF(mode) ? 0x05 : 0x25);
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xF0, 0xA5, 0xA5);
+	if (irc_update && IS_HBM_ON(mode)) {
+		/* Global para */
+		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x01, 0x6A);
+		/* IRC Setting */
+		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x6A, IS_HBM_ON_IRC_OFF(mode) ? 0x01 : 0x21);
 	}
+
+	EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_off_f0);
+	shoreline_update_wrctrld(exynos_panel);
+
 	dev_info(exynos_panel->dev, "hbm_on=%d hbm_ircoff=%d\n", IS_HBM_ON(exynos_panel->hbm_mode),
 		 IS_HBM_ON_IRC_OFF(exynos_panel->hbm_mode));
 }
