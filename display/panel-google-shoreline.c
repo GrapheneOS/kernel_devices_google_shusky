@@ -80,8 +80,7 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 
 	/* TE Settings */
 	EXYNOS_DSI_CMD0(test_key_on_f0),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x01, 0xB9), /* global para  */
-	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31), /* TE Select - HS 120Hz/HS 60Hz */
+	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31, 0x31), /* TE and TE2 Select for HS mode */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x10, 0xB9), /* Global para */
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x00, 0x20, 0x00, 0x0C), /* TE Width */
 	EXYNOS_DSI_CMD0(test_key_off_f0),
