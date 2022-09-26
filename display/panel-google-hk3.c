@@ -1684,14 +1684,18 @@ const struct exynos_panel_desc google_hk3 = {
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.reset_timing_ms = {1, 1, 5},
 	.reg_ctrl_enable = {
-		{PANEL_REG_ID_VDDI, 0},
-		{PANEL_REG_ID_VDDD, 0},
+		{PANEL_REG_ID_VDDI, 1},
 		{PANEL_REG_ID_VCI, 10},
 	},
+	.reg_ctrl_post_enable = {
+		{PANEL_REG_ID_VDDD, 1},
+	},
+	.reg_ctrl_pre_disable = {
+		{PANEL_REG_ID_VDDD, 1},
+	},
 	.reg_ctrl_disable = {
-		{PANEL_REG_ID_VDDD, 0},
-		{PANEL_REG_ID_VDDI, 0},
-		{PANEL_REG_ID_VCI, 0},
+		{PANEL_REG_ID_VCI, 1},
+		{PANEL_REG_ID_VDDI, 1},
 	},
 };
 
