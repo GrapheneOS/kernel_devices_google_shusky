@@ -81,8 +81,6 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	/* TE Settings */
 	EXYNOS_DSI_CMD0(test_key_on_f0),
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31, 0x31), /* TE and TE2 Select for HS mode */
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x10, 0xB9), /* Global para */
-	EXYNOS_DSI_CMD_SEQ(0xB9, 0x00, 0x20, 0x00, 0x0C), /* TE Width */
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
@@ -176,30 +174,37 @@ static void shoreline_lhbm_gamma_write(struct exynos_panel *ctx)
 
 static void shoreline_update_te2(struct exynos_panel *ctx)
 {
-	u8 setting[2][5] = {
+	static const u8 setting[2][5] = {
 		{0xB9, 0x12, 0xD0, 0x00, 0x40}, /* HS 60Hz */
 		{0xB9, 0x09, 0x60, 0x00, 0x40}, /* HS 120Hz */
 	};
+	const unsigned int vrefresh = drm_mode_vrefresh(&ctx->current_mode->mode);
 
 	if (!ctx)
 		return;
 
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x26, 0xB9); /* global para */
-	EXYNOS_DCS_WRITE_TABLE(ctx, setting[0]); /* TE2 Width - 60HZ HS */
-	EXYNOS_DCS_WRITE_TABLE(ctx, setting[1]); /* TE2 Width - 120HZ HS */
+	EXYNOS_DCS_WRITE_TABLE(ctx, setting[(vrefresh == 60) ? 0 : 1]); /* TE2 Width */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
 static void shoreline_change_frequency(struct exynos_panel *ctx,
 				       const unsigned int vrefresh)
 {
+	static const u8 te_setting[2][5] = {
+		{0xB9, 0x09, 0x74, 0x00, 0x0C}, /* HS 60Hz */
+		{0xB9, 0x00, 0x20, 0x00, 0x0C}, /* HS 120Hz */
+	};
+
 	if (!ctx || (vrefresh != 60 && vrefresh != 120))
 		return;
 
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0x60, (vrefresh == 120) ? 0x00 : 0x08, 0x00);
 	EXYNOS_DCS_WRITE_TABLE(ctx, freq_update);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x10, 0xB9); /* global para */
+	EXYNOS_DCS_WRITE_TABLE(ctx, te_setting[(vrefresh == 60) ? 0 : 1]); /* TE Width */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 
 	dev_dbg(ctx->dev, "frequency changed to %uhz\n", vrefresh);
@@ -395,6 +400,7 @@ static void shoreline_panel_init(struct exynos_panel *ctx)
 
 	exynos_panel_debugfs_create_cmdset(ctx, csroot,
 					   &shoreline_init_cmd_set, "init");
+	shoreline_change_frequency(ctx, drm_mode_vrefresh(&ctx->current_mode->mode));
 	shoreline_lhbm_gamma_read(ctx);
 	shoreline_lhbm_gamma_write(ctx);
 }
