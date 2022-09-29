@@ -407,8 +407,6 @@ static void shoreline_panel_init(struct exynos_panel *ctx)
 
 static int shoreline_read_id(struct exynos_panel *ctx)
 {
-	if (ctx->panel_rev < PANEL_REV_EVT1)
-		return exynos_panel_read_id(ctx);
 	return exynos_panel_read_ddic_id(ctx);
 }
 
