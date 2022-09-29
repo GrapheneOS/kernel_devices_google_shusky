@@ -403,6 +403,7 @@ static void shoreline_panel_init(struct exynos_panel *ctx)
 	shoreline_change_frequency(ctx, drm_mode_vrefresh(&ctx->current_mode->mode));
 	shoreline_lhbm_gamma_read(ctx);
 	shoreline_lhbm_gamma_write(ctx);
+	exynos_panel_send_cmd_set(ctx, &shoreline_lhbm_location_cmd_set);
 }
 
 static int shoreline_read_id(struct exynos_panel *ctx)
