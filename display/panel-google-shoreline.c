@@ -355,26 +355,6 @@ static void shoreline_set_local_hbm_mode(struct exynos_panel *exynos_panel,
 		return;
 
 	exynos_panel->hbm.local_hbm.enabled = local_hbm_en;
-	if (local_hbm_en) {
-		EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_on_f0);
-		/* global para */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0xDE, 0x66);
-		 /* LHBM EM_Off setting */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x66, 0x00, 0x49);
-		/* global para */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x28, 0xF2);
-		/* global para 10bit */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xF2, 0xCC);
-		/* global para */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x02, 0x2D, 0x65);
-		/* 1 pulse setting */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x65, 0x00, 0x72, 0x00, 0x7C, 0x00, 0x7C);
-		/* global para */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x28, 0xF2);
-		/* global para 8bit */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xF2, 0xC4);
-		EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_off_f0);
-	}
 	shoreline_update_wrctrld(exynos_panel);
 }
 
