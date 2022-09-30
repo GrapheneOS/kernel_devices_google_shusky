@@ -18,6 +18,7 @@
 &spitouch {
 	st,dchip_id = /bits/ 8 <0x36 0x40>;
 	st,max-coords = <1343 2991>;
+	st,panel_map = <&google_hk3 0>;
 };
 
 &m_ldo25_reg {
