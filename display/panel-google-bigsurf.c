@@ -222,8 +222,8 @@ static void bigsurf_update_te2(struct exynos_panel *ctx)
 }
 
 static void bigsurf_update_irc(struct exynos_panel *ctx,
-				enum exynos_hbm_mode hbm_mode,
-				int vrefresh)
+				const enum exynos_hbm_mode hbm_mode,
+				const int vrefresh)
 {
 	if (!IS_HBM_ON(hbm_mode)) {
 		dev_info(ctx->dev, "hbm is off, skip update irc\n");
@@ -394,29 +394,8 @@ static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
 static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 				       bool local_hbm_en)
 {
-	const struct exynos_panel_mode *pmode;
-	int vrefresh;
-
-	if (ctx->hbm.local_hbm.enabled == local_hbm_en)
-		return;
-
-	pmode = ctx->current_mode;
-	if (unlikely(pmode == NULL)) {
-		dev_err(ctx->dev, "%s: unknown current mode\n", __func__);
-		return;
-	}
-
-	vrefresh = drm_mode_vrefresh(&pmode->mode);
-	if (local_hbm_en) {
-		/* Add check to turn on LHBM @ 120hz only to comply with HW requirement */
-		if (vrefresh != 120) {
-			dev_err(ctx->dev, "unexpected mode `%s` while enabling LHBM, give up\n",
-				pmode->mode.name);
-			return;
-		}
-	}
-
-	ctx->hbm.local_hbm.enabled = local_hbm_en;
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	int vrefresh = drm_mode_vrefresh(&pmode->mode);
 
 	if (local_hbm_en) {
 		if (IS_HBM_ON(ctx->hbm_mode))
@@ -431,9 +410,6 @@ static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 static void bigsurf_mode_set(struct exynos_panel *ctx,
 			     const struct exynos_panel_mode *pmode)
 {
-	if (!is_panel_active(ctx))
-		return;
-
 	bigsurf_change_frequency(ctx, pmode);
 }
 

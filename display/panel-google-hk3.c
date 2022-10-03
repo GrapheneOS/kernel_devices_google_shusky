@@ -1116,28 +1116,8 @@ static void hk3_set_dimming_on(struct exynos_panel *ctx,
 static void hk3_set_local_hbm_mode(struct exynos_panel *ctx,
 				 bool local_hbm_en)
 {
-	const struct exynos_panel_mode *pmode;
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
 
-	if (ctx->hbm.local_hbm.enabled == local_hbm_en)
-		return;
-
-	pmode = ctx->current_mode;
-	if (unlikely(pmode == NULL)) {
-		dev_err(ctx->dev, "%s: unknown current mode\n", __func__);
-		return;
-	}
-
-	if (local_hbm_en) {
-		const int vrefresh = drm_mode_vrefresh(&pmode->mode);
-		/* Add check to turn on LHBM @ 120hz only to comply with HW requirement */
-		if (vrefresh != 120) {
-			dev_err(ctx->dev, "unexpected mode `%s` while enabling LHBM, give up\n",
-				pmode->mode.name);
-			return;
-		}
-	}
-
-	ctx->hbm.local_hbm.enabled = local_hbm_en;
 	/* TODO: LHBM Position & Size */
 	hk3_write_display_mode(ctx, &pmode->mode);
 }
@@ -1145,13 +1125,6 @@ static void hk3_set_local_hbm_mode(struct exynos_panel *ctx,
 static void hk3_mode_set(struct exynos_panel *ctx,
 			 const struct exynos_panel_mode *pmode)
 {
-	if (!is_panel_active(ctx))
-		return;
-
-	if (ctx->hbm.local_hbm.enabled == true)
-		dev_warn(ctx->dev, "do mode change (`%s`) unexpectedly when LHBM is ON\n",
-			pmode->mode.name);
-
 	hk3_change_frequency(ctx, pmode);
 }
 

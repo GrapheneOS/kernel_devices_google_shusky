@@ -351,19 +351,12 @@ static void shoreline_set_dimming_on(struct exynos_panel *exynos_panel,
 static void shoreline_set_local_hbm_mode(struct exynos_panel *exynos_panel,
 				 bool local_hbm_en)
 {
-	if (exynos_panel->hbm.local_hbm.enabled == local_hbm_en)
-		return;
-
-	exynos_panel->hbm.local_hbm.enabled = local_hbm_en;
 	shoreline_update_wrctrld(exynos_panel);
 }
 
 static void shoreline_mode_set(struct exynos_panel *ctx,
 			       const struct exynos_panel_mode *pmode)
 {
-	if (!ctx->enabled)
-		return;
-
 	shoreline_change_frequency(ctx, drm_mode_vrefresh(&pmode->mode));
 }
 
