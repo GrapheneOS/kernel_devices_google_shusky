@@ -418,8 +418,8 @@ static const u32 shoreline_bl_range[] = {
 
 static const struct exynos_panel_mode shoreline_modes[] = {
 	{
-		/* 1080x2400 @ 60Hz */
 		.mode = {
+			.name = "1080x2400x60",
 			.clock = 168498,
 			.hdisplay = 1080,
 			.hsync_start = 1080 + 32, // add hfp
@@ -451,8 +451,8 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 		},
 	},
 	{
-		/* 1080x2400 @120Hz */
 		.mode = {
+			.name = "1080x2400x120",
 			.clock = 336996,
 			.hdisplay = 1080,
 			.hsync_start = 1080 + 32, // add hfp
@@ -487,7 +487,6 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 
 static const struct exynos_panel_mode shoreline_lp_mode = {
 	.mode = {
-		/* 1080x2400 @ 30Hz */
 		.name = "1080x2400x30",
 		.clock = 84249,
 		.hdisplay = 1080,

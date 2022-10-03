@@ -1190,7 +1190,6 @@ static const u32 hk3_bl_range[] = {
 static const struct exynos_panel_mode hk3_modes[] = {
 #ifdef PANEL_FACTORY_BUILD
 	{
-		/* 1344x2992 @ 1Hz */
 		.mode = {
 			.name = "1344x2992x1",
 			.clock = 4485,
@@ -1225,7 +1224,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED,
 	},
 	{
-		/* 1344x2992 @ 5Hz */
 		.mode = {
 			.name = "1344x2992x5",
 			.clock = 22423,
@@ -1260,7 +1258,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED,
 	},
 	{
-		/* 1344x2992 @ 10Hz */
 		.mode = {
 			.name = "1344x2992x10",
 			.clock = 44846,
@@ -1295,7 +1292,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED,
 	},
 	{
-		/* 1344x2992 @ 30Hz */
 		.mode = {
 			.name = "1344x2992x30",
 			.clock = 134539,
@@ -1332,7 +1328,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 	},
 #endif
 	{
-		/* 1344x2992 @ 60Hz */
 		.mode = {
 			.name = "1344x2992x60",
 			.clock = 269079,
@@ -1368,7 +1363,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
 	},
 	{
-		/* 1344x2992 @ 120Hz */
 		.mode = {
 			.name = "1344x2992x120",
 			.clock = 538158,
@@ -1404,7 +1398,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
 	},
 	{
-		/* 1008x2244 @ 60Hz */
 		.mode = {
 			.name = "1008x2244x60",
 			.clock = 156633,
@@ -1439,7 +1432,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
 	},
 	{
-		/* 1008x2244 @ 120Hz */
 		.mode = {
 			.name = "1008x2244x120",
 			.clock = 313266,
@@ -1479,7 +1471,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 static const struct exynos_panel_mode hk3_lp_modes[] = {
 	{
 		.mode = {
-			/* 1344x2992 @ 30Hz */
 			.name = "1344x2992x30",
 			.clock = 134539,
 			.hdisplay = 1344,
@@ -1511,7 +1502,6 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 	},
 	{
 		.mode = {
-			/* 1008x2244 @ 30Hz */
 			.name = "1008x2244x30",
 			.clock = 78317,
 			.hdisplay = 1008,

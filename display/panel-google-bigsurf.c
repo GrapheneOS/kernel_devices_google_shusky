@@ -494,7 +494,6 @@ static const struct drm_dsc_config bigsurf_dsc_cfg = {
 
 static const struct exynos_panel_mode bigsurf_modes[] = {
 	{
-		/* 1080x2400 @ 60Hz */
 		.mode = {
 			.name = "1080x2400x60",
 			.clock = 168498,
@@ -524,7 +523,6 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		},
 	},
 	{
-		/* 1080x2400 @ 120Hz */
 		.mode = {
 			.name = "1080x2400x120",
 			.clock = 336996,
@@ -557,7 +555,6 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 
 static const struct exynos_panel_mode bigsurf_lp_mode = {
 	.mode = {
-		/* 1080x2400 @ 30Hz */
 		.name = "1080x2400x30",
 		.clock = 84249,
 		.hdisplay = 1080,
