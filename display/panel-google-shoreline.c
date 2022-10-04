@@ -81,6 +81,16 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	/* TE Settings */
 	EXYNOS_DSI_CMD0(test_key_on_f0),
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31, 0x31), /* TE and TE2 Select for HS mode */
+
+	/* FFC Settings */
+	EXYNOS_DSI_CMD_SEQ(0xFC, 0x5A, 0x5A), /* Test Key Enable */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x3E, 0xC5), /* Global Para 120HS */
+	EXYNOS_DSI_CMD_SEQ(0xC5, 0x94, 0x74), /* OSC frequency Setting */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x46, 0xC5), /* Global Para 60HS */
+	EXYNOS_DSI_CMD_SEQ(0xC5, 0x94, 0x74), /* OSC frequency Setting */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x36, 0xC5), /* Global Para */
+	EXYNOS_DSI_CMD_SEQ(0xC5, 0x11, 0x10, 0x50, 0x05), /* FFC ON */
+	EXYNOS_DSI_CMD_SEQ(0xFC, 0xA5, 0xA5), /* Test Key Disable */
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
@@ -408,7 +418,7 @@ static int shoreline_panel_probe(struct mipi_dsi_device *dsi)
 }
 
 static const struct exynos_display_underrun_param underrun_param = {
-	.te_idle_us = 1000,
+	.te_idle_us = 350,
 	.te_var = 1,
 };
 
