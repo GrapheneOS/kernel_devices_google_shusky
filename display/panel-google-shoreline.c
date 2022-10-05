@@ -82,7 +82,11 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD0(test_key_on_f0),
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31, 0x31), /* TE and TE2 Select for HS mode */
 
-	/* FFC Settings */
+	/* LHBM Location */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x09, 0x6D), /* global para */
+	EXYNOS_DSI_CMD_SEQ(0x6D, 0xC6, 0xE3, 0x65), /* Size and Location */
+
+	/* FFC Settings (OSC: 180 MHz, MIPI: 776 Mbps) */
 	EXYNOS_DSI_CMD_SEQ(0xFC, 0x5A, 0x5A), /* Test Key Enable */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x3E, 0xC5), /* Global Para 120HS */
 	EXYNOS_DSI_CMD_SEQ(0xC5, 0x94, 0x74), /* OSC frequency Setting */
@@ -94,18 +98,6 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
-
-static const struct exynos_dsi_cmd shoreline_lhbm_location_cmds[] = {
-	EXYNOS_DSI_CMD0(test_key_on_f0),
-
-	/* global para */
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x09, 0x6D),
-	/* Size and Location */
-	EXYNOS_DSI_CMD_SEQ(0x6D, 0xC6, 0xE3, 0x65),
-
-	EXYNOS_DSI_CMD0(test_key_off_f0),
-};
-static DEFINE_EXYNOS_CMD_SET(shoreline_lhbm_location);
 
 #define LHBM_GAMMA_CMD_SIZE 6
 /**
@@ -286,7 +278,6 @@ static int shoreline_enable(struct drm_panel *panel)
 	shoreline_change_frequency(ctx, drm_mode_vrefresh(mode));
 
 	shoreline_lhbm_gamma_write(ctx);
-	exynos_panel_send_cmd_set(ctx, &shoreline_lhbm_location_cmd_set);
 
 	/* DSC related configuration */
 	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
@@ -386,7 +377,12 @@ static void shoreline_panel_init(struct exynos_panel *ctx)
 	shoreline_change_frequency(ctx, drm_mode_vrefresh(&ctx->current_mode->mode));
 	shoreline_lhbm_gamma_read(ctx);
 	shoreline_lhbm_gamma_write(ctx);
-	exynos_panel_send_cmd_set(ctx, &shoreline_lhbm_location_cmd_set);
+
+	/* LHBM Location */
+	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x09, 0x6D);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0xC6, 0xE3, 0x65);
+	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
 static int shoreline_read_id(struct exynos_panel *ctx)
