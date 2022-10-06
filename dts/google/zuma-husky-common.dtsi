@@ -10,6 +10,7 @@
 #include "zuma-husky-audio.dtsi"
 #include "zuma-husky-battery.dtsi"
 #include "zuma-husky-camera.dtsi"
+#include "zuma-husky-charging.dtsi"
 #include "zuma-husky-display.dtsi"
 #include "zuma-husky-touch.dtsi"
 #include "zuma-shusky-haptics.dtsi"
