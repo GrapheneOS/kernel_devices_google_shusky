@@ -816,6 +816,7 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	}
 }
 
+/* TODO: Modify the brightness threshold for P1.1 */
 #define HK3_ACL_ZA_THRESHOLD_DBV 3917
 static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 {
@@ -1602,25 +1603,25 @@ const struct brightness_capability hk3_brightness_capability = {
 			.max = 800,
 		},
 		.level = {
-			.min = 4,
-			.max = 2047,
+			.min = 196,
+			.max = 2989,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 57,
+			.max = 50,
 		},
 	},
 	.hbm = {
 		.nits = {
 			.min = 800,
-			.max = 1400,
+			.max = 1600,
 		},
 		.level = {
-			.min = 2048,
+			.min = 2990,
 			.max = 4095,
 		},
 		.percentage = {
-			.min = 57,
+			.min = 50,
 			.max = 100,
 		},
 	},
