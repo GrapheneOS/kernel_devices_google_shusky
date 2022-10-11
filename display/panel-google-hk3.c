@@ -1648,6 +1648,7 @@ const struct exynos_panel_desc google_hk3 = {
 	.binned_lp = hk3_binned_lp,
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
 	.is_panel_idle_supported = true,
+	.no_lhbm_rr_constraints = true,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.reset_timing_ms = {1, 1, 5},
