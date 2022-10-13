@@ -69,6 +69,8 @@ struct hk3_panel {
 	bool hw_acl_enabled;
 	/** @hw_za_enabled: whether zonal attenuation is enabled */
 	bool hw_za_enabled;
+	/** @force_za_off: force to turn off zonal attenuation */
+	bool force_za_off;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -795,7 +797,7 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	bool enable_za = false;
 	u8 opr;
 
-	if (spanel->hw_acl_enabled) {
+	if (spanel->hw_acl_enabled && !spanel->force_za_off) {
 		if (!hk3_get_opr(ctx, &opr)) {
 			enable_za = (opr > HK3_ZA_THRESHOLD_OPR);
 		} else {
@@ -1546,6 +1548,8 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &hk3_init_cmd_set, "init");
 	debugfs_create_bool("force_changeable_te", 0644, ctx->debugfs_entry,
 				&spanel->force_changeable_te);
+	debugfs_create_bool("force_za_off", 0644, ctx->debugfs_entry,
+				&spanel->force_za_off);
 
 	if (ctx->panel_rev == PANEL_REV_PROTO1)
 		hk3_lhbm_luminance_opr_setting(ctx);
