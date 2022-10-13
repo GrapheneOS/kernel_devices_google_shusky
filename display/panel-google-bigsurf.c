@@ -643,25 +643,25 @@ const struct brightness_capability bigsurf_brightness_capability = {
 			.max = 800,
 		},
 		.level = {
-			.min = 290,
-			.max = 3789,
+			.min = 268,
+			.max = 3672,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 67,
+			.max = 57,
 		},
 	},
 	.hbm = {
 		.nits = {
 			.min = 800,
-			.max = 1200,
+			.max = 1400,
 		},
 		.level = {
-			.min = 3790,
+			.min = 3673,
 			.max = 4094,
 		},
 		.percentage = {
-			.min = 67,
+			.min = 57,
 			.max = 100,
 		},
 	},
@@ -670,8 +670,8 @@ const struct brightness_capability bigsurf_brightness_capability = {
 const struct exynos_panel_desc google_bigsurf = {
 	.data_lane_cnt = 4,
 	.max_brightness = 4094,
-	.min_brightness = 290,
-	.dft_brightness = 1448,
+	.min_brightness = 268,
+	.dft_brightness = 1023,
 	.brt_capability = &bigsurf_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
 	.hdr_formats = BIT(2) | BIT(3),

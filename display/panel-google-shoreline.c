@@ -560,25 +560,25 @@ static const struct brightness_capability shoreline_brightness_capability = {
 			.max = 800,
 		},
 		.level = {
-			.min = 2,
-			.max = 2047,
+			.min = 209,
+			.max = 3175,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 67,
+			.max = 57,
 		},
 	},
 	.hbm = {
 		.nits = {
 			.min = 800,
-			.max = 1200,
+			.max = 1400,
 		},
 		.level = {
-			.min = 2048,
+			.min = 3176,
 			.max = 4095,
 		},
 		.percentage = {
-			.min = 67,
+			.min = 57,
 			.max = 100,
 		},
 	},
@@ -589,7 +589,7 @@ static const struct exynos_panel_desc google_shoreline = {
 	.dsc_pps_len = ARRAY_SIZE(PPS_SETTING),
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
-	.min_brightness = 2,
+	.min_brightness = 209,
 	.dft_brightness = 1023,
 	.brt_capability = &shoreline_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
