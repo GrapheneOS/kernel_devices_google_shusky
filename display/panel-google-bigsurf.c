@@ -457,6 +457,8 @@ static int bigsurf_read_id(struct exynos_panel *ctx)
 	if (ret != BIGSURF_DDIC_ID_LEN) {
 		dev_warn(ctx->dev, "Unable to read DDIC id (%d)\n", ret);
 		goto done;
+	} else {
+		ret = 0;
 	}
 
 	exynos_bin2hex(buf, BIGSURF_DDIC_ID_LEN,
