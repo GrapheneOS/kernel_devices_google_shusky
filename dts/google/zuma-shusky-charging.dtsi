@@ -17,7 +17,7 @@
 				#cooling-cells = <2>;
 
 				google,chg-power-supplies = "main-charger",	// out-0
-							    "pca94xx-mains";	// out-1
+							    "dc-mains";	// out-1
 
 				/* S2MPG12X01 -> GPIO_1 -> CHARGE_PUMP_EN */
 				google,dc-en = <&s2mpg14_gpio 1 0>;
@@ -110,7 +110,7 @@
 		compatible = "nxp,pca9468";
 		reg = <0x57>;
 
-		pca9468,psy_name = "pca94xx-mains";
+		pca9468,psy_name = "dc-mains";
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&dc_charger_irq>;

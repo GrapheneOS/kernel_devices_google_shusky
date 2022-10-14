@@ -17,7 +17,7 @@
 				#cooling-cells = <2>;
 
 				google,chg-power-supplies = "main-charger",	// out-0
-							    "pca94xx-mains";	// out-1
+							    "dc-mains";	// out-1
 
 				/* S2MPG12X01 -> GPIO_1 -> CHARGE_PUMP_EN */
 				google,dc-en = <&s2mpg14_gpio 1 0>;
@@ -110,7 +110,7 @@
 		compatible = "nxp,pca9468";
 		reg = <0x57>;
 
-		pca9468,psy_name = "pca94xx-mains";
+		pca9468,psy_name = "dc-mains";
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&dc_charger_irq>;
@@ -136,10 +136,23 @@
 		pca9468,google_cpm = <&google_cpm>;
 	};
 
-	st_wc: st_wc68@65 {
-		dev-name = "st_wc68";
+	stwc68_dc: st_wc68@65 {
 		compatible = "st_wc68";
 		reg = <0x65>;
+
+		wc68,psy_name = "dc-mains";
+
+		wc68,float-voltage = <4300000>; /* 4.3V */
+
+		wc68,input-itopoff = <500000>; /* 500mA */
+
+		/* USBC thermal zone */
+		google,usb-port-tz-name = "usbc-therm-adc";
+
+		/* irdrop */
+		/* google,irdrop-limits = <105000 75000 0>; */
+
+		wc68,google_cpm = <&google_cpm>;
 		status = "ok";
 	};
 
