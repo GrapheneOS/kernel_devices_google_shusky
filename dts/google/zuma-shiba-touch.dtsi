@@ -44,6 +44,9 @@
 	goodix,config_names = "goodix_cfg_group_bigsurf.bin",
 			"goodix_cfg_group_shoreline.bin";
 
+	goodix,test_limits_names = "goodix_test_limits_bigsurf.csv",
+			"goodix_test_limits_shoreline.csv";
+
 	goog,touch_offload_id = /bits/ 8 <'s' 'b' '3' '0'>;
 	goog,display-resolution = /bits/ 16 <1080 2400>;
 	goog,channel-num = /bits/ 16 <16 36>;
