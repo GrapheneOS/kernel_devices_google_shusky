@@ -36,6 +36,10 @@ static const unsigned char PPS_SETTING[] = {
 #define SHORELINE_WRCTRLD_HBM_BIT        0xC0
 #define SHORELINE_WRCTRLD_LOCAL_HBM_BIT  0x10
 
+#define SHORELINE_TE2_RISING_EDGE_60HZ  0x12D0
+#define SHORELINE_TE2_RISING_EDGE_120HZ 0x960
+#define SHORELINE_TE2_FALLING_EDGE      0x30
+
 static const u8 test_key_on_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 test_key_off_f0[] = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
@@ -67,9 +71,10 @@ static const struct exynos_dsi_cmd shoreline_lp_high_cmds[] = {
 
 static const struct exynos_binned_lp shoreline_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, shoreline_lp_off_cmds),
-	/* rising time = delay = 0, falling time = delay + width = 0 + 16 */
-	BINNED_LP_MODE_TIMING("low", 80, shoreline_lp_low_cmds, 0, 0 + 16),
-	BINNED_LP_MODE_TIMING("high", 2047, shoreline_lp_high_cmds, 0, 0 + 16)
+	BINNED_LP_MODE_TIMING("low", 80, shoreline_lp_low_cmds,
+			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),
+	BINNED_LP_MODE_TIMING("high", 2047, shoreline_lp_high_cmds,
+			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),
 };
 
 static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
@@ -174,20 +179,47 @@ static void shoreline_lhbm_gamma_write(struct exynos_panel *ctx)
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
+/**
+ * TODO: Revise the calculation of TE2 timing
+ *
+ * Current definition of the B9h command parameter:
+ * TE2 rising: start from next vsync falling and shift left
+ *             min 0x1, max 0x96F for 120Hz
+ *             min 0x1, max 0x12DF for 60Hz
+ * TE2 falling: start from current vsync falling and shift right
+ *              min 0x2, max 0x970 for 120Hz
+ *              min 0x2, max 0x12E0 for 60Hz
+ */
 static void shoreline_update_te2(struct exynos_panel *ctx)
 {
-	static const u8 setting[2][5] = {
-		{0xB9, 0x12, 0xD0, 0x00, 0x40}, /* HS 60Hz */
-		{0xB9, 0x09, 0x60, 0x00, 0x40}, /* HS 120Hz */
+	struct exynos_panel_te2_timing timing = {
+		.rising_edge = SHORELINE_TE2_RISING_EDGE_60HZ,
+		.falling_edge = SHORELINE_TE2_FALLING_EDGE,
 	};
-	const unsigned int vrefresh = drm_mode_vrefresh(&ctx->current_mode->mode);
+	u32 rising, falling;
+	int ret;
 
 	if (!ctx)
 		return;
 
+	/* Not needed to update TE2 in LP mode */
+	if (ctx->current_mode->exynos_mode.is_lp_mode)
+		return;
+
+	ret = exynos_panel_get_current_mode_te2(ctx, &timing);
+	if (ret) {
+		dev_dbg(ctx->dev, "failed to get TE2 timng\n");
+		return;
+	}
+	rising = timing.rising_edge;
+	falling = timing.falling_edge;
+
+	dev_dbg(ctx->dev, "TE2 updated: rising=0x%X falling=0x%X\n", rising, falling);
+
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x26, 0xB9); /* global para */
-	EXYNOS_DCS_WRITE_TABLE(ctx, setting[(vrefresh == 60) ? 0 : 1]); /* TE2 Width */
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB9, (rising >> 8) & 0xF, rising & 0xFF,
+			     (falling >> 8) & 0xF, falling & 0xFF); /* TE2 Width */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
@@ -452,8 +484,8 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
-			.rising_edge = 0,
-			.falling_edge = 0 + 48,
+			.rising_edge = SHORELINE_TE2_RISING_EDGE_60HZ,
+			.falling_edge = SHORELINE_TE2_FALLING_EDGE,
 		},
 	},
 	{
@@ -485,8 +517,8 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
-			.rising_edge = 0,
-			.falling_edge = 0 + 48,
+			.rising_edge = SHORELINE_TE2_RISING_EDGE_120HZ,
+			.falling_edge = SHORELINE_TE2_FALLING_EDGE,
 		},
 	},
 };
