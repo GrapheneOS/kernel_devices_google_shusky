@@ -798,7 +798,9 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	u8 opr;
 
 	if (spanel->hw_acl_enabled && !spanel->force_za_off) {
-		if (!hk3_get_opr(ctx, &opr)) {
+		if (ctx->panel_rev != PANEL_REV_PROTO1) {
+			enable_za = true;
+		} else if (!hk3_get_opr(ctx, &opr)) {
 			enable_za = (opr > HK3_ZA_THRESHOLD_OPR);
 		} else {
 			dev_warn(ctx->dev, "Unable to update za\n");
@@ -807,10 +809,14 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	}
 
 	if (spanel->hw_za_enabled != enable_za) {
+		/* LP setting - 0x21 or 0x11: 7.5%, 0x00: off */
+		u8 val = 0;
+
 		EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x01, 0x6C, 0x92);
-		/* LP setting - 0x21: 7.5%, 0x00: off */
-		EXYNOS_DCS_BUF_ADD(ctx, 0x92, enable_za ? 0x21 : 0x00);
+		if (enable_za)
+			val = (ctx->panel_rev == PANEL_REV_PROTO1) ? 0x21 : 0x11;
+		EXYNOS_DCS_BUF_ADD(ctx, 0x92, val);
 		EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
 
 		spanel->hw_za_enabled = enable_za;
@@ -818,8 +824,8 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	}
 }
 
-/* TODO: Modify the brightness threshold for P1.1 */
-#define HK3_ACL_ZA_THRESHOLD_DBV 3917
+#define HK3_ACL_ZA_THRESHOLD_DBV_P1_0 3917
+#define HK3_ACL_ZA_THRESHOLD_DBV 3781
 static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 {
 	int ret;
@@ -838,11 +844,18 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 	ret = exynos_dcs_set_brightness(ctx, brightness);
 	if (!ret) {
 		struct hk3_panel *spanel = to_spanel(ctx);
-		bool enable_acl = (br >= HK3_ACL_ZA_THRESHOLD_DBV && IS_HBM_ON(ctx->hbm_mode));
+		u16 dbv_th =
+			(ctx->panel_rev == PANEL_REV_PROTO1) ? HK3_ACL_ZA_THRESHOLD_DBV_P1_0 :
+			HK3_ACL_ZA_THRESHOLD_DBV;
+		bool enable_acl = (br >= dbv_th && IS_HBM_ON(ctx->hbm_mode));
 
 		if (spanel->hw_acl_enabled != enable_acl) {
-			/* ACL setting - 0x01: 5%, 0x00: off */
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, enable_acl ? 0x01 : 0x00);
+			/* ACL setting - 0x01: 5%, 0x02: 7.5%, 0x00: off */
+			u8 val = 0;
+
+			if (enable_acl)
+				val = (ctx->panel_rev == PANEL_REV_PROTO1) ? 0x01 : 0x02;
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, val);
 			spanel->hw_acl_enabled = enable_acl;
 			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
 
