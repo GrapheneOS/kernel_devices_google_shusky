@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Shusky board-common device tree source.
+ *
+ * Copyright 2022 Google LLC
+ */
+
+#include "zuma-ripcurrent-camera-pmic.dtsi"
+#include "zuma-shusky-usb.dtsi"
+#include "zuma-shusky-battery.dtsi"
+#include "zuma-shusky-charging.dtsi"
+#include "zuma-shusky-usecases.dtsi"
+#include "zuma-shusky-wcharger.dtsi"
+#include "zuma-shusky-gsa-gsc.dtsi"

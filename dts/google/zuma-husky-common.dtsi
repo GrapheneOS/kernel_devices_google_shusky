@@ -5,7 +5,8 @@
  * Copyright 2022 Google LLC
  */
 
-#include "zuma-board.dtsi"
+#include "../google-dts-base/zuma-board.dtsi"
+#include "zuma-shusky-board.dtsi"
 
 #include "zuma-husky-audio.dtsi"
 #include "zuma-husky-battery.dtsi"
