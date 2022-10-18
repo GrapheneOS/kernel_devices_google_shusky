@@ -5,6 +5,8 @@
  * Copyright 2022 Google LLC
  */
 
+#include "../google-dts-base/zuma-board.dtsi"
+
 #include "zuma-ripcurrent-camera-pmic.dtsi"
 #include "zuma-shusky-usb.dtsi"
 #include "zuma-shusky-battery.dtsi"
