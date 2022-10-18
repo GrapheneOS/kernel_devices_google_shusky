@@ -17,6 +17,7 @@
 #include "samsung/panel/panel-samsung-drv.h"
 
 #define BIGSURF_DDIC_ID_LEN 8
+#define BIGSURF_DIMMING_FRAME 32
 
 /**
  * struct bigsurf_panel - panel specific runtime info
@@ -332,6 +333,17 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 	dev_info(ctx->dev, "exit LP mode\n");
 }
 
+static void bigsurf_dimming_frame_setting(struct exynos_panel *ctx, u8 dimming_frame)
+{
+	if (!dimming_frame)
+		dimming_frame = 0x01;
+
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB2, 0x19);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x05);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xB2, dimming_frame, dimming_frame);
+}
+
 static int bigsurf_enable(struct drm_panel *panel)
 {
 	struct exynos_panel *ctx = container_of(panel, struct exynos_panel, panel);
@@ -347,6 +359,7 @@ static int bigsurf_enable(struct drm_panel *panel)
 	exynos_panel_reset(ctx);
 	exynos_panel_send_cmd_set(ctx, &bigsurf_init_cmd_set);
 	bigsurf_change_frequency(ctx, pmode);
+	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
 
 	if (!pmode->exynos_mode.is_lp_mode)
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
@@ -602,6 +615,7 @@ static void bigsurf_panel_init(struct exynos_panel *ctx)
 	struct dentry *csroot = ctx->debugfs_cmdset_entry;
 
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &bigsurf_init_cmd_set, "init");
+	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
 }
 
 static int bigsurf_panel_probe(struct mipi_dsi_device *dsi)
