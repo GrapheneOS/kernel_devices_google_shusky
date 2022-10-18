@@ -101,10 +101,10 @@
 	};
 
 	sensor_mclk1_out: sensor-mclk1-out {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X5>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
 	};
 	sensor_mclk1_fn: sensor-mclk1-fn {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X5>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
 	};
 	sensor_mclk2_out: sensor-mclk2-out {
 		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
