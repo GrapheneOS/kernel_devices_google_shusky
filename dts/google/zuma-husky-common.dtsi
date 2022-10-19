@@ -19,3 +19,4 @@
 #include "zuma-ripcurrent-bluetooth.dtsi"
 #include "zuma-shusky-pmic.dtsi"
 #include "zuma-shusky-bcl.dtsi"
+#include "zuma-husky-wcharger.dtsi"

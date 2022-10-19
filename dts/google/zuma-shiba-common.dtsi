@@ -20,3 +20,4 @@
 #include "zuma-shusky-pmic.dtsi"
 #include "zuma-shiba-pmic.dtsi"
 #include "zuma-shusky-bcl.dtsi"
+#include "zuma-shiba-wcharger.dtsi"
