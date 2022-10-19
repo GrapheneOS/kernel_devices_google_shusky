@@ -202,26 +202,27 @@ static void hk3_update_te2_internal(struct exynos_panel *ctx, bool lock)
 	struct hk3_panel *spanel = to_spanel(ctx);
 	u8 option = hk3_get_te2_option(ctx);
 	u8 idx;
-	int ret;
 
 	if (!ctx)
 		return;
 
-	ret = exynos_panel_get_current_mode_te2(ctx, &timing);
-	if (ret) {
-		dev_dbg(ctx->dev, "failed to get TE2 timng\n");
-		return;
-	}
-	rising = timing.rising_edge;
-	falling = timing.falling_edge;
-
-	if (option == HK3_TE2_CHANGEABLE && test_bit(FEAT_OP_NS, spanel->feat))
+	if (test_bit(FEAT_OP_NS, spanel->feat)) {
+		rising = HK3_TE2_RISING_EDGE_OFFSET;
 		falling = HK3_TE2_FALLING_EDGE_OFFSET_NS;
+	} else {
+		if (exynos_panel_get_current_mode_te2(ctx, &timing)) {
+			dev_dbg(ctx->dev, "failed to get TE2 timng\n");
+			return;
+		}
+		rising = timing.rising_edge;
+		falling = timing.falling_edge;
+	}
 
 	ctx->te2.option = (option == HK3_TE2_FIXED) ? TE2_OPT_FIXED : TE2_OPT_CHANGEABLE;
 
 	dev_dbg(ctx->dev,
-		"TE2 updated: option %s, idle %s, rising=0x%X falling=0x%X\n",
+		"TE2 updated: %s mode, option %s, idle %s, rising=0x%X falling=0x%X\n",
+		test_bit(FEAT_OP_NS, spanel->feat) ? "NS" : "HS",
 		(option == HK3_TE2_CHANGEABLE) ? "changeable" : "fixed",
 		ctx->panel_idle_vrefresh ? "active" : "inactive",
 		rising, falling);
