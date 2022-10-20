@@ -1564,9 +1564,6 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 				&spanel->force_changeable_te);
 	debugfs_create_bool("force_za_off", 0644, ctx->debugfs_entry,
 				&spanel->force_za_off);
-
-	if (ctx->panel_rev == PANEL_REV_PROTO1)
-		hk3_lhbm_luminance_opr_setting(ctx);
 }
 
 static int hk3_panel_probe(struct mipi_dsi_device *dsi)
