@@ -1,7 +1,7 @@
 KERNEL_DIR=private/google-modules/soc/gs
 DEVICE_MODULES_DIR=${KERNEL_DIR}
 # Compile these modules with the GKI kernel
-KERNEL_DIR="aosp-bringup"
+KERNEL_DIR="aosp-staging"
 # Compute the path of this project relative to KERNEL_DIR
 DEVICE_MODULES_REL_DIR=$(rel_path ${DEVICE_MODULES_DIR} ${KERNEL_DIR})
 
@@ -72,7 +72,6 @@ private/google-modules/touch/goodix
 private/google-modules/touch/sec
 private/google-modules/video/gchips
 private/google-modules/power/reset
-private/google-modules/wlan/bcm4398
 private/google-modules/bluetooth/broadcom
 private/google-modules/gps/broadcom/bcm47765
 "
