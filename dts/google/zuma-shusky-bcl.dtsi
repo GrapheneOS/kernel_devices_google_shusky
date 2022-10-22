@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Google Zuma Ripcurrent-specific bcl device tree source
+ * Google Zuma shusky-specific bcl device tree source
  *
  * Copyright (c) 2022 Google, LLC
  *		https://www.google.com

@@ -967,8 +967,8 @@
 					"gpio";
 				power-up-seq-delays-us =
 					<1000
-					 0
-					 0
+					 1000
+					 1000
 					 0>;
 
 				/* Power down sequence */
@@ -983,9 +983,9 @@
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
-					<0
-					 0
-					 0
+					<1000
+					 1000
+					 1000
 					 0>;
 			};
 
@@ -1406,8 +1406,8 @@
 					"gpio";
 				power-up-seq-delays-us =
 					<1000
-					 0
-					 0
+					 1000
+					 1000
 					 0>;
 
 				/* Power down sequence */
@@ -1422,9 +1422,9 @@
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
-					<0
-					 0
-					 0
+					<1000
+					 1000
+					 1000
 					 0>;
 
 				/* Thread priority */

@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Battery device tree entries specific to panther
+ *
+ * Copyright 2022 Google,LLC
+ *
+ */
+
+&pca9468_dc {
+	pca9468,input-current-limit = <2700000>; /* 5.4A max */
+};
+
+/* TODO: thermal hal */

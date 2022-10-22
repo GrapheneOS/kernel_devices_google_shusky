@@ -57,3 +57,7 @@
 &s_ldo8_reg {
 	/delete-property/ regulator-always-on;
 };
+
+&drmdecon1 {
+	status = "okay";
+};

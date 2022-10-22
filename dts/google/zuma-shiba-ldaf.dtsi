@@ -43,10 +43,10 @@
 		/* IRQ: XEINT_4: GPA5[4] */
 		intr-gpio = <&gpa5 4 GPIO_ACTIVE_HIGH>;
 
-		/* IOVDD: 1.8V */
+		/* IOVDD: 1.85V */
 		vio-type = "regulator";
 		vio-supply = <&s_ldo12_reg>;
-		vio-voltage = <1800000>;
+		vio-voltage = <1850000>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&ldaf_irq>;

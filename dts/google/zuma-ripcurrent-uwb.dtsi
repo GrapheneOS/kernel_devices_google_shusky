@@ -45,6 +45,7 @@
 		interrupts = <0 IRQ_TYPE_LEVEL_HIGH 0>;
 		reset-gpios = <&gpp14 0 GPIO_ACTIVE_LOW>;
 		ss-ready-gpios = <&gpn4 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+		wakeup-gpios = <&gpa5 6 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 		controller-data {
 			samsung,spi-feedback-delay = <0>;

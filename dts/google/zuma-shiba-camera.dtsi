@@ -101,10 +101,10 @@
 	};
 
 	sensor_mclk1_out: sensor-mclk1-out {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X5>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
 	};
 	sensor_mclk1_fn: sensor-mclk1-fn {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X5>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
 	};
 	sensor_mclk2_out: sensor-mclk2-out {
 		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
@@ -125,7 +125,7 @@
 	#size-cells = <0>;
 	gpios = <&gpp2 0 GPIO_ACTIVE_HIGH &gpp2 1 GPIO_ACTIVE_HIGH>;
 	status = "okay";
-	clock-frequency = <1000000>;
+	clock-frequency = <950000>;
 	samsung,reset-before-trans;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
@@ -167,7 +167,7 @@
 	#size-cells = <0>;
 	gpios = <&gpp8 0 GPIO_ACTIVE_HIGH &gpp8 1 GPIO_ACTIVE_HIGH>;
 	status = "okay";
-	clock-frequency = <1000000>;
+	clock-frequency = <950000>;
 	samsung,reset-before-trans;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
@@ -181,7 +181,7 @@
 	#size-cells = <0>;
 	gpios = <&gpp16 0 GPIO_ACTIVE_HIGH &gpp16 1 GPIO_ACTIVE_HIGH>;
 	status = "okay";
-	clock-frequency = <400000>;
+	clock-frequency = <390000>;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
 	pinctrl-0 = <&hsi2c14_bus>;
@@ -428,7 +428,7 @@
 				power-up-seq-delays-us =
 					<0
 					 0
-					 0
+					 100
 					 1000
 					 10000>;
 

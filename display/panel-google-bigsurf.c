@@ -17,6 +17,7 @@
 #include "samsung/panel/panel-samsung-drv.h"
 
 #define BIGSURF_DDIC_ID_LEN 8
+#define BIGSURF_DIMMING_FRAME 32
 
 /**
  * struct bigsurf_panel - panel specific runtime info
@@ -32,6 +33,10 @@ struct bigsurf_panel {
 #define to_spanel(ctx) container_of(ctx, struct bigsurf_panel, base)
 
 static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
+	/* Disable the Black insertion in AoD */
+	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0xC0, 0x44),
+
 	/* disable dimming */
 	EXYNOS_DSI_CMD_SEQ(0x53, 0x20),
 	/* enter AOD */
@@ -73,6 +78,9 @@ static DEFINE_EXYNOS_CMD_SET(bigsurf_off);
 static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	/* CMD2, Page0 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x18),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_PROTO1_1), 0xB2, 0x3B, 0x34),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_GE(PANEL_REV_PROTO1_1), 0xB2, 0x39, 0x60),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x1B),
 	EXYNOS_DSI_CMD_SEQ(0xBA, 0x18),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x1C),
@@ -117,13 +125,26 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x01),
 	EXYNOS_DSI_CMD_SEQ(0xBE, 0x47),
 
-	/* Disable the Black insertion in AoD */
-	EXYNOS_DSI_CMD_SEQ(0xC0, 0x44),
-
 	/* CMD2, Page1 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x01),
+	/* FFC Off */
+	EXYNOS_DSI_CMD_SEQ(0xC3, 0x00),
+	/* FFC setting (MIPI: 776Mbps) */
+	EXYNOS_DSI_CMD_SEQ(0xC3, 0x00, 0x06, 0x20, 0x0C, 0xFF, 0x00, 0x06, 0x20,
+				 0x0C, 0xFF, 0x00, 0x04, 0x46, 0x0C, 0x06, 0x0D,
+				 0x11, 0x04, 0x46, 0x0C, 0x06, 0x0D, 0x11, 0x04,
+				 0x46, 0x0C, 0x06, 0x0D, 0x11, 0x04, 0x46, 0x0C,
+				 0x06, 0x0D, 0x11, 0x04, 0x46, 0x0C, 0x06, 0x0D,
+				 0x11),
+	/* FFC On */
+	EXYNOS_DSI_CMD_SEQ(0xC3, 0xDD),
+
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x05),
 	EXYNOS_DSI_CMD_SEQ(0xC5, 0x15, 0x15, 0x15, 0xDD),
+
+	/* Idle delay frame */
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0E),
+	EXYNOS_DSI_CMD_SEQ(0xD2, 0x00),
 
 	/* CMD2, Page7 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x07),
@@ -179,7 +200,7 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_PAGE_ADDRESS, 0x00, 0x00, 0x09, 0x5F),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_GAMMA_CURVE, 0x00),
 	EXYNOS_DSI_CMD_SEQ(0x81, 0x01, 0x19),
-	EXYNOS_DSI_CMD_SEQ(0x88, 0x81, 0x02, 0x1C, 0x06, 0xE2, 0x00, 0x00, 0x00, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0x88, 0x01, 0x02, 0x1C, 0x06, 0xE2, 0x00, 0x00, 0x00, 0x00),
 	// 8bpc PPS
 	EXYNOS_DSI_CMD_SEQ(0x03, 0x01),
 	EXYNOS_DSI_CMD_SEQ(0x90, 0x03, 0x03),
@@ -222,8 +243,8 @@ static void bigsurf_update_te2(struct exynos_panel *ctx)
 }
 
 static void bigsurf_update_irc(struct exynos_panel *ctx,
-				enum exynos_hbm_mode hbm_mode,
-				int vrefresh)
+				const enum exynos_hbm_mode hbm_mode,
+				const int vrefresh)
 {
 	if (!IS_HBM_ON(hbm_mode)) {
 		dev_info(ctx->dev, "hbm is off, skip update irc\n");
@@ -258,11 +279,8 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x00, 0x00);
 		}
 	}
-	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
-	EXYNOS_DCS_BUF_ADD(ctx, 0xCC, 0x30);
-	EXYNOS_DCS_BUF_ADD(ctx, 0xCE, 0x01);
-	EXYNOS_DCS_BUF_ADD(ctx, 0xCC, 0x00);
-	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCE, 0x00);
+	/* Empty command is for flush */
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x00);
 }
 
 static void bigsurf_change_frequency(struct exynos_panel *ctx,
@@ -307,6 +325,8 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 		return;
 
 	/* exit AOD */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x54);
 	EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_EXIT_IDLE_MODE);
 	EXYNOS_DCS_BUF_ADD(ctx, 0x5A, 0x04);
 	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
@@ -315,6 +335,17 @@ static void bigsurf_set_nolp_mode(struct exynos_panel *ctx,
 	bigsurf_change_frequency(ctx, pmode);
 
 	dev_info(ctx->dev, "exit LP mode\n");
+}
+
+static void bigsurf_dimming_frame_setting(struct exynos_panel *ctx, u8 dimming_frame)
+{
+	if (!dimming_frame)
+		dimming_frame = 0x01;
+
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB2, 0x19);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x05);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xB2, dimming_frame, dimming_frame);
 }
 
 static int bigsurf_enable(struct drm_panel *panel)
@@ -332,11 +363,17 @@ static int bigsurf_enable(struct drm_panel *panel)
 	exynos_panel_reset(ctx);
 	exynos_panel_send_cmd_set(ctx, &bigsurf_init_cmd_set);
 	bigsurf_change_frequency(ctx, pmode);
+	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
 
-	if (!pmode->exynos_mode.is_lp_mode)
+	if (!pmode->exynos_mode.is_lp_mode) {
+		/* Gamma update setting */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
+		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCC, 0x10);
+		usleep_range(9000, 9100);
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
-	else
+	} else {
 		exynos_panel_set_lp_mode(ctx, pmode);
+	}
 
 	return 0;
 }
@@ -394,29 +431,8 @@ static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
 static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 				       bool local_hbm_en)
 {
-	const struct exynos_panel_mode *pmode;
-	int vrefresh;
-
-	if (ctx->hbm.local_hbm.enabled == local_hbm_en)
-		return;
-
-	pmode = ctx->current_mode;
-	if (unlikely(pmode == NULL)) {
-		dev_err(ctx->dev, "%s: unknown current mode\n", __func__);
-		return;
-	}
-
-	vrefresh = drm_mode_vrefresh(&pmode->mode);
-	if (local_hbm_en) {
-		/* Add check to turn on LHBM @ 120hz only to comply with HW requirement */
-		if (vrefresh != 120) {
-			dev_err(ctx->dev, "unexpected mode `%s` while enabling LHBM, give up\n",
-				pmode->mode.name);
-			return;
-		}
-	}
-
-	ctx->hbm.local_hbm.enabled = local_hbm_en;
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	int vrefresh = drm_mode_vrefresh(&pmode->mode);
 
 	if (local_hbm_en) {
 		if (IS_HBM_ON(ctx->hbm_mode))
@@ -431,9 +447,6 @@ static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 static void bigsurf_mode_set(struct exynos_panel *ctx,
 			     const struct exynos_panel_mode *pmode)
 {
-	if (!is_panel_active(ctx))
-		return;
-
 	bigsurf_change_frequency(ctx, pmode);
 }
 
@@ -469,6 +482,8 @@ static int bigsurf_read_id(struct exynos_panel *ctx)
 	if (ret != BIGSURF_DDIC_ID_LEN) {
 		dev_warn(ctx->dev, "Unable to read DDIC id (%d)\n", ret);
 		goto done;
+	} else {
+		ret = 0;
 	}
 
 	exynos_bin2hex(buf, BIGSURF_DDIC_ID_LEN,
@@ -518,7 +533,6 @@ static const struct drm_dsc_config bigsurf_dsc_cfg = {
 
 static const struct exynos_panel_mode bigsurf_modes[] = {
 	{
-		/* 1080x2400 @ 60Hz */
 		.mode = {
 			.name = "1080x2400x60",
 			.clock = 168498,
@@ -548,7 +562,6 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		},
 	},
 	{
-		/* 1080x2400 @ 120Hz */
 		.mode = {
 			.name = "1080x2400x120",
 			.clock = 336996,
@@ -581,7 +594,6 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 
 static const struct exynos_panel_mode bigsurf_lp_mode = {
 	.mode = {
-		/* 1080x2400 @ 30Hz */
 		.name = "1080x2400x30",
 		.clock = 84249,
 		.hdisplay = 1080,
@@ -612,6 +624,7 @@ static void bigsurf_panel_init(struct exynos_panel *ctx)
 	struct dentry *csroot = ctx->debugfs_cmdset_entry;
 
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &bigsurf_init_cmd_set, "init");
+	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
 }
 
 static int bigsurf_panel_probe(struct mipi_dsi_device *dsi)
@@ -658,25 +671,25 @@ const struct brightness_capability bigsurf_brightness_capability = {
 			.max = 800,
 		},
 		.level = {
-			.min = 290,
-			.max = 3789,
+			.min = 268,
+			.max = 3672,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 67,
+			.max = 57,
 		},
 	},
 	.hbm = {
 		.nits = {
 			.min = 800,
-			.max = 1200,
+			.max = 1400,
 		},
 		.level = {
-			.min = 3790,
+			.min = 3673,
 			.max = 4094,
 		},
 		.percentage = {
-			.min = 67,
+			.min = 57,
 			.max = 100,
 		},
 	},
@@ -685,8 +698,8 @@ const struct brightness_capability bigsurf_brightness_capability = {
 const struct exynos_panel_desc google_bigsurf = {
 	.data_lane_cnt = 4,
 	.max_brightness = 4094,
-	.min_brightness = 290,
-	.dft_brightness = 1448,
+	.min_brightness = 268,
+	.dft_brightness = 1023,
 	.brt_capability = &bigsurf_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
 	.hdr_formats = BIT(2) | BIT(3),

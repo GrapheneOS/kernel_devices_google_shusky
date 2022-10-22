@@ -69,6 +69,8 @@ struct hk3_panel {
 	bool hw_acl_enabled;
 	/** @hw_za_enabled: whether zonal attenuation is enabled */
 	bool hw_za_enabled;
+	/** @force_za_off: force to turn off zonal attenuation */
+	bool force_za_off;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -200,26 +202,27 @@ static void hk3_update_te2_internal(struct exynos_panel *ctx, bool lock)
 	struct hk3_panel *spanel = to_spanel(ctx);
 	u8 option = hk3_get_te2_option(ctx);
 	u8 idx;
-	int ret;
 
 	if (!ctx)
 		return;
 
-	ret = exynos_panel_get_current_mode_te2(ctx, &timing);
-	if (ret) {
-		dev_dbg(ctx->dev, "failed to get TE2 timng\n");
-		return;
-	}
-	rising = timing.rising_edge;
-	falling = timing.falling_edge;
-
-	if (option == HK3_TE2_CHANGEABLE && test_bit(FEAT_OP_NS, spanel->feat))
+	if (test_bit(FEAT_OP_NS, spanel->feat)) {
+		rising = HK3_TE2_RISING_EDGE_OFFSET;
 		falling = HK3_TE2_FALLING_EDGE_OFFSET_NS;
+	} else {
+		if (exynos_panel_get_current_mode_te2(ctx, &timing)) {
+			dev_dbg(ctx->dev, "failed to get TE2 timng\n");
+			return;
+		}
+		rising = timing.rising_edge;
+		falling = timing.falling_edge;
+	}
 
 	ctx->te2.option = (option == HK3_TE2_FIXED) ? TE2_OPT_FIXED : TE2_OPT_CHANGEABLE;
 
 	dev_dbg(ctx->dev,
-		"TE2 updated: option %s, idle %s, rising=0x%X falling=0x%X\n",
+		"TE2 updated: %s mode, option %s, idle %s, rising=0x%X falling=0x%X\n",
+		test_bit(FEAT_OP_NS, spanel->feat) ? "NS" : "HS",
 		(option == HK3_TE2_CHANGEABLE) ? "changeable" : "fixed",
 		ctx->panel_idle_vrefresh ? "active" : "inactive",
 		rising, falling);
@@ -795,8 +798,10 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	bool enable_za = false;
 	u8 opr;
 
-	if (spanel->hw_acl_enabled) {
-		if (!hk3_get_opr(ctx, &opr)) {
+	if (spanel->hw_acl_enabled && !spanel->force_za_off) {
+		if (ctx->panel_rev != PANEL_REV_PROTO1) {
+			enable_za = true;
+		} else if (!hk3_get_opr(ctx, &opr)) {
 			enable_za = (opr > HK3_ZA_THRESHOLD_OPR);
 		} else {
 			dev_warn(ctx->dev, "Unable to update za\n");
@@ -805,10 +810,14 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	}
 
 	if (spanel->hw_za_enabled != enable_za) {
+		/* LP setting - 0x21 or 0x11: 7.5%, 0x00: off */
+		u8 val = 0;
+
 		EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x01, 0x6C, 0x92);
-		/* LP setting - 0x21: 7.5%, 0x00: off */
-		EXYNOS_DCS_BUF_ADD(ctx, 0x92, enable_za ? 0x21 : 0x00);
+		if (enable_za)
+			val = (ctx->panel_rev == PANEL_REV_PROTO1) ? 0x21 : 0x11;
+		EXYNOS_DCS_BUF_ADD(ctx, 0x92, val);
 		EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
 
 		spanel->hw_za_enabled = enable_za;
@@ -816,7 +825,8 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	}
 }
 
-#define HK3_ACL_ZA_THRESHOLD_DBV 3917
+#define HK3_ACL_ZA_THRESHOLD_DBV_P1_0 3917
+#define HK3_ACL_ZA_THRESHOLD_DBV 3781
 static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 {
 	int ret;
@@ -835,11 +845,18 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 	ret = exynos_dcs_set_brightness(ctx, brightness);
 	if (!ret) {
 		struct hk3_panel *spanel = to_spanel(ctx);
-		bool enable_acl = (br >= HK3_ACL_ZA_THRESHOLD_DBV && IS_HBM_ON(ctx->hbm_mode));
+		u16 dbv_th =
+			(ctx->panel_rev == PANEL_REV_PROTO1) ? HK3_ACL_ZA_THRESHOLD_DBV_P1_0 :
+			HK3_ACL_ZA_THRESHOLD_DBV;
+		bool enable_acl = (br >= dbv_th && IS_HBM_ON(ctx->hbm_mode));
 
 		if (spanel->hw_acl_enabled != enable_acl) {
-			/* ACL setting - 0x01: 5%, 0x00: off */
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, enable_acl ? 0x01 : 0x00);
+			/* ACL setting - 0x01: 5%, 0x02: 7.5%, 0x00: off */
+			u8 val = 0;
+
+			if (enable_acl)
+				val = (ctx->panel_rev == PANEL_REV_PROTO1) ? 0x01 : 0x02;
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, val);
 			spanel->hw_acl_enabled = enable_acl;
 			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
 
@@ -888,7 +905,11 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 
 	/* FFC: 165MHz, MIPI Speed 1346 Mbps */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x36, 0xC5),
-	EXYNOS_DSI_CMD_SEQ(0xC5, 0x11, 0x10, 0x50, 0x05, 0x4E, 0x74),
+	EXYNOS_DSI_CMD_SEQ(0xC5, 0x11, 0x10, 0x50, 0x05, 0x4E, 0x74, 0x40,
+			   0x00, 0x40, 0x00, 0x40, 0x00, 0x4E, 0x74, 0x40,
+			   0x00, 0x40, 0x00, 0x40, 0x00, 0x4E, 0x74, 0x40,
+			   0x00, 0x40, 0x00, 0x40, 0x00, 0x4E, 0x74, 0x40,
+			   0x00, 0x40, 0x00, 0x40, 0x00),
 
 	EXYNOS_DSI_CMD0(freq_update),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
@@ -1116,28 +1137,8 @@ static void hk3_set_dimming_on(struct exynos_panel *ctx,
 static void hk3_set_local_hbm_mode(struct exynos_panel *ctx,
 				 bool local_hbm_en)
 {
-	const struct exynos_panel_mode *pmode;
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
 
-	if (ctx->hbm.local_hbm.enabled == local_hbm_en)
-		return;
-
-	pmode = ctx->current_mode;
-	if (unlikely(pmode == NULL)) {
-		dev_err(ctx->dev, "%s: unknown current mode\n", __func__);
-		return;
-	}
-
-	if (local_hbm_en) {
-		const int vrefresh = drm_mode_vrefresh(&pmode->mode);
-		/* Add check to turn on LHBM @ 120hz only to comply with HW requirement */
-		if (vrefresh != 120) {
-			dev_err(ctx->dev, "unexpected mode `%s` while enabling LHBM, give up\n",
-				pmode->mode.name);
-			return;
-		}
-	}
-
-	ctx->hbm.local_hbm.enabled = local_hbm_en;
 	/* TODO: LHBM Position & Size */
 	hk3_write_display_mode(ctx, &pmode->mode);
 }
@@ -1145,13 +1146,6 @@ static void hk3_set_local_hbm_mode(struct exynos_panel *ctx,
 static void hk3_mode_set(struct exynos_panel *ctx,
 			 const struct exynos_panel_mode *pmode)
 {
-	if (!is_panel_active(ctx))
-		return;
-
-	if (ctx->hbm.local_hbm.enabled == true)
-		dev_warn(ctx->dev, "do mode change (`%s`) unexpectedly when LHBM is ON\n",
-			pmode->mode.name);
-
 	hk3_change_frequency(ctx, pmode);
 }
 
@@ -1217,7 +1211,6 @@ static const u32 hk3_bl_range[] = {
 static const struct exynos_panel_mode hk3_modes[] = {
 #ifdef PANEL_FACTORY_BUILD
 	{
-		/* 1344x2992 @ 1Hz */
 		.mode = {
 			.name = "1344x2992x1",
 			.clock = 4485,
@@ -1252,7 +1245,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED,
 	},
 	{
-		/* 1344x2992 @ 5Hz */
 		.mode = {
 			.name = "1344x2992x5",
 			.clock = 22423,
@@ -1287,7 +1279,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED,
 	},
 	{
-		/* 1344x2992 @ 10Hz */
 		.mode = {
 			.name = "1344x2992x10",
 			.clock = 44846,
@@ -1322,7 +1313,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED,
 	},
 	{
-		/* 1344x2992 @ 30Hz */
 		.mode = {
 			.name = "1344x2992x30",
 			.clock = 134539,
@@ -1359,7 +1349,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 	},
 #endif
 	{
-		/* 1344x2992 @ 60Hz */
 		.mode = {
 			.name = "1344x2992x60",
 			.clock = 269079,
@@ -1395,7 +1384,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
 	},
 	{
-		/* 1344x2992 @ 120Hz */
 		.mode = {
 			.name = "1344x2992x120",
 			.clock = 538158,
@@ -1431,7 +1419,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
 	},
 	{
-		/* 1008x2244 @ 60Hz */
 		.mode = {
 			.name = "1008x2244x60",
 			.clock = 156633,
@@ -1466,7 +1453,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
 	},
 	{
-		/* 1008x2244 @ 120Hz */
 		.mode = {
 			.name = "1008x2244x120",
 			.clock = 313266,
@@ -1506,7 +1492,6 @@ static const struct exynos_panel_mode hk3_modes[] = {
 static const struct exynos_panel_mode hk3_lp_modes[] = {
 	{
 		.mode = {
-			/* 1344x2992 @ 30Hz */
 			.name = "1344x2992x30",
 			.clock = 134539,
 			.hdisplay = 1344,
@@ -1538,7 +1523,6 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 	},
 	{
 		.mode = {
-			/* 1008x2244 @ 30Hz */
 			.name = "1008x2244x30",
 			.clock = 78317,
 			.hdisplay = 1008,
@@ -1578,9 +1562,8 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &hk3_init_cmd_set, "init");
 	debugfs_create_bool("force_changeable_te", 0644, ctx->debugfs_entry,
 				&spanel->force_changeable_te);
-
-	if (ctx->panel_rev == PANEL_REV_PROTO1)
-		hk3_lhbm_luminance_opr_setting(ctx);
+	debugfs_create_bool("force_za_off", 0644, ctx->debugfs_entry,
+				&spanel->force_za_off);
 }
 
 static int hk3_panel_probe(struct mipi_dsi_device *dsi)
@@ -1635,25 +1618,25 @@ const struct brightness_capability hk3_brightness_capability = {
 			.max = 800,
 		},
 		.level = {
-			.min = 4,
-			.max = 2047,
+			.min = 196,
+			.max = 2989,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 57,
+			.max = 50,
 		},
 	},
 	.hbm = {
 		.nits = {
 			.min = 800,
-			.max = 1400,
+			.max = 1600,
 		},
 		.level = {
-			.min = 2048,
+			.min = 2990,
 			.max = 4095,
 		},
 		.percentage = {
-			.min = 57,
+			.min = 50,
 			.max = 100,
 		},
 	},
@@ -1680,18 +1663,23 @@ const struct exynos_panel_desc google_hk3 = {
 	.binned_lp = hk3_binned_lp,
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
 	.is_panel_idle_supported = true,
+	.no_lhbm_rr_constraints = true,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.reset_timing_ms = {1, 1, 5},
 	.reg_ctrl_enable = {
-		{PANEL_REG_ID_VDDI, 0},
-		{PANEL_REG_ID_VDDD, 0},
+		{PANEL_REG_ID_VDDI, 1},
 		{PANEL_REG_ID_VCI, 10},
 	},
+	.reg_ctrl_post_enable = {
+		{PANEL_REG_ID_VDDD, 1},
+	},
+	.reg_ctrl_pre_disable = {
+		{PANEL_REG_ID_VDDD, 1},
+	},
 	.reg_ctrl_disable = {
-		{PANEL_REG_ID_VDDD, 0},
-		{PANEL_REG_ID_VDDI, 0},
-		{PANEL_REG_ID_VCI, 0},
+		{PANEL_REG_ID_VCI, 1},
+		{PANEL_REG_ID_VDDI, 1},
 	},
 };
 
