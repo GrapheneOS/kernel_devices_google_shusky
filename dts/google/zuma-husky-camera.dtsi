@@ -249,17 +249,17 @@
 
 				/* Power up sequence */
 				power-up-seqs =
-					"s2mpg15_ldo26",
 					"enable",
 					"ldo8",
+					"s2mpg15_ldo26",
 					"s2mpg15_ldo12",
 					"ldo1",
 					"ldo4",
 					"reset",
 					"mclk_on";
 				power-up-seq-types =
-					"regulator",
 					"gpio",
+					"regulator",
 					"regulator",
 					"regulator",
 					"regulator",
@@ -267,9 +267,9 @@
 					"gpio",
 					"pinctrl";
 				power-up-seq-delays-us =
-					<1000
-					 500
+					<500
 					 1000
+					 0
 					 0
 					 0
 					 2000
@@ -283,9 +283,9 @@
 					"ldo4",
 					"ldo1",
 					"s2mpg15_ldo12",
+					"s2mpg15_ldo26",
 					"ldo8",
-					"enable",
-					"s2mpg15_ldo26";
+					"enable";
 				power-down-seq-types =
 					"pinctrl",
 					"gpio",
@@ -293,8 +293,8 @@
 					"regulator",
 					"regulator",
 					"regulator",
-					"gpio",
-					"regulator";
+					"regulator",
+					"gpio";
 				power-down-seq-delays-us =
 					<1000
 					 1000
@@ -328,6 +328,7 @@
 				reset-gpios = <&gpp4 2 GPIO_ACTIVE_HIGH>;
 
 				/* Power supplies */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
 				gpio3-supply = <&slg51002_gpio3>;
 
@@ -348,6 +349,7 @@
 
 				/* Power up sequence */
 				power-up-seqs =
+					"s2mpg15_ldo26",
 					"s2mpg15_ldo12",
 					"gpio3",
 					"mclk_on",
@@ -355,10 +357,12 @@
 				power-up-seq-types =
 					"regulator",
 					"regulator",
+					"regulator",
 					"pinctrl",
 					"gpio";
 				power-up-seq-delays-us =
 					<0
+					 0
 					 1000
 					 1000
 					 8000>;
@@ -368,15 +372,18 @@
 					"reset",
 					"mclk_off",
 					"gpio3",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26";
 				power-down-seq-types =
 					"gpio",
 					"pinctrl",
+					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<0
 					 1000
+					 0
 					 0
 					 1000>;
 
@@ -579,7 +586,7 @@
 					"regulator",
 					"regulator";
 				power-up-seq-delays-us =
-					<1000
+					<0
 					 1000
 					 1000>;
 				/* Power down sequence */
@@ -593,7 +600,7 @@
 					"regulator";
 				power-down-seq-delays-us =
 					<1000
-					 1000
+					 0
 					 1000>;
 			};
 
@@ -834,7 +841,6 @@
 				reg-value-bitwidth = <8>;
 
 				/* Power supplies */
-				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
 				enable-gpios = <&s2mpg15_gpio 4 GPIO_ACTIVE_HIGH>;
 				/* Make front AF can be powered up alone */
@@ -843,18 +849,15 @@
 
 				/* Power up sequence */
 				power-up-seqs =
-					"s2mpg15_ldo26",
 					"s2mpg15_ldo12",
 					"gpio3",
 					"enable";
 				power-up-seq-types =
 					"regulator",
 					"regulator",
-					"regulator",
 					"gpio";
 				power-up-seq-delays-us =
 					<1000
-					 1000
 					 500
 					 0>;
 
@@ -862,16 +865,13 @@
 				power-down-seqs =
 					"enable",
 					"gpio3",
-					"s2mpg15_ldo12",
-					"s2mpg15_ldo26";
+					"s2mpg15_ldo12";
 				power-down-seq-types =
 					"gpio",
-					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<0
-					 0
 					 0
 					 0>;
 
@@ -895,21 +895,25 @@
 				reg-value-bitwidth = <32>;
 
 				/* Power supplies */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
 				ldo5-supply = <&slg51002_ldo5>;
 				gpio4-supply = <&slg51002_gpio4>;
 
 				/* Power up sequence */
 				power-up-seqs =
+					"s2mpg15_ldo26",
 					"s2mpg15_ldo12",
 					"ldo5",
 					"gpio4";
 				power-up-seq-types =
 					"regulator",
 					"regulator",
+					"regulator",
 					"regulator";
 				power-up-seq-delays-us =
-					<1000
+					< 0
+					 1000
 					 1000
 					 1000>;
 
@@ -917,14 +921,17 @@
 				power-down-seqs =
 					"gpio4",
 					"ldo5",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26";
 				power-down-seq-types =
+					"regulator",
 					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<5000
 					 4000
+					 0
 					 0>;
 
 				/* Thread priority */
