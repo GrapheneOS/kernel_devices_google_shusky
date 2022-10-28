@@ -51,11 +51,14 @@ maxim,config {
 		>;
 	};
 
-	/* ATL: SB3_ATL_3347_20221020_BC59P10_RC2.ini.txt, b/238972338#comment3 */
+	/* ATL: SB3_ATL_3347_20221027_BC59_RC2.ini.txt, b/238972338#comment4 */
 	maxim,atl-a1-1k {
 		maxim,batt-id-kohm = <1>;
-		maxim,model-version = <2>;
+		maxim,model-version = <3>;
 		maxim,force-reset-model-data;
+		maxim,rc1-tempco = /bits/ 16 <0x131f>;
+		maxim,rc2-tempco = /bits/ 16 <0x1202>;
+		maxim,rc2-learncfg = /bits/ 16 <0x260e>;
 		maxim,fg-model = /bits/ 16 <
                         0xa4b0 0xb690 0xb960 0xbb70 0xbd10 0xbea0 0xbff0 0xc240
                         0xc4a0 0xc710 0xcb30 0xce20 0xd300 0xd650 0xd980 0xde10
@@ -87,19 +90,22 @@ maxim,config {
 			/* 0x002C */	0xED51	/* TGain */
 			/* 0x002D */	0x1EBA	/* TOff */
 			/* 0x00B9 */	0x0014	/* Curve */
-			/* 0x002B */	0x3870	/* MiscCFG */
+			/* 0x002B */	0x6030	/* MiscCFG */
 			/* 0x0004 */	0x1900	/* AtRate */
 			/* 0x0049 */	0x2241	/* convgcfg */
-			/* 0x0029 */	0x0623	/* FilterCFG */
+			/* 0x0029 */	0x0613	/* FilterCFG */
 			/* 0x003c */	0x2D00	/* TaskPeriod */
 		>;
 	};
 
-        /* COS: SB3_COS_3348_20221020_BC59O6_RC2.ini.txt, b/238972338#comment3 */
+        /* COS: SB3_COS_3348_20221027_BC59_RC2.ini.txt, b/238972338#comment4 */
 	maxim,cos-a1-2k {
 		maxim,batt-id-kohm = <2>;
-		maxim,model-version = <2>;
+		maxim,model-version = <3>;
 		maxim,force-reset-model-data;
+		maxim,rc1-tempco = /bits/ 16 <0x0b22>;
+		maxim,rc2-tempco = /bits/ 16 <0x1602>;
+		maxim,rc2-learncfg = /bits/ 16 <0x260e>;
 		maxim,fg-model = /bits/ 16 <
                         0xa170 0xb750 0xb890 0xba40 0xbbd0 0xbcd0 0xbf00 0xc080
                         0xc390 0xc7b0 0xcae0 0xce10 0xd190 0xd480 0xd780 0xdda0
@@ -131,10 +137,10 @@ maxim,config {
 			/* 0x002C */	0xED51	/* TGain */
 			/* 0x002D */	0x1EBA	/* TOff */
 			/* 0x00B9 */	0x0014	/* Curve */
-			/* 0x002B */	0x3870	/* MiscCFG */
+			/* 0x002B */	0x6030	/* MiscCFG */
 			/* 0x0004 */	0x1900	/* AtRate */
 			/* 0x0049 */	0x2241	/* convgcfg */
-			/* 0x0029 */	0x0623	/* FilterCFG */
+			/* 0x0029 */	0x0613	/* FilterCFG */
 			/* 0x003c */	0x2D00	/* TaskPeriod */
 		>;
 	};
