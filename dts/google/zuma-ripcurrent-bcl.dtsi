@@ -32,7 +32,9 @@
 				cpu0_clkdivstep = <0x1>;
 				odpm_ratio = <3>;
 				gpios = <&gpa9 5 0>,		/* VDROOP1 */
-					<&gpa9 6 0>;		/* VDROOP2 */
+					<&gpa9 6 0>,		/* VDROOP2 */
+					<&gpp19 2 0>,		/* MODEM 1 */
+					<&gpp10 0 0>;		/* MODEM 2 */
 			};
 		};
 	};
