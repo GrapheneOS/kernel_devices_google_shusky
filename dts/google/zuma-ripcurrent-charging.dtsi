@@ -153,6 +153,7 @@
 		/* google,irdrop-limits = <105000 75000 0>; */
 
 		wc68,google_cpm = <&google_cpm>;
+		wc68,input-current-limit = <3000000>; /* 6A max */
 		status = "ok";
 	};
 
