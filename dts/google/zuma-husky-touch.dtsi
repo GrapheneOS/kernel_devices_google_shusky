@@ -19,6 +19,12 @@
 	st,dchip_id = /bits/ 8 <0x36 0x40>;
 	st,max-coords = <1343 2991>;
 	st,panel_map = <&google_hk3 0>;
+
+	goog,vrr-enabled;
+	goog,vrr-display-rate = /bits/ 32 <60 120>;
+	goog,vrr-touch-rate = /bits/ 32 <120 240>;
+	goog,vrr-up-delay = <0>;
+	goog,vrr-down-delay = <2>;
 };
 
 &m_ldo25_reg {
