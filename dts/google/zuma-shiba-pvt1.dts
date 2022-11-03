@@ -9,6 +9,7 @@
 /plugin/;
 
 #include "zuma-shiba-common.dtsi"
+#include "zuma-shusky-wcharger.dtsi"
 
 / {
 	board_id = <0x40305>;
