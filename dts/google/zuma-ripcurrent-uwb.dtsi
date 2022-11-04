@@ -46,9 +46,6 @@
 		reset-gpios = <&gpp14 0 GPIO_ACTIVE_LOW>;
 		ss-ready-gpios = <&gpn4 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
 		wakeup-gpios = <&gpa5 6 GPIO_ACTIVE_HIGH>;
-		qm35-vdd1-supply = <&s_bucka_reg>;
-		qm35-vdd2-supply = <&s_ldo16_reg>;
-		qm35-vdd3-supply = <&s_bucka_reg>;
 		status = "okay";
 		controller-data {
 			samsung,spi-feedback-delay = <0>;
