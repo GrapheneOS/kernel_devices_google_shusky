@@ -303,6 +303,8 @@ static u32 hk3_get_min_idle_vrefresh(struct exynos_panel *ctx,
 		return 0;
 	}
 
+	dev_dbg(ctx->dev, "%s: min_idle_vrefresh %d\n", __func__, min_idle_vrefresh);
+
 	return min_idle_vrefresh;
 }
 
@@ -326,6 +328,7 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 		if (bitmap_empty(changed_feat, FEAT_MAX) &&
 			vrefresh == spanel->hw_vrefresh &&
 			idle_vrefresh == spanel->hw_idle_vrefresh)
+			dev_dbg(ctx->dev, "%s: no changes, skip update\n", __func__);
 			return;
 	}
 
@@ -637,6 +640,8 @@ static void hk3_update_refresh_mode(struct exynos_panel *ctx,
 	hk3_update_panel_feat(ctx, pmode, false);
 	te2_state_changed(ctx->bl);
 	backlight_state_changed(ctx->bl);
+
+	dev_dbg(ctx->dev, "%s: display state is notified\n", __func__);
 }
 
 static void hk3_change_frequency(struct exynos_panel *ctx,
@@ -681,6 +686,8 @@ static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 	const struct exynos_panel_mode *pmode = ctx->current_mode;
 	struct hk3_panel *spanel = to_spanel(ctx);
 	u32 idle_vrefresh;
+
+	dev_dbg(ctx->dev, "%s: %d\n", __func__, enable);
 
 	if (unlikely(!pmode))
 		return false;
@@ -1091,49 +1098,42 @@ static int hk3_disable(struct drm_panel *panel)
  *
  * - update timestamp of switching to manual mode in case its been a while since the
  *   last frame update and auto mode may have started to lower refresh rate.
- * - disable auto refresh mode if there is switching delay requirement
- * - trigger early exit by command if it's changeable TE, which could result in
- *   fast 120 Hz boost and seeing 120 Hz TE earlier
+ * - trigger early exit by command if it's changeable TE and no switching delay, which
+ *   could result in fast 120 Hz boost and seeing 120 Hz TE earlier, otherwise disable
+ *   auto refresh mode to avoid lowering frequency too fast.
  */
-static bool hk3_update_idle_state(struct exynos_panel *ctx)
+static void hk3_update_idle_state(struct exynos_panel *ctx)
 {
 	s64 delta_us;
 	struct hk3_panel *spanel = to_spanel(ctx);
-	bool updated = false;
 
 	ctx->panel_idle_vrefresh = 0;
 	if (!test_bit(FEAT_FRAME_AUTO, spanel->feat))
-		return false;
+		return;
 
 	delta_us = ktime_us_delta(ktime_get(), ctx->last_commit_ts);
 	if (delta_us < EARLY_EXIT_THRESHOLD_US) {
 		dev_dbg(ctx->dev, "skip early exit. %lldus since last commit\n",
 			delta_us);
-		return false;
+		return;
 	}
 
 	/* triggering early exit causes a switch to 120hz */
 	ctx->last_mode_set_ts = ktime_get();
 
 	DPU_ATRACE_BEGIN(__func__);
-	/*
-	 * If there is delay limitation requirement, turn off auto mode to prevent panel
-	 * from lowering frequency too fast if not seeing new frame.
-	 */
-	if (ctx->idle_delay_ms) {
-		const struct exynos_panel_mode *pmode = ctx->current_mode;
-		hk3_update_refresh_mode(ctx, pmode, 0);
-		updated = true;
-	} else if (spanel->force_changeable_te) {
+
+	if (!ctx->idle_delay_ms && spanel->force_changeable_te) {
 		dev_dbg(ctx->dev, "sending early exit out cmd\n");
 		EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
 		EXYNOS_DCS_BUF_ADD_SET(ctx, freq_update);
 		EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+	} else {
+		/* turn off auto mode to prevent panel from lowering frequency too fast */
+		hk3_update_refresh_mode(ctx, ctx->current_mode, 0);
 	}
 
 	DPU_ATRACE_END(__func__);
-
-	return updated;
 }
 
 static void hk3_commit_done(struct exynos_panel *ctx)
@@ -1141,8 +1141,7 @@ static void hk3_commit_done(struct exynos_panel *ctx)
 	if (!ctx->current_mode)
 		return;
 
-	if (hk3_update_idle_state(ctx))
-		hk3_update_te2(ctx);
+	hk3_update_idle_state(ctx);
 
 	hk3_update_za(ctx);
 }
