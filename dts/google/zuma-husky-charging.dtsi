@@ -10,5 +10,8 @@
 	pca9468,input-current-limit = <3000000>; /* 6A max */
 };
 
+&google_cpm {
+	google,wlc-dc-fcc-ua = <4950000>; /* 1C(4950mah) */
+};
 /* TODO: thermal hal */
 

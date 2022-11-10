@@ -6,6 +6,34 @@
  *
  */
 
+&pinctrl_0 {
+	odpm_vbatt_enable: odpm-vbatt-enable {
+		samsung,pins = "gpa3-2";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
+		samsung,pin-val = <1>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_UP>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
+	};
+	odpm_vbatt_disable: odpm-vbatt-disable {
+		samsung,pins = "gpa3-2";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
+		samsung,pin-val = <0>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_DOWN>;
+		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
+	};
+};
+
+&s2mpg14mfd {
+	odpm_vbatt_en: odpm_vbatt_en {
+		compatible = "google,odpm_vbatt_en";
+		dev-name = "odpm_vbatt_en";
+		pinctrl-names = "odpm-vbatt-enable", "odpm-vbatt-disable";
+		pinctrl-0 = <&odpm_vbatt_enable>;
+		pinctrl-1 = <&odpm_vbatt_disable>;
+		status = "okay";
+	};
+};
+
 &m_ldo4_reg {
 	schematic-name = "L4M_TS_AVDD";
 	subsys-name = "TS";

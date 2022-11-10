@@ -13,9 +13,9 @@
 		1008x2244 {
 			mode-name = "1008x2244";
 			pmsk = <
-				0x2 0xDB 0x2 0x1355 /* p m s k */
+				0x1 0x6F 0x2 0x5400 /* p m s k */
 				>;
-			hs-clk = <1346>;
+			hs-clk = <1368>;
 			esc-clk = <20>;
 		};
 		1080x2400 {
@@ -29,9 +29,9 @@
 		1344x2992 {
 			mode-name = "1344x2992";
 			pmsk = <
-				0x2 0xDB 0x2 0x1355 /* p m s k */
+				0x1 0x6F 0x2 0x5400 /* p m s k */
 				>;
-			hs-clk = <1346>;
+			hs-clk = <1368>;
 			esc-clk = <20>;
 		};
 	};
