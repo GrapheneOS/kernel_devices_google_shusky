@@ -1,13 +1,14 @@
-KERNEL_DIR=private/google-modules/soc/gs
-DEVICE_MODULES_DIR=${KERNEL_DIR}
+# KERNEL_DIR is set by the environment to the directory where the BUILD_CONFIG
+# file is located.
+DEVICE_DIR=${KERNEL_DIR}
+SOC_DIR=private/google-modules/soc/gs
 # Compile these modules with the GKI kernel
-KERNEL_DIR="aosp-staging"
-# Compute the path of this project relative to KERNEL_DIR
-DEVICE_MODULES_REL_DIR=$(rel_path ${DEVICE_MODULES_DIR} ${KERNEL_DIR})
+KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp-staging"}
+DEVICE_REL_DIR=$(rel_path2 ${DEVICE_DIR} ${KERNEL_DIR})
 
-GKI_FRAGMENT_DEFCONFIG=../boot/dts/google/devices/shusky/../../shusky_gki.fragment
-
-. ${ROOT_DIR}/${DEVICE_MODULES_DIR}/build.config.zuma
+# These just need to be relative to the ROOT_DIR
+GKI_FRAGMENT_DEFCONFIG=${DEVICE_DIR}/shusky_gki.fragment
+. ${ROOT_DIR}/${SOC_DIR}/build.config.zuma
 
 MAKE_GOALS="$MAKE_GOALS
 modules
@@ -15,13 +16,12 @@ dtbs
 "
 
 DTS_EXT_DIR="private/devices/google/shusky/dts"
-DTC_INCLUDE=${ROOT_DIR}/${DEVICE_MODULES_DIR}/include/dtc
+DTC_INCLUDE=${ROOT_DIR}/${SOC_DIR}/include/dtc
 BUILD_DTBO_IMG=1
 MKDTIMG_FLAGS="--page_size=4096 --id=/:board_id --rev=/:board_rev"
 # These paths need to be relative to KERNEL_DIR.
 MKDTIMG_DTBOS="
-../private/devices/google/shusky/dts/google-dts-base/*.dtbo
-../private/devices/google/shusky/dts/google/*.dtbo
+${DEVICE_REL_DIR}/dts/google/*.dtbo
 "
 
 FILES="
@@ -37,7 +37,7 @@ google/zuma-shiba-proto1_1.dtbo
 # Concatenate vendor_kernel_boot_modules.zuma (platform common) and vendor_kernel_boot_modules.shusky (device specified) into one file
 POST_KERNEL_BUILD_CMDS="concat_vendor_kernel_boot_modules"
 function concat_vendor_kernel_boot_modules() {
-  cat ${DEVICE_MODULES_DIR}/vendor_kernel_boot_modules.zuma \
+  cat ${SOC_DIR}/vendor_kernel_boot_modules.zuma \
     private/devices/google/shusky/vendor_kernel_boot_modules.shusky > \
     ${OUT_DIR}/vendor_kernel_boot_modules.concat
   MODULES_LIST=${OUT_DIR}/vendor_kernel_boot_modules.concat
