@@ -13,6 +13,8 @@ EXTRA_CFLAGS += -Werror
 
 EXTRA_SYMBOLS += $(OUT_DIR)/../private/google-modules/display/Module.symvers
 
+include $(KERNEL_SRC)/../private/google-modules/soc/gs/Makefile.include
+
 modules modules_install clean:
 	$(MAKE) -C $(KERNEL_SRC) M=$(M) W=1 \
 	$(KBUILD_OPTIONS) \
