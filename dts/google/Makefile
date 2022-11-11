@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0
 
 shusky_overlays := \
-	../google-dts-base/zuma-emulator.dtbo \
-	../google-dts-base/zuma-hybrid.dtbo \
 	zuma-ripcurrent.dtbo \
 	zuma-husky-proto1.dtbo \
 	zuma-husky-proto1-wingboard.dtbo \
@@ -50,8 +48,8 @@ endef
 define multi_dtbs_overlay
 	$(foreach base, $1, \
 		$(foreach overlay, $2, \
-			$(eval $(call DTBS_overlay_template, $(overlay), $(base), $(base:%.dtb=%))) \
-			$(eval $(call DTB_object_template, $3, $(overlay), $(base:%.dtb=%)))))
+			$(eval $(call DTBS_overlay_template, $(overlay), $(base), $(notdir $(base:%.dtb=%)))) \
+			$(eval $(call DTB_object_template, $3, $(overlay), $(notdir $(base:%.dtb=%))))))
 endef
 
 # Create the -dtbs and dtb-y constructs. We can do this by looping through the
