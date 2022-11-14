@@ -10,6 +10,7 @@ load(
     "kernel_module",
     "kernel_module_group",
     "kernel_modules_install",
+    "kernel_unstripped_modules_archive",
     "merged_kernel_uapi_headers",
 )
 
@@ -27,6 +28,7 @@ kernel_build(
     ],
     outs = aarch64_outs,
     build_config = "build.config.shusky.gki",
+    collect_unstripped_modules = True,
     # For building system_dlkm (b/241855743)
     # Device fragments need to add: '# CONFIG_MODULE_SIG_ALL is not set'
     implicit_outs = [
@@ -35,6 +37,7 @@ kernel_build(
         "certs/signing_key.x509",
     ],
     module_implicit_outs = COMMON_GKI_MODULES_LIST,
+    strip_modules = True,
 )
 
 kernel_modules_install(
@@ -125,6 +128,7 @@ kernel_build(
     # base_kernel = "//aosp-staging:kernel_aarch64",
     base_kernel = ":shusky_gki",
     build_config = "build.config.shusky",
+    collect_unstripped_modules = True,
     dtstree = "//private/devices/google/shusky/dts:shusky.dt",
     implicit_outs = _SHUSKY_DTBOS,
     kconfig_ext = "//private/google-modules/soc/gs:Kconfig.ext",
@@ -139,6 +143,7 @@ kernel_build(
         "drivers/spi/spidev.ko",
         "drivers/watchdog/softdog.ko",
     ],
+    strip_modules = True,
 )
 
 kernel_module(
@@ -305,6 +310,12 @@ merged_kernel_uapi_headers(
     kernel_modules = [":shusky_ext_modules"],
 )
 
+kernel_unstripped_modules_archive(
+    name = "zuma_shusky_unstripped_modules_archive",
+    kernel_build = ":zuma_shusky",
+    kernel_modules = [":shusky_ext_modules"],
+)
+
 genrule(
     name = "vendor_kernel_boot_modules.shusky-cat",
     srcs = [
@@ -404,6 +415,7 @@ copy_to_dist_dir(
         ":zuma_shusky_images",
         # TODO: support running ufdt_apply_overlay in a loop on each DTBO
         #":zuma_shusky_ufdt_overlay",
+        ":zuma_shusky_unstripped_modules_archive",
     ] + _GKI_MODULES,
     dist_dir = "out/shusky/dist",
     flat = True,
