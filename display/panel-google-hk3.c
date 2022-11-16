@@ -327,9 +327,10 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 		bitmap_xor(changed_feat, spanel->feat, spanel->hw_feat, FEAT_MAX);
 		if (bitmap_empty(changed_feat, FEAT_MAX) &&
 			vrefresh == spanel->hw_vrefresh &&
-			idle_vrefresh == spanel->hw_idle_vrefresh)
+			idle_vrefresh == spanel->hw_idle_vrefresh) {
 			dev_dbg(ctx->dev, "%s: no changes, skip update\n", __func__);
 			return;
+		}
 	}
 
 	spanel->hw_vrefresh = vrefresh;
