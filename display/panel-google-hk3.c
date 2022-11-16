@@ -129,6 +129,17 @@ static const struct exynos_dsi_cmd hk3_lp_cmds[] = {
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
 	/* Fixed TE: sync on */
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x51),
+	/* Manual mode: 30Hz */
+	EXYNOS_DSI_CMD_SEQ(0xBD, 0x21),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x01, 0x60),
+	EXYNOS_DSI_CMD_SEQ(0x60, 0x00),
+	EXYNOS_DSI_CMD0(freq_update),
+	EXYNOS_DSI_CMD0(lock_cmd_f0),
+};
+static DEFINE_EXYNOS_CMD_SET(hk3_lp);
+
+static const struct exynos_dsi_cmd hk3_post_lp_cmds[] = {
+	EXYNOS_DSI_CMD0(unlock_cmd_f0),
 	/* Auto frame insertion: 1Hz */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x18, 0xBD),
 	EXYNOS_DSI_CMD_SEQ(0xBD, 0x04, 0x00, 0x74),
@@ -147,7 +158,7 @@ static const struct exynos_dsi_cmd hk3_lp_cmds[] = {
 	EXYNOS_DSI_CMD0(freq_update),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
 };
-static DEFINE_EXYNOS_CMD_SET(hk3_lp);
+static DEFINE_EXYNOS_CMD_SET(hk3_post_lp);
 
 static const struct exynos_dsi_cmd hk3_lp_off_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
@@ -929,6 +940,42 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 	return ret;
 }
 
+/*
+ * We may have 1/10/30Hz min_vrefresh before entering LP mode if auto frame
+ * insertion is enabled. Select 30Hz to keep the feature and also have better
+ * performance.
+ */
+#define HK3_BEFORE_LP_MIN_VREFRESH 30
+static void hk3_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_mode *pmode)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	dev_dbg(ctx->dev, "%s\n", __func__);
+
+	DPU_ATRACE_BEGIN(__func__);
+	/*
+	 * We will go to a lower refresh rate, e.g. 1Hz before entering LP mode if
+	 * auto frame insertion is enabled. It will cause bad performance (sluggish)
+	 * during the transition. Changing min_vrefresh to a higher value can have
+	 * better experience.
+	 */
+	if (test_bit(FEAT_FRAME_AUTO, spanel->feat))
+		hk3_update_refresh_mode(ctx, ctx->current_mode, HK3_BEFORE_LP_MIN_VREFRESH);
+	exynos_panel_set_lp_mode(ctx, pmode);
+	DPU_ATRACE_END(__func__);
+}
+
+static void hk3_set_post_lp_mode(struct exynos_panel *ctx)
+{
+	dev_dbg(ctx->dev, "%s\n", __func__);
+
+	/*
+	 * Enable panel idle after entering LP mode to avoid bad performance due to
+	 * 1Hz during the transition.
+	 */
+	exynos_panel_send_cmd_set(ctx, &hk3_post_lp_cmd_set);
+}
+
 static void hk3_set_nolp_mode(struct exynos_panel *ctx,
 			      const struct exynos_panel_mode *pmode)
 {
@@ -1652,9 +1699,10 @@ static const struct drm_panel_funcs hk3_drm_funcs = {
 
 static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.set_brightness = hk3_set_brightness,
-	.set_lp_mode = exynos_panel_set_lp_mode,
+	.set_lp_mode = hk3_set_lp_mode,
 	.set_nolp_mode = hk3_set_nolp_mode,
 	.set_binned_lp = exynos_panel_set_binned_lp,
+	.set_post_lp_mode = hk3_set_post_lp_mode,
 	.set_hbm_mode = hk3_set_hbm_mode,
 	.set_dimming_on = hk3_set_dimming_on,
 	.set_local_hbm_mode = hk3_set_local_hbm_mode,
