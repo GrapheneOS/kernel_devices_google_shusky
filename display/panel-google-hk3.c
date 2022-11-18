@@ -519,9 +519,9 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 				0x0B, 0xC9, 0x0B, 0xE8, 0x0B, 0xC9, 0x0B, 0xE8);
 		else
 			/* Changeable TE setting */
-			EXYNOS_DCS_BUF_ADD(ctx, 0xB9, 0x0B, 0xE0, 0x00, 0x2F,
+			EXYNOS_DCS_BUF_ADD(ctx, 0xB9, 0x0B, 0xBB, 0x00, 0x2F,
 				/* Fixed TE setting */
-				0x0B, 0xE0, 0x00, 0x2F, 0x0B, 0xE0, 0x00, 0x2F);
+				0x0B, 0xBB, 0x00, 0x2F, 0x0B, 0xBB, 0x00, 0x2F);
 	}
 	/* TE setting */
 	if (test_bit(FEAT_EARLY_EXIT, changed_feat) ||
@@ -1757,7 +1757,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
-			.te_usec = 150, //TODO
+			.te_usec = 276,
 			.bpc = 8,
 			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
@@ -1816,7 +1816,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
-			.te_usec = 150, //TODO
+			.te_usec = 276,
 			.bpc = 8,
 			.dsc = HK3_FHD_DSC,
 			.underrun_param = &underrun_param,
@@ -1849,7 +1849,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
-			.te_usec = 25300, //TODO
+			.te_usec = 693,
 			.bpc = 8,
 			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
@@ -1875,7 +1875,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
-			.te_usec = 25300, //TODO
+			.te_usec = 693,
 			.bpc = 8,
 			.dsc = HK3_FHD_DSC,
 			.underrun_param = &underrun_param,
