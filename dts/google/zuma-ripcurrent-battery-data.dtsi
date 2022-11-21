@@ -9,10 +9,9 @@
 maxim,config {
 
 	/* ATL: 1_ATL_2937_2_011421_3.3V_RC2_V03.txt, 2021-11-18, b/205853069 */
-	/* simulate 1.2C charge: 4087 x 1.2 ~ 4905 (R4) */
 	maxim,cos-a1-1k {
 		maxim,batt-id-kohm = <1>;
-		maxim,model-version = <6>;
+		maxim,model-version = <7>;
 		maxim,force-reset-model-data;
 		maxim,fg-model = /bits/ 16 <
 			0xa4c0 0xaa10 0xb710 0xb9a0 0xbba0 0xbc30 0xbd20 0xbeb0
@@ -29,11 +28,11 @@ maxim,config {
 			/* 0x001D */	0x4217	/* Config */
 			/* 0x00BB */	0x0090	/* Config2 */
 			/* 0x0013 */	0x5f00	/* FullSOCthr */
-			/* 0x0035 */	0x07fb	/* FullCAPRep */
-			/* 0x0018 */	0x07fb	/* DesignCap */
+			/* 0x0035 */	0x09d6	/* FullCAPRep */
+			/* 0x0018 */	0x09d6	/* DesignCap */
 			/* 0x0046 */	0x3200	/* dPacc */
 			/* 0x0045 */	0x0275	/* dQacc */
-			/* 0x0023 */	0x07fb	/* FullCAPNom */
+			/* 0x0023 */	0x09d6	/* FullCAPNom */
 			/* 0x003A */	0xa561	/* V_empty */
 			/* 0x0012 */	0x3100	/* QResidual00 */
 			/* 0x0022 */	0x1580	/* QResidual10 */
@@ -53,7 +52,7 @@ maxim,config {
 		>;
 	};
 
-	/* Placeholder for 1.5C battery model, b/255239258#comment1 */
+	/* Placeholder for 1.5C battery model, b/255239258#comment1 with 5138mAh */
 	maxim,cos-a1-10k {
 		maxim,batt-id-kohm = <10>;
 		maxim,model-version = <1>;
@@ -73,11 +72,11 @@ maxim,config {
 			/* 0x001D */	0x4217	/* Config */
 			/* 0x00BB */	0x0090	/* Config2 */
 			/* 0x0013 */	0x5f00	/* FullSOCthr */
-			/* 0x0035 */	0x09cf	/* FullCAPRep */
-			/* 0x0018 */	0x09cf	/* DesignCap */
+			/* 0x0035 */	0x0a09	/* FullCAPRep */
+			/* 0x0018 */	0x0a09	/* DesignCap */
 			/* 0x0046 */	0x3200	/* dPacc */
 			/* 0x0045 */	0x0273	/* dQacc */
-			/* 0x0023 */	0x09cf	/* FullCAPNom */
+			/* 0x0023 */	0x0a09	/* FullCAPNom */
 			/* 0x003A */	0xa561	/* V_empty */
 			/* 0x0012 */	0x2400	/* QResidual00 */
 			/* 0x0022 */	0x0f80	/* QResidual10 */
