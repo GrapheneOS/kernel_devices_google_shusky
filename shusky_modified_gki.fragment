@@ -1,4 +1,2 @@
-# CONFIG_ARM64_BTI is not set
-# CONFIG_ARM64_BTI_KERNEL is not set
 # CONFIG_ARM64_SVE is not set
 # CONFIG_ARM64_MPAM is not set
