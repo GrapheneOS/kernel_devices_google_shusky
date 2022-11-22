@@ -12,5 +12,4 @@
 #include "zuma-shusky-battery.dtsi"
 #include "zuma-shusky-charging.dtsi"
 #include "zuma-shusky-usecases.dtsi"
-#include "zuma-shusky-wcharger.dtsi"
 #include "zuma-shusky-gsa-gsc.dtsi"
