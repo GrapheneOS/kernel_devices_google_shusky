@@ -1048,18 +1048,26 @@
 				/* XAPC_MCLK8: GPP15[0] */
 				reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk8_fn>;
+				pinctrl-1 = <&sensor_mclk8_out>;
+
 				/* Power up sequence */
 				power-up-seqs =
+					"mclk_off",
 					"s2mpg15_ldo12",
 					"s2mpg15_ldo26",
 					"reset";
 				power-up-seq-types =
+					"pinctrl",
 					"regulator",
 					"regulator",
 					"gpio";
 				power-up-seq-delays-us =
-					<1000
-					 1000
+					<0
+					 0
+					 0
 					 1000>;
 
 				/* Power down sequence */
@@ -1073,8 +1081,8 @@
 					"regulator";
 				power-down-seq-delays-us =
 					<1000
-					 1000
-					 1000>;
+					 0
+					 0>;
 			};
 		};
 	};
