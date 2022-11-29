@@ -26,6 +26,7 @@ MKDTIMG_DTBOS="
 
 FILES="
 google-dts-base/zuma-a0.dtb
+google-dts-base/zuma-b0.dtb
 google/zuma-ripcurrent.dtbo
 google/zuma-husky-proto1.dtbo
 google/zuma-husky-proto1_1.dtbo
