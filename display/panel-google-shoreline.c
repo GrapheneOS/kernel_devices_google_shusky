@@ -40,6 +40,9 @@ static const unsigned char PPS_SETTING[] = {
 #define SHORELINE_TE2_RISING_EDGE_120HZ 0x960
 #define SHORELINE_TE2_FALLING_EDGE      0x30
 
+#define WIDTH_MM 64
+#define HEIGHT_MM 143
+
 static const u8 test_key_on_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 test_key_off_f0[] = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
@@ -468,8 +471,8 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 			.vsync_end = 2400 + 12 + 4, // add vsa
 			.vtotal = 2400 + 12 + 4 + 26, // add vbp
 			.flags = 0,
-			.width_mm = 70,
-			.height_mm = 149,
+			.width_mm = WIDTH_MM,
+			.height_mm = HEIGHT_MM,
 		},
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
@@ -501,8 +504,8 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 			.vsync_end = 2400 + 12 + 4, // add vsa
 			.vtotal = 2400 + 12 + 4 + 26, // add vbp
 			.flags = 0,
-			.width_mm = 70,
-			.height_mm = 149,
+			.width_mm = WIDTH_MM,
+			.height_mm = HEIGHT_MM,
 		},
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
@@ -537,8 +540,8 @@ static const struct exynos_panel_mode shoreline_lp_mode = {
 		.vtotal = 2400 + 12 + 4 + 26, // add vbp
 		.flags = 0,
 		.type = DRM_MODE_TYPE_DRIVER,
-		.width_mm = 70,
-		.height_mm = 149,
+		.width_mm = WIDTH_MM,
+		.height_mm = HEIGHT_MM,
 	},
 	.exynos_mode = {
 		.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
