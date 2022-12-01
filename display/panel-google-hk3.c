@@ -1672,6 +1672,10 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 				&spanel->force_changeable_te2);
 	debugfs_create_bool("force_za_off", 0644, ctx->debugfs_entry,
 				&spanel->force_za_off);
+
+#ifdef PANEL_FACTORY_BUILD
+	ctx->panel_idle_enabled = false;
+#endif
 }
 
 static int hk3_panel_probe(struct mipi_dsi_device *dsi)
