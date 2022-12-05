@@ -30,7 +30,7 @@
 	goodix,panel-max-y = <2399>;
 	goodix,panel-max-w = <255>;
 	goodix,panel-max-p = <255>;
-	goodix,panel-height-mm = <141>;
+	goodix,panel-height-mm = <143>;
 	goodix,udfps-x = <540>;
 	goodix,udfps-y = <1717>;
 	goodix,sleep-enable;
@@ -47,6 +47,9 @@
 	goodix,test_limits_names = "goodix_test_limits_bigsurf.csv",
 			"goodix_test_limits_shoreline.csv";
 
+	goog,offload-enabled;
+	goog,v4l2-enabled;
+	goog,offload-caps-scan-types = /bits/ 16 <0xC0>;
 	goog,touch_offload_id = /bits/ 8 <'s' 'b' '3' '0'>;
 	goog,display-resolution = /bits/ 16 <1080 2400>;
 	goog,channel-num = /bits/ 16 <16 36>;
