@@ -30,7 +30,7 @@
 
 	goog,v4l2-enabled;
 	goog,offload-enabled;
-	goog,offload-caps-data-types = /bits/ 16 <0x0F>;
+	goog,offload-caps-data-types = /bits/ 16 <0x1F>;
 	goog,offload-caps-scan-types = /bits/ 16 <0xC0>;
 	goog,offload-caps-cancel-reporting;
         goog,offload-caps-rotation-reporting;
