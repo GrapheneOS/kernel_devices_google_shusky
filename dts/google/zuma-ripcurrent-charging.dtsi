@@ -26,10 +26,13 @@
 				google,dc_limit-demand = <560000>;
 				google,dc_limit-vbatt = <4350000>;
 				google,dc_limit-vbatt_min = <3400000>;
+				google,dc_limit-vbatt_max = <4700000>;
 
 				google,tcpm-power-supply = <&max77759tcpc>;	// in=0
 				google,wlc_dc-power-supply = "wireless";	// in=1
 				google,pps-awake;
+
+				google,taper_step-count = <1>;
 			};
 
 			google_charger: google,charger {
@@ -42,7 +45,7 @@
 				google,usb-power-supply = "usb";
 				google,tcpm-power-supply = <&max77759tcpc>;
 
-				google,fv-max-uv = <4450000>;
+				google,fv-max-uv = <4700000>;
 
 				google,wlc-thermal-mitigation = <1100000 500000 250000 110000>;
 				google,therm-wlc-overrides-fcc;
@@ -63,6 +66,7 @@
 				google,bd-temp-dry-run;
 
 				google,chg-termination-5v;
+				google,chg-taper-last-tier;
 			};
 
 			google_bms {
