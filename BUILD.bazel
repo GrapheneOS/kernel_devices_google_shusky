@@ -15,6 +15,32 @@ load(
     "kernel_unstripped_modules_archive",
     "merged_kernel_uapi_headers",
 )
+load(
+    "//private/google-modules/soc/gs:debug_build_configs.bzl",
+    "debug_build_configs",
+    "staging_build_config",
+)
+
+# TODO: make this configurable to allow switching between aosp/ and
+# aosp-staging/
+_GKI_KERNEL_DIR = "aosp-staging"
+
+_GKI_BUILD_CONFIG_FRAGMENT = "//private/devices/google/shusky:build.config.shusky.gki.fragment"
+
+staging_build_config(
+    name = "build.config.shusky_staging",
+    base_build_config = ":build.config.shusky",
+    device_name = "shusky",
+    gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
+)
+
+debug_build_configs(
+    name = "build.config.shusky",
+    base_build_config = ":build.config.shusky",
+    device_name = "shusky",
+    gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
+    gki_kernel_dir = _GKI_KERNEL_DIR,
+)
 
 # TODO(b/221278445): Use real GKI. Delete the shusky_gki targets.
 # Note: shusky_gki and shusky_X all writes to shusky_gki_defconfig,
@@ -26,10 +52,18 @@ kernel_build(
         "build.config.*",
         "shusky*.fragment",
     ]) + [
-        "//aosp-staging:kernel_aarch64_sources",
+        "//{}:kernel_aarch64_sources".format(_GKI_KERNEL_DIR),
+        "//private/google-modules/soc/gs:build.config.slider.blktest",
+        "//private/google-modules/soc/gs:build.config.slider.debug_api",
+        "//private/google-modules/soc/gs:build.config.slider.debug_kmemleak",
+        "//private/google-modules/soc/gs:build.config.slider.debug_locking",
+        "//private/google-modules/soc/gs:build.config.slider.debug_memory",
+        "//private/google-modules/soc/gs:build.config.slider.debug_memory_accounting",
+        "//private/google-modules/soc/gs:build.config.slider.kasan",
+        "//private/google-modules/soc/gs:build.config.slider.khwasan",
     ],
     outs = aarch64_outs,
-    build_config = "build.config.shusky.gki",
+    build_config = "//private/google-modules/soc/gs:gki_build_config",
     collect_unstripped_modules = True,
     # For building system_dlkm (b/241855743)
     # Device fragments need to add: '# CONFIG_MODULE_SIG_ALL is not set'
@@ -113,9 +147,17 @@ kernel_build_abi(
         "shusky*.fragment",
     ]) + [
         # keep sorted
-        "//aosp-staging:kernel_aarch64_sources",
+        "//{}:kernel_aarch64_sources".format(_GKI_KERNEL_DIR),
         "//private/google-modules/bms/misc:bms-misc.kconfig",
         "//private/google-modules/power/reset:reset.kconfig",
+        "//private/google-modules/soc/gs:build.config.slider.blktest",
+        "//private/google-modules/soc/gs:build.config.slider.debug_api",
+        "//private/google-modules/soc/gs:build.config.slider.debug_kmemleak",
+        "//private/google-modules/soc/gs:build.config.slider.debug_locking",
+        "//private/google-modules/soc/gs:build.config.slider.debug_memory",
+        "//private/google-modules/soc/gs:build.config.slider.debug_memory_accounting",
+        "//private/google-modules/soc/gs:build.config.slider.kasan",
+        "//private/google-modules/soc/gs:build.config.slider.khwasan",
         "//private/google-modules/soc/gs:build.config.zuma",
         "//private/google-modules/soc/gs:gs_soc.kconfig",
         "//private/google-modules/touch/common:touch.common.kconfig",
@@ -127,14 +169,14 @@ kernel_build_abi(
         for soc_rev in _SOC_REVS
     ],
     # TODO(b/221278445): Use real GKI
-    # base_kernel = "//aosp-staging:kernel_aarch64",
+    # base_kernel = "//{}:kernel_aarch64".format(_GKI_KERNEL_DIR),
     base_kernel = ":shusky_gki",
-    build_config = "build.config.shusky",
+    build_config = "//private/google-modules/soc/gs:device_build_config",
     collect_unstripped_modules = True,
     dtstree = "//private/devices/google/shusky/dts:shusky.dt",
     implicit_outs = _SHUSKY_DTBOS,
     kconfig_ext = "//private/google-modules/soc/gs:Kconfig.ext",
-    kmi_symbol_list = "//aosp-staging:android/abi_gki_aarch64_pixel",
+    kmi_symbol_list = "//{}:android/abi_gki_aarch64_pixel".format(_GKI_KERNEL_DIR),
     kmi_symbol_list_add_only = True,
     module_grouping = False,
     module_outs = [
