@@ -19,6 +19,9 @@
 #define BIGSURF_DDIC_ID_LEN 8
 #define BIGSURF_DIMMING_FRAME 32
 
+#define WIDTH_MM 64
+#define HEIGHT_MM 143
+
 /**
  * struct bigsurf_panel - panel specific runtime info
  *
@@ -520,8 +523,8 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 			.vsync_end = 2400 + 12 + 4, // add vsa
 			.vtotal = 2400 + 12 + 4 + 26, // add vbp
 			.flags = 0,
-			.width_mm = 64,
-			.height_mm = 134,
+			.width_mm = WIDTH_MM,
+			.height_mm = HEIGHT_MM,
 		},
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
@@ -549,8 +552,8 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 			.vsync_end = 2400 + 12 + 4, // add vsa
 			.vtotal = 2400 + 12 + 4 + 26, // add vbp
 			.flags = 0,
-			.width_mm = 64,
-			.height_mm = 134,
+			.width_mm = WIDTH_MM,
+			.height_mm = HEIGHT_MM,
 		},
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
@@ -581,8 +584,8 @@ static const struct exynos_panel_mode bigsurf_lp_mode = {
 		.vtotal = 2400 + 12 + 4 + 26, // add vbp
 		.flags = 0,
 		.type = DRM_MODE_TYPE_DRIVER,
-		.width_mm = 64,
-		.height_mm = 134,
+		.width_mm = WIDTH_MM,
+		.height_mm = HEIGHT_MM,
 	},
 	.exynos_mode = {
 		.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,

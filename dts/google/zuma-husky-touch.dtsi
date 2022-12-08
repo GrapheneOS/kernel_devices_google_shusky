@@ -16,6 +16,8 @@
 };
 
 &spitouch {
+	spi-max-frequency = <10000000>;
+
 	st,dchip_id = /bits/ 8 <0x36 0x40>;
 	st,max-coords = <1343 2991>;
 	st,panel_map = <&google_hk3 0>;
@@ -25,6 +27,16 @@
 	goog,vrr-touch-rate = /bits/ 32 <120 240>;
 	goog,vrr-up-delay = <0>;
 	goog,vrr-down-delay = <2>;
+
+	goog,v4l2-enabled;
+	goog,offload-enabled;
+	goog,offload-caps-data-types = /bits/ 16 <0x1F>;
+	goog,offload-caps-scan-types = /bits/ 16 <0xC0>;
+	goog,offload-caps-cancel-reporting;
+        goog,offload-caps-rotation-reporting;
+	goog,touch_offload_id = /bits/ 8 <'h' 'k' '3' '0'>;
+	goog,display-resolution = /bits/ 16 <1344 2992>;
+	goog,channel-num = /bits/ 16 <18 39>;
 };
 
 &m_ldo25_reg {
