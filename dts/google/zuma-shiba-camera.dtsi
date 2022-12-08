@@ -395,6 +395,7 @@
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
 				ldo2-supply = <&slg51002_ldo2>;
+				ldo4-supply = <&slg51002_ldo4>;
 				ldo6-supply = <&slg51002_ldo6>;
 
 				clocks =
@@ -416,6 +417,7 @@
 				power-up-seqs =
 					"s2mpg15_ldo12",
 					"ldo6",
+					"ldo4",
 					"ldo2",
 					"mclk_on",
 					"reset";
@@ -423,10 +425,12 @@
 					"regulator",
 					"regulator",
 					"regulator",
+					"regulator",
 					"pinctrl",
 					"gpio";
 				power-up-seq-delays-us =
 					<0
+					 0
 					 0
 					 100
 					 1000
@@ -437,6 +441,7 @@
 					"reset",
 					"mclk_off",
 					"ldo2",
+					"ldo4",
 					"ldo6",
 					"s2mpg15_ldo12";
 				power-down-seq-types =
@@ -444,10 +449,12 @@
 					"pinctrl",
 					"regulator",
 					"regulator",
+					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<1000
 					 1000
+					 0
 					 0
 					 0
 					 1000>;
