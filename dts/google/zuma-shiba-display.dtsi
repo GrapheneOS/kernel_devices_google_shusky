@@ -12,12 +12,13 @@
 	google_bigsurf: panel@0 {
 		compatible = "google,bigsurf";
 		label = "google-bigsurf";
+		touch = <&spitouch>;
 	};
 	google_shoreline: panel@2 {
 		compatible = "google,shoreline";
 		label = "google-shoreline";
 		channel = <0>;
-		//touch = <&spitouch>;
+		touch = <&spitouch>;
 
 		/* reset, power */
 		reset-gpios = <&gpa6 0 GPIO_ACTIVE_HIGH>;
