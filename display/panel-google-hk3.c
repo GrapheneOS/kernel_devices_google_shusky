@@ -1132,7 +1132,14 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 		bool enable_acl = (br >= dbv_th && IS_HBM_ON(ctx->hbm_mode));
 
 		if (spanel->hw_acl_enabled != enable_acl) {
-			/* ACL setting - 0x01: 5%, 0x02: 7.5%, 0x00: off */
+			/*
+			 * ACL setting:
+			 *
+			 * P1.0 - 5% (0x01)
+			 * P1.1 - 7.5% (0x02)
+			 * EVT1 and later - 12% (0x02)
+			 * Set 0x00 to disable it
+			 */
 			u8 val = 0;
 
 			if (enable_acl)
@@ -1141,7 +1148,9 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 			spanel->hw_acl_enabled = enable_acl;
 			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
 
-			hk3_update_za(ctx);
+			/* Keep ZA off after EVT1 */
+			if (ctx->panel_rev < PANEL_REV_EVT1)
+				hk3_update_za(ctx);
 		}
 	}
 
