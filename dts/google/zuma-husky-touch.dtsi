@@ -22,6 +22,9 @@
 	st,max-coords = <1343 2991>;
 	st,panel_map = <&google_hk3 0>;
 
+	st,sensor_inverted_x;
+	st,sensor_inverted_y;
+
 	goog,vrr-enabled;
 	goog,vrr-display-rate = /bits/ 32 <60 120>;
 	goog,vrr-touch-rate = /bits/ 32 <120 240>;
