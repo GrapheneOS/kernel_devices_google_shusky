@@ -346,7 +346,7 @@ static const struct exynos_binned_lp hk3_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, hk3_lp_off_cmds),
 	BINNED_LP_MODE_TIMING("low", 80, hk3_lp_low_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET),
-	BINNED_LP_MODE_TIMING("high", 2047, hk3_lp_high_cmds,
+	BINNED_LP_MODE_TIMING("high", 3307, hk3_lp_high_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET)
 };
 
@@ -1625,7 +1625,7 @@ static const struct exynos_display_underrun_param underrun_param = {
 };
 
 static const u32 hk3_bl_range[] = {
-	94, 180, 270, 360, 2047
+	94, 180, 270, 360, 3307
 };
 
 #define HK3_WQHD_DSC {\
@@ -2107,28 +2107,28 @@ const struct brightness_capability hk3_brightness_capability = {
 	.normal = {
 		.nits = {
 			.min = 2,
-			.max = 800,
+			.max = 1000,
 		},
 		.level = {
 			.min = 196,
-			.max = 2989,
+			.max = 3307,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 50,
+			.max = 63,
 		},
 	},
 	.hbm = {
 		.nits = {
-			.min = 800,
+			.min = 1000,
 			.max = 1600,
 		},
 		.level = {
-			.min = 2990,
+			.min = 3308,
 			.max = 4095,
 		},
 		.percentage = {
-			.min = 50,
+			.min = 63,
 			.max = 100,
 		},
 	},
@@ -2137,7 +2137,7 @@ const struct brightness_capability hk3_brightness_capability = {
 const struct exynos_panel_desc google_hk3 = {
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
-	.dft_brightness = 1023,
+	.dft_brightness = 1653,
 	.brt_capability = &hk3_brightness_capability,
 	.dbv_extra_frame = true,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
