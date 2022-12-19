@@ -1031,7 +1031,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Actuator JOTNAR for KRAKEN */
@@ -1083,7 +1083,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Actuator SLENDERMAN for SANDWORM*/
@@ -1128,7 +1128,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Actuator CORNERFOLK for BOITATA */
@@ -1173,7 +1173,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Actuator CORNERFOLK for OKSOKO */
@@ -1218,7 +1218,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Actuator CORNERFOLK for SANDWORM */
@@ -1263,7 +1263,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Ois GARGOYLE for NAGUAL*/
@@ -1315,7 +1315,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Ois JOTNAR for KRAKEN */
@@ -1367,7 +1367,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Ois HUMBABA for P23 tele */
@@ -1428,7 +1428,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			/* Ois DJINN for BOITATA*/
@@ -1480,7 +1480,7 @@
 					 0>;
 
 				/* Thread priority */
-				periodic-io-thread-priority = <99>;
+				transaction-thread-priority = <99>;
 			};
 
 			flash0: flash@0 {

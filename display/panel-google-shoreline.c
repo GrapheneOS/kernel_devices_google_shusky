@@ -55,6 +55,12 @@ static DEFINE_EXYNOS_CMD_SET(shoreline_off);
 
 static const struct exynos_dsi_cmd shoreline_lp_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
+	EXYNOS_DSI_CMD0(test_key_on_f0),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x10, 0xB9),
+	EXYNOS_DSI_CMD_SEQ(0xB9, 0x00, 0x20, 0x00, 0x0C),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x26, 0xB9),
+	EXYNOS_DSI_CMD_SEQ(0xB9, 0x09, 0x60, 0x00, 0x40),
+	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_lp);
 
@@ -63,12 +69,12 @@ static const struct exynos_dsi_cmd shoreline_lp_off_cmds[] = {
 };
 
 static const struct exynos_dsi_cmd shoreline_lp_low_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ_DELAY(17, MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x25), /* AOD 10 nit */
+	EXYNOS_DSI_CMD_SEQ_DELAY(34, MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x25), /* AOD 10 nit */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON)
 };
 
 static const struct exynos_dsi_cmd shoreline_lp_high_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ_DELAY(17, MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24), /* AOD 50 nit */
+	EXYNOS_DSI_CMD_SEQ_DELAY(34, MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24), /* AOD 50 nit */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON)
 };
 
@@ -409,7 +415,6 @@ static void shoreline_panel_init(struct exynos_panel *ctx)
 
 	exynos_panel_debugfs_create_cmdset(ctx, csroot,
 					   &shoreline_init_cmd_set, "init");
-	shoreline_change_frequency(ctx, drm_mode_vrefresh(&ctx->current_mode->mode));
 	shoreline_lhbm_gamma_read(ctx);
 	shoreline_lhbm_gamma_write(ctx);
 
