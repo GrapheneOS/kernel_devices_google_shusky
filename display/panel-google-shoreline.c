@@ -100,12 +100,12 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x09, 0x6D), /* global para */
 	EXYNOS_DSI_CMD_SEQ(0x6D, 0xC6, 0xE3, 0x65), /* Size and Location */
 
-	/* FFC Settings (OSC: 180 MHz, MIPI: 776 Mbps) */
+	/* FFC Settings (OSC: 180 MHz, MIPI: 756 Mbps) */
 	EXYNOS_DSI_CMD_SEQ(0xFC, 0x5A, 0x5A), /* Test Key Enable */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x3E, 0xC5), /* Global Para 120HS */
-	EXYNOS_DSI_CMD_SEQ(0xC5, 0x94, 0x74), /* OSC frequency Setting */
+	EXYNOS_DSI_CMD_SEQ(0xC5, 0x98, 0x62), /* OSC frequency Setting */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x46, 0xC5), /* Global Para 60HS */
-	EXYNOS_DSI_CMD_SEQ(0xC5, 0x94, 0x74), /* OSC frequency Setting */
+	EXYNOS_DSI_CMD_SEQ(0xC5, 0x98, 0x62), /* OSC frequency Setting */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x36, 0xC5), /* Global Para */
 	EXYNOS_DSI_CMD_SEQ(0xC5, 0x11, 0x10, 0x50, 0x05), /* FFC ON */
 	EXYNOS_DSI_CMD_SEQ(0xFC, 0xA5, 0xA5), /* Test Key Disable */
@@ -454,7 +454,7 @@ static int shoreline_panel_probe(struct mipi_dsi_device *dsi)
 }
 
 static const struct exynos_display_underrun_param underrun_param = {
-	.te_idle_us = 350,
+	.te_idle_us = 280,
 	.te_var = 1,
 };
 
