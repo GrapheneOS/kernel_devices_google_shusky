@@ -35,6 +35,99 @@
 					<&gpa9 6 0>,		/* VDROOP2 */
 					<&gpp19 2 0>,		/* MODEM 1 */
 					<&gpp10 0 0>;		/* MODEM 2 */
+
+				main_limit {
+					pmic = "main_limit";
+					ch1 {
+						/* BUCK1M Min: 0.006868132 mW Max: 14403.51 mW */
+						setting = <255>;   /* BUCK1M LSB: 0.006868132 mW */
+					};
+					ch2 {
+						/* BUCK2M Min: 0.013736264 mW Max: 28807.01 mW */
+						setting = <255>;   /* BUCK2M LSB: 0.013736264 mW */
+					};
+					ch3 {
+						/* BUCK3M Min: 0.020604396 mW Max: 43210.53 mW */
+						setting = <255>;   /* BUCK3M LSB: 0.020604396 mW */
+					};
+					ch4 {
+						/* BUCK4M Min: 0.013736264 mW Max: 28807.01 mW */
+						setting = <255>;   /* BUCK4M LSB: 0.013736264 mW */
+					};
+					ch5 {
+						/* BUCK5M Min: 0.020604396 mW Max: 43210.53 mW */
+						setting = <255>;   /* BUCK5M LSB: 0.020604396 mW */
+					};
+					ch6 {
+						/* BUCK6M Min: 0.006868132 mW Max: 14403.51 mW */
+						setting = <255>;   /* BUCK6M LSB: 0.006868132 mW */
+					};
+					ch7 {
+						/* BUCK7M Min: 0.020604396 mW Max: 43210.53 mW */
+						setting = <255>;   /* BUCK7M LSB: 0.020604396 mW */
+					};
+					ch8 {
+						/* BUCK8M Min: 0.006868132 mW Max: 14403.51 mW */
+						setting = <255>;   /* BUCK8M LSB: 0.006868132 mW */
+					};
+					ch9 {
+						setting = <255>;   /* LDO15M LSB: 0.001831502 mW */
+					};
+					ch10 {
+						setting = <255>;   /* VSEN_C1 LSB: 0.0021978021 V */
+					};
+					ch11 {
+						setting = <255>;  /* VSEN_C2 LSB: 0.0021978021 V */
+					};
+					ch12 {
+						setting = <255>;  /* VSEN_C3 LSB: 0.0021978021 V */
+					};
+				};
+				sub_limit {
+					pmic = "sub_limit";
+					ch1 {
+						/* BUCK1S Min: 0.013736264 mW Max: 28807.01 mW */
+						setting = <255>;   /* BUCK1S LSB: 0.013736264 mW */
+					};
+					ch2 {
+						/* BUCK2S Min: 0.013736264 mW Max: 28807.01 mW */
+						setting = <255>;   /* BUCK2S LSB: 0.013736264 mW */
+					};
+					ch3 {
+						/* BUCK4S Min: 0.006868132 mW Max: 14403.51 mW */
+						setting = <255>;   /* BUCK4S LSB: 0.006868132 mW */
+					};
+					ch4 {
+						/* BUCK5S Min: 0.006868132 mW Max: 14403.51 mW */
+						setting = <255>;   /* BUCK5S LSB: 0.006868132 mW */
+					};
+					ch5 {
+						/* BUCK8S Min: 0.006868132 mW Max: 14403.51 mW */
+						setting = <255>;   /* BUCK8S LSB: 0.006868132 mW */
+					};
+					ch6 {
+						/* BUCK9S Min: 0.006868132 mW Max: 14403.51 mW */
+						setting = <255>;   /* BUCK9S LSB: 0.006868132 mW */
+					};
+					ch7 {
+						setting = <255>;   /* LDO2S LSB: 0.001831502 mW */
+					};
+					ch8 {
+						setting = <255>;   /* LDO9S LSB: 0.000457875 mW */
+					};
+					ch9 {
+						setting = <255>;   /* LDO29S LSB: 0.000915751 mW */
+					};
+					ch10 {
+						setting = <255>;  /* VSEN_C4 LSB: 0.0021978021 V */
+					};
+					ch11 {
+						setting = <255>;  /* VSEN_C5 LSB: 0.0021978021 V */
+					};
+					ch12 {
+						setting = <255>;  /* VSEN_C6 LSB: 0.0021978021 V */
+					};
+				};
 			};
 		};
 	};
