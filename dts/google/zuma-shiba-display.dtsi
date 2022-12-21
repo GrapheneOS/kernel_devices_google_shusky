@@ -31,3 +31,13 @@
 &drmdsim1 {
 	status = "disabled";
 };
+
+&drmdp {
+	status = "okay";
+	extcon = <&max77759tcpc>;
+};
+
+&drmdecon2 {
+	status = "okay";
+	connector = <0x10>;	// DRM-DP
+};
