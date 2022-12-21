@@ -81,9 +81,9 @@ static DEFINE_EXYNOS_CMD_SET(bigsurf_off);
 static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	/* CMD2, Page0 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00),
-	EXYNOS_DSI_CMD_SEQ(0x6F, 0x18),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_EVT1), 0x6F, 0x18),
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_PROTO1_1), 0xB2, 0x3B, 0x34),
-	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_GE(PANEL_REV_PROTO1_1), 0xB2, 0x39, 0x60),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_PROTO1_1, 0xB2, 0x39, 0x60),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x1B),
 	EXYNOS_DSI_CMD_SEQ(0xBA, 0x18),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x1C),
@@ -144,8 +144,8 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xC5, 0x15, 0x15, 0x15, 0xDD),
 
 	/* Idle delay frame */
-	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0E),
-	EXYNOS_DSI_CMD_SEQ(0xD2, 0x00),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_EVT1), 0x6F, 0x0E),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_EVT1), 0xD2, 0x00),
 
 	/* CMD2, Page7 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x07),
@@ -367,10 +367,12 @@ static int bigsurf_enable(struct drm_panel *panel)
 	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
 
 	if (!pmode->exynos_mode.is_lp_mode) {
-		/* Gamma update setting */
-		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
-		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCC, 0x10);
-		usleep_range(9000, 9100);
+		if (ctx->panel_rev < PANEL_REV_EVT1) {
+			/* Gamma update setting */
+			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
+			EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCC, 0x10);
+			usleep_range(9000, 9100);
+		}
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 	} else {
 		exynos_panel_set_lp_mode(ctx, pmode);
