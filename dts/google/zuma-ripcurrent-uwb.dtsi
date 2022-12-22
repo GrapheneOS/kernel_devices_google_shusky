@@ -43,6 +43,7 @@
 		pinctrl-0 = <&qm35_irq &qm35_ap_rst>;
 		interrupt-parent = <&gpn5>;
 		interrupts = <0 IRQ_TYPE_LEVEL_HIGH 0>;
+		exton-gpios = <&gpp13 1 GPIO_ACTIVE_HIGH>;
 		reset-gpios = <&gpp14 0 GPIO_ACTIVE_LOW>;
 		ss-ready-gpios = <&gpn4 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
 		wakeup-gpios = <&gpa5 6 GPIO_ACTIVE_HIGH>;
