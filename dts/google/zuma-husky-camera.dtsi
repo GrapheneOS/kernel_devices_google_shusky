@@ -132,6 +132,14 @@
 	};
 };
 
+&pinctrl_2 {
+        ldaf_irq: ldaf-irq {
+                samsung,pins = "gpa5-4"; /* XEINT_4 */
+                samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
+                samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+        };
+};
+
 &hsi2c_1 {
 	#address-cells = <1>;
 	#size-cells = <0>;
@@ -1078,10 +1086,11 @@
 				/* XAPC_MCLK8: GPP15[0] */
 				reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 
-				/* MCLK Control */
-				pinctrl-names = "mclk_on", "mclk_off";
+				/* MCLK and TOF IRQ Control*/
+				pinctrl-names = "mclk_on", "mclk_off", "default";
 				pinctrl-0 = <&sensor_mclk8_fn>;
 				pinctrl-1 = <&sensor_mclk8_out>;
+				pinctrl-2 = <&ldaf_irq>;
 
 				/* XEINT_4: GPA5[4] */
 				irq-gpios = <&gpa5 4 GPIO_ACTIVE_LOW>;
