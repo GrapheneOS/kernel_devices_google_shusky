@@ -68,8 +68,8 @@ static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, bigsurf_lp_off_cmds),
 	/* rising = 0, falling = 32 */
-	BINNED_LP_MODE_TIMING("low", 648, bigsurf_lp_low_cmds, 0, 32),
-	BINNED_LP_MODE_TIMING("high", 3789, bigsurf_lp_high_cmds, 0, 32),
+	BINNED_LP_MODE_TIMING("low", 332, bigsurf_lp_low_cmds, 0, 32),
+	BINNED_LP_MODE_TIMING("high", 3574, bigsurf_lp_high_cmds, 0, 32),
 };
 
 static const struct exynos_dsi_cmd bigsurf_off_cmds[] = {
@@ -655,28 +655,28 @@ const struct brightness_capability bigsurf_brightness_capability = {
 	.normal = {
 		.nits = {
 			.min = 2,
-			.max = 800,
+			.max = 1000,
 		},
 		.level = {
-			.min = 268,
-			.max = 3672,
+			.min = 1,
+			.max = 3574,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 57,
+			.max = 71,
 		},
 	},
 	.hbm = {
 		.nits = {
-			.min = 800,
+			.min = 1000,
 			.max = 1400,
 		},
 		.level = {
-			.min = 3673,
-			.max = 4094,
+			.min = 3575,
+			.max = 3827,
 		},
 		.percentage = {
-			.min = 57,
+			.min = 71,
 			.max = 100,
 		},
 	},
