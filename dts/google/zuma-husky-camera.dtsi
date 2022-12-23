@@ -1057,10 +1057,8 @@
 
 				/* GPIOs */
 				/* HW_ENABLE GPP8[2] */
-				/* FLASH_STROBE GPP24[0] */
 				enable-gpios =
-					<&gpp8 2 GPIO_ACTIVE_HIGH
-					 &gpp24 0 GPIO_ACTIVE_LOW>;
+					<&gpp8 2 GPIO_ACTIVE_HIGH>;
 			};
 
 			tof0: tof@0 {
