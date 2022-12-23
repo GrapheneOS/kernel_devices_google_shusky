@@ -147,6 +147,15 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_EVT1), 0x6F, 0x0E),
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_EVT1), 0xD2, 0x00),
 
+	/* CMD2, Page3 */
+	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x03),
+	/* TE width = 275 us */
+	EXYNOS_DSI_CMD_SEQ(0xB3, 0x00, 0x00, 0x00, 0x00, 0x60, 0x10, 0x70, 0x40,
+				 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				 0x00, 0x00, 0x00, 0x00, 0x60, 0x10, 0x70, 0x40,
+				 0x60, 0x10, 0x70, 0x40, 0x60, 0x10, 0x70, 0x40,
+				 0x60, 0x10, 0x70, 0x40),
+
 	/* CMD2, Page7 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x07),
 	/* Disable round corner and punch hole */
@@ -529,7 +538,7 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
-			.te_usec = 8545,
+			.te_usec = 8604,
 			.bpc = 8,
 			BIGSURF_DSC_CONFIG,
 			.underrun_param = &underrun_param,
@@ -558,7 +567,7 @@ static const struct exynos_panel_mode bigsurf_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
-			.te_usec = 202,
+			.te_usec = 274,
 			.bpc = 8,
 			BIGSURF_DSC_CONFIG,
 			.underrun_param = &underrun_param,

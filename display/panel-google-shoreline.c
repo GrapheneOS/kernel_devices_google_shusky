@@ -101,7 +101,7 @@ static const struct exynos_dsi_cmd shoreline_lp_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
 	EXYNOS_DSI_CMD0(test_key_on_f0),
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x10, 0xB9),
-	EXYNOS_DSI_CMD_SEQ(0xB9, 0x00, 0x20, 0x00, 0x0C),
+	EXYNOS_DSI_CMD_SEQ(0xB9, 0x00, 0x44, 0x00, 0x0C),
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x26, 0xB9),
 	EXYNOS_DSI_CMD_SEQ(0xB9, 0x09, 0x60, 0x00, 0x40),
 	EXYNOS_DSI_CMD0(test_key_off_f0),
@@ -281,7 +281,7 @@ static void shoreline_change_frequency(struct exynos_panel *ctx,
 {
 	static const u8 te_setting[2][5] = {
 		{0xB9, 0x09, 0x74, 0x00, 0x0C}, /* HS 60Hz */
-		{0xB9, 0x00, 0x20, 0x00, 0x0C}, /* HS 120Hz */
+		{0xB9, 0x00, 0x44, 0x00, 0x0C}, /* HS 120Hz */
 	};
 
 	if (!ctx || (vrefresh != 60 && vrefresh != 120))
@@ -535,6 +535,7 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
+			.te_usec = 8356,
 			.bpc = 8,
 			.dsc = GOOGLE_SHORELINE_DSC,
 			.underrun_param = &underrun_param,
@@ -563,6 +564,7 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 		.exynos_mode = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
+			.te_usec = 273,
 			.bpc = 8,
 			.dsc = GOOGLE_SHORELINE_DSC,
 			.underrun_param = &underrun_param,
