@@ -20,7 +20,10 @@ shusky_overlays := \
 	zuma-shiba-pvt1.dtbo \
 	zuma-shiba-mp.dtbo
 
-shusky_dtbs := ../google-dts-base/zuma-a0.dtb ../google-dts-base/zuma-b0.dtb
+shusky_dtbs := \
+	../google-dts-base/zuma-a0-foplp.dtb \
+	../google-dts-base/zuma-a0-ipop.dtb \
+	../google-dts-base/zuma-b0.dtb
 
 # Usage:
 #   $(call DTBS_overlay_template, overlay, base_dtb, suffix)

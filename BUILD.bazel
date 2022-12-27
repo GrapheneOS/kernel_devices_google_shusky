@@ -90,7 +90,8 @@ kernel_images(
 )
 
 _SOC_REVS = [
-    "a0",
+    "a0-foplp",
+    "a0-ipop",
     "b0",
 ]
 
