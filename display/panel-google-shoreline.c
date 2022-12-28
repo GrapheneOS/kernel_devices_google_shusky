@@ -417,10 +417,23 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 	}
 
 	if (irc_update && IS_HBM_ON(mode)) {
-		/* Global para */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x01, 0x6A);
-		/* IRC Setting */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x6A, IS_HBM_ON_IRC_OFF(mode) ? 0x01 : 0x21);
+		if (exynos_panel->panel_rev < PANEL_REV_EVT1) {
+			/* Global para */
+			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x01, 0x6A);
+			/* IRC Setting */
+			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x6A,
+							IS_HBM_ON_IRC_OFF(mode) ? 0x01 : 0x21);
+		} else {
+			const u8 irc_mode[2][5] = {
+				{0x6B, 0x19, 0xE1, 0xFF, 0x94}, /* FGZ Mode */
+				{0x6B, 0x00, 0x00, 0xFF, 0x90}, /* Flat gamma */
+			};
+
+			/* Global para */
+			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x0A, 0x6B);
+			/* IRC Setting */
+			EXYNOS_DCS_WRITE_TABLE(exynos_panel, irc_mode[IS_HBM_ON_IRC_OFF(mode)]);
+		}
 	}
 
 	EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_off_f0);
