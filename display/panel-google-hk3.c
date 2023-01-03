@@ -127,35 +127,131 @@ struct hk3_panel {
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
 
 /* 1344x2992 */
-static const unsigned char WQHD_PPS_SETTING[DSC_PPS_SIZE] = {
-	0x11, 0x00, 0x00, 0x89, 0x30, 0x80, 0x0B, 0xB0,
-	0x05, 0x40, 0x00, 0xBB, 0x02, 0xA0, 0x02, 0xA0,
-	0x02, 0x00, 0x02, 0x50, 0x00, 0x20, 0x14, 0x39,
-	0x00, 0x09, 0x00, 0x0C, 0x00, 0x85, 0x00, 0x70,
-	0x18, 0x00, 0x10, 0xF0, 0x03, 0x0C, 0x20, 0x00,
-	0x06, 0x0B, 0x0B, 0x33, 0x0E, 0x1C, 0x2A, 0x38,
-	0x46, 0x54, 0x62, 0x69, 0x70, 0x77, 0x79, 0x7B,
-	0x7D, 0x7E, 0x01, 0x02, 0x01, 0x00, 0x09, 0x40,
-	0x09, 0xBE, 0x19, 0xFC, 0x19, 0xFA, 0x19, 0xF8,
-	0x1A, 0x38, 0x1A, 0x78, 0x1A, 0xB6, 0x2A, 0xF6,
-	0x2B, 0x34, 0x2B, 0x74, 0x3B, 0x74, 0x6B, 0xF4,
-	0x00
+static const struct drm_dsc_config wqhd_pps_config = {
+	.line_buf_depth = 9,
+	.bits_per_component = 8,
+	.convert_rgb = true,
+	.slice_width = 672,
+	.slice_height = 187,
+	.simple_422 = false,
+	.pic_width = 1344,
+	.pic_height = 2992,
+	.rc_tgt_offset_high = 3,
+	.rc_tgt_offset_low = 3,
+	.bits_per_pixel = 128,
+	.rc_edge_factor = 6,
+	.rc_quant_incr_limit1 = 11,
+	.rc_quant_incr_limit0 = 11,
+	.initial_xmit_delay = 512,
+	.initial_dec_delay = 592,
+	.block_pred_enable = true,
+	.first_line_bpg_offset = 12,
+	.initial_offset = 6144,
+	.rc_buf_thresh = {
+		14, 28, 42, 56,
+		70, 84, 98, 105,
+		112, 119, 121, 123,
+		125, 126
+	},
+	.rc_range_params = {
+		{.range_min_qp = 0, .range_max_qp = 4, .range_bpg_offset = 2},
+		{.range_min_qp = 0, .range_max_qp = 4, .range_bpg_offset = 0},
+		{.range_min_qp = 1, .range_max_qp = 5, .range_bpg_offset = 0},
+		{.range_min_qp = 1, .range_max_qp = 6, .range_bpg_offset = 62},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 60},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 58},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 8, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 9, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 10, .range_bpg_offset = 54},
+		{.range_min_qp = 5, .range_max_qp = 11, .range_bpg_offset = 54},
+		{.range_min_qp = 5, .range_max_qp = 12, .range_bpg_offset = 52},
+		{.range_min_qp = 5, .range_max_qp = 13, .range_bpg_offset = 52},
+		{.range_min_qp = 7, .range_max_qp = 13, .range_bpg_offset = 52},
+		{.range_min_qp = 13, .range_max_qp = 15, .range_bpg_offset = 52}
+	},
+	.rc_model_size = 8192,
+	.flatness_min_qp = 3,
+	.flatness_max_qp = 12,
+	.initial_scale_value = 32,
+	.scale_decrement_interval = 9,
+	.scale_increment_interval = 5177,
+	.nfl_bpg_offset = 133,
+	.slice_bpg_offset = 112,
+	.final_offset = 4336,
+	.vbr_enable = false,
+	.slice_chunk_size = 672,
+	.dsc_version_minor = 1,
+	.dsc_version_major = 1,
+	.native_422 = false,
+	.native_420 = false,
+	.second_line_bpg_offset = 0,
+	.nsl_bpg_offset = 0,
+	.second_line_offset_adj = 0,
 };
 
 /* 1008x2244 */
-static const unsigned char FHD_PPS_SETTING[DSC_PPS_SIZE] = {
-	0x11, 0x00, 0x00, 0x89, 0x30, 0x80, 0x08, 0xC4,
-	0x03, 0xF0, 0x00, 0xBB, 0x01, 0xF8, 0x01, 0xF8,
-	0x02, 0x00, 0x01, 0xFC, 0x00, 0x20, 0x11, 0x82,
-	0x00, 0x07, 0x00, 0x0C, 0x00, 0x85, 0x00, 0x96,
-	0x18, 0x00, 0x10, 0xF0, 0x03, 0x0C, 0x20, 0x00,
-	0x06, 0x0B, 0x0B, 0x33, 0x0E, 0x1C, 0x2A, 0x38,
-	0x46, 0x54, 0x62, 0x69, 0x70, 0x77, 0x79, 0x7B,
-	0x7D, 0x7E, 0x01, 0x02, 0x01, 0x00, 0x09, 0x40,
-	0x09, 0xBE, 0x19, 0xFC, 0x19, 0xFA, 0x19, 0xF8,
-	0x1A, 0x38, 0x1A, 0x78, 0x1A, 0xB6, 0x2A, 0xF6,
-	0x2B, 0x34, 0x2B, 0x74, 0x3B, 0x74, 0x6B, 0xF4,
-	0x00
+static const struct drm_dsc_config fhd_pps_config = {
+	.line_buf_depth = 9,
+	.bits_per_component = 8,
+	.convert_rgb = true,
+	.slice_width = 504,
+	.slice_height = 187,
+	.simple_422 = false,
+	.pic_width = 1008,
+	.pic_height = 2244,
+	.rc_tgt_offset_high = 3,
+	.rc_tgt_offset_low = 3,
+	.bits_per_pixel = 128,
+	.rc_edge_factor = 6,
+	.rc_quant_incr_limit1 = 11,
+	.rc_quant_incr_limit0 = 11,
+	.initial_xmit_delay = 512,
+	.initial_dec_delay = 508,
+	.block_pred_enable = true,
+	.first_line_bpg_offset = 12,
+	.initial_offset = 6144,
+	.rc_buf_thresh = {
+		14, 28, 42, 56,
+		70, 84, 98, 105,
+		112, 119, 121, 123,
+		125, 126
+	},
+	.rc_range_params = {
+		{.range_min_qp = 0, .range_max_qp = 4, .range_bpg_offset = 2},
+		{.range_min_qp = 0, .range_max_qp = 4, .range_bpg_offset = 0},
+		{.range_min_qp = 1, .range_max_qp = 5, .range_bpg_offset = 0},
+		{.range_min_qp = 1, .range_max_qp = 6, .range_bpg_offset = 62},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 60},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 58},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 8, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 9, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 10, .range_bpg_offset = 54},
+		{.range_min_qp = 5, .range_max_qp = 11, .range_bpg_offset = 54},
+		{.range_min_qp = 5, .range_max_qp = 12, .range_bpg_offset = 52},
+		{.range_min_qp = 5, .range_max_qp = 13, .range_bpg_offset = 52},
+		{.range_min_qp = 7, .range_max_qp = 13, .range_bpg_offset = 52},
+		{.range_min_qp = 13, .range_max_qp = 15, .range_bpg_offset = 52}
+	},
+	.rc_model_size = 8192,
+	.flatness_min_qp = 3,
+	.flatness_max_qp = 12,
+	.initial_scale_value = 32,
+	.scale_decrement_interval = 7,
+	.scale_increment_interval = 4482,
+	.nfl_bpg_offset = 133,
+	.slice_bpg_offset = 150,
+	.final_offset = 4336,
+	.vbr_enable = false,
+	.slice_chunk_size = 504,
+	.dsc_version_minor = 1,
+	.dsc_version_major = 1,
+	.native_422 = false,
+	.native_420 = false,
+	.second_line_bpg_offset = 0,
+	.nsl_bpg_offset = 0,
+	.second_line_offset_adj = 0,
 };
 
 #define HK3_WRCTRLD_DIMMING_BIT    0x08
@@ -1149,6 +1245,7 @@ static int hk3_enable(struct drm_panel *panel)
 	const struct drm_display_mode *mode;
 	struct hk3_panel *spanel = to_spanel(ctx);
 	const bool needs_reset = !is_panel_enabled(ctx);
+	struct drm_dsc_picture_parameter_set pps_payload;
 	bool is_fhd;
 
 	if (!pmode) {
@@ -1164,8 +1261,10 @@ static int hk3_enable(struct drm_panel *panel)
 		exynos_panel_reset(ctx);
 
 	/* DSC related configuration */
+	drm_dsc_pps_payload_pack(&pps_payload,
+				 is_fhd ? &fhd_pps_config : &wqhd_pps_config);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0x9D, 0x01);
-	EXYNOS_PPS_WRITE_BUF(ctx, is_fhd ? FHD_PPS_SETTING : WQHD_PPS_SETTING);
+	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
 
 	if (needs_reset) {
 		EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 120, MIPI_DCS_EXIT_SLEEP_MODE);
@@ -1474,6 +1573,21 @@ static const u32 hk3_bl_range[] = {
 	94, 180, 270, 360, 2047
 };
 
+#define HK3_WQHD_DSC {\
+	.enabled = true,\
+	.dsc_count = 2,\
+	.slice_count = 2,\
+	.slice_height = 187,\
+	.cfg = &wqhd_pps_config,\
+}
+#define HK3_FHD_DSC {\
+	.enabled = true,\
+	.dsc_count = 2,\
+	.slice_count = 2,\
+	.slice_height = 187,\
+	.cfg = &fhd_pps_config,\
+}
+
 static const struct exynos_panel_mode hk3_modes[] = {
 #ifdef PANEL_FACTORY_BUILD
 	{
@@ -1496,12 +1610,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1530,12 +1639,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1564,12 +1668,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1599,12 +1698,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1635,12 +1729,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1670,12 +1759,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.vblank_usec = 120,
 			.te_usec = 150, //TODO
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1704,12 +1788,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_FHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1739,12 +1818,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.vblank_usec = 120,
 			.te_usec = 150, //TODO
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_FHD_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -1777,12 +1851,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.vblank_usec = 120,
 			.te_usec = 25300, //TODO
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_WQHD_DSC,
 			.underrun_param = &underrun_param,
 			.is_lp_mode = true,
 		},
@@ -1808,12 +1877,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.vblank_usec = 120,
 			.te_usec = 25300, //TODO
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 187,
-			},
+			.dsc = HK3_FHD_DSC,
 			.underrun_param = &underrun_param,
 			.is_lp_mode = true,
 		},

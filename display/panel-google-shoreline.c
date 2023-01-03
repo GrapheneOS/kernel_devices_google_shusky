@@ -12,23 +12,67 @@
 
 #include "samsung/panel/panel-samsung-drv.h"
 
-static const unsigned char PPS_SETTING[] = {
-	0x11, 0x00, 0x00, 0x89, 0x30, 0x80, 0x09, 0x60,
-	0x04, 0x38, 0x00, 0x30, 0x02, 0x1C, 0x02, 0x1C,
-	0x02, 0x00, 0x02, 0x0E, 0x00, 0x20, 0x04, 0xA6,
-	0x00, 0x07, 0x00, 0x0C, 0x02, 0x0B, 0x02, 0x1F,
-	0x18, 0x00, 0x10, 0xF0, 0x03, 0x0C, 0x20, 0x00,
-	0x06, 0x0B, 0x0B, 0x33, 0x0E, 0x1C, 0x2A, 0x38,
-	0x46, 0x54, 0x62, 0x69, 0x70, 0x77, 0x79, 0x7B,
-	0x7D, 0x7E, 0x01, 0x02, 0x01, 0x00, 0x09, 0x40,
-	0x09, 0xBE, 0x19, 0xFC, 0x19, 0xFA, 0x19, 0xF8,
-	0x1A, 0x38, 0x1A, 0x78, 0x1A, 0xB6, 0x2A, 0xF6,
-	0x2B, 0x34, 0x2B, 0x74, 0x3B, 0x74, 0x6B, 0xF4,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+static const struct drm_dsc_config pps_config = {
+	.line_buf_depth = 9,
+	.bits_per_component = 8,
+	.convert_rgb = true,
+	.slice_width = 540,
+	.slice_height = 48,
+	.simple_422 = false,
+	.pic_width = 1080,
+	.pic_height = 2400,
+	.rc_tgt_offset_high = 3,
+	.rc_tgt_offset_low = 3,
+	.bits_per_pixel = 128,
+	.rc_edge_factor = 6,
+	.rc_quant_incr_limit1 = 11,
+	.rc_quant_incr_limit0 = 11,
+	.initial_xmit_delay = 512,
+	.initial_dec_delay = 526,
+	.block_pred_enable = true,
+	.first_line_bpg_offset = 12,
+	.initial_offset = 6144,
+	.rc_buf_thresh = {
+		14, 28, 42, 56,
+		70, 84, 98, 105,
+		112, 119, 121, 123,
+		125, 126
+	},
+	.rc_range_params = {
+		{.range_min_qp = 0, .range_max_qp = 4, .range_bpg_offset = 2},
+		{.range_min_qp = 0, .range_max_qp = 4, .range_bpg_offset = 0},
+		{.range_min_qp = 1, .range_max_qp = 5, .range_bpg_offset = 0},
+		{.range_min_qp = 1, .range_max_qp = 6, .range_bpg_offset = 62},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 60},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 58},
+		{.range_min_qp = 3, .range_max_qp = 7, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 8, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 9, .range_bpg_offset = 56},
+		{.range_min_qp = 3, .range_max_qp = 10, .range_bpg_offset = 54},
+		{.range_min_qp = 5, .range_max_qp = 11, .range_bpg_offset = 54},
+		{.range_min_qp = 5, .range_max_qp = 12, .range_bpg_offset = 52},
+		{.range_min_qp = 5, .range_max_qp = 13, .range_bpg_offset = 52},
+		{.range_min_qp = 7, .range_max_qp = 13, .range_bpg_offset = 52},
+		{.range_min_qp = 13, .range_max_qp = 15, .range_bpg_offset = 52}
+	},
+	.rc_model_size = 8192,
+	.flatness_min_qp = 3,
+	.flatness_max_qp = 12,
+	.initial_scale_value = 32,
+	.scale_decrement_interval = 7,
+	.scale_increment_interval = 1190,
+	.nfl_bpg_offset = 523,
+	.slice_bpg_offset = 543,
+	.final_offset = 4336,
+	.vbr_enable = false,
+	.slice_chunk_size = 540,
+	.dsc_version_minor = 1,
+	.dsc_version_major = 1,
+	.native_422 = false,
+	.native_420 = false,
+	.second_line_bpg_offset = 0,
+	.nsl_bpg_offset = 0,
+	.second_line_offset_adj = 0,
 };
 
 #define SHORELINE_WRCTRLD_DIMMING_BIT    0x08
@@ -303,6 +347,7 @@ static int shoreline_enable(struct drm_panel *panel)
 	struct exynos_panel *ctx = container_of(panel, struct exynos_panel, panel);
 	const struct exynos_panel_mode *pmode = ctx->current_mode;
 	const struct drm_display_mode *mode;
+	struct drm_dsc_picture_parameter_set pps_payload;
 
 	if (!pmode) {
 		dev_err(ctx->dev, "no current mode set\n");
@@ -321,8 +366,9 @@ static int shoreline_enable(struct drm_panel *panel)
 	shoreline_lhbm_gamma_write(ctx);
 
 	/* DSC related configuration */
+	drm_dsc_pps_payload_pack(&pps_payload, &pps_config);
 	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
-	EXYNOS_PPS_LONG_WRITE(ctx); /* PPS_SETTING */
+	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
 
 	shoreline_update_wrctrld(ctx); /* dimming and HBM */
 
@@ -462,6 +508,13 @@ static const u32 shoreline_bl_range[] = {
 	95, 205, 315, 400, 2047
 };
 
+#define GOOGLE_SHORELINE_DSC {\
+	.enabled = true,\
+	.dsc_count = 2,\
+	.slice_count = 2,\
+	.slice_height = 48,\
+	.cfg = &pps_config,\
+	}
 static const struct exynos_panel_mode shoreline_modes[] = {
 	{
 		.mode = {
@@ -483,12 +536,7 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 48,
-			},
+			.dsc = GOOGLE_SHORELINE_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -516,12 +564,7 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 			.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 			.vblank_usec = 120,
 			.bpc = 8,
-			.dsc = {
-				.enabled = true,
-				.dsc_count = 2,
-				.slice_count = 2,
-				.slice_height = 48,
-			},
+			.dsc = GOOGLE_SHORELINE_DSC,
 			.underrun_param = &underrun_param,
 		},
 		.te2_timing = {
@@ -552,12 +595,7 @@ static const struct exynos_panel_mode shoreline_lp_mode = {
 		.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
 		.vblank_usec = 120,
 		.bpc = 8,
-		.dsc = {
-			.enabled = true,
-			.dsc_count = 2,
-			.slice_count = 2,
-			.slice_height = 48,
-		},
+		.dsc = GOOGLE_SHORELINE_DSC,
 		.underrun_param = &underrun_param,
 		.is_lp_mode = true,
 	}
@@ -621,8 +659,6 @@ static const struct brightness_capability shoreline_brightness_capability = {
 };
 
 static const struct exynos_panel_desc google_shoreline = {
-	.dsc_pps = PPS_SETTING,
-	.dsc_pps_len = ARRAY_SIZE(PPS_SETTING),
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
 	.min_brightness = 209,
