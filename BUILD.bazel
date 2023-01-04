@@ -240,7 +240,7 @@ kernel_module(
         "drivers/phy/samsung/eusb_repeater.ko",
         "drivers/phy/samsung/phy-exynos-mipi.ko",
         "drivers/phy/samsung/phy-exynos-mipi-dsim.ko",
-        "drivers/phy/samsung/phy-exynos-usbdrd-super.ko",
+        "drivers/phy/samsung/phy-exynos-usbdrd-eusb-super.ko",
         "drivers/pinctrl/gs/pinctrl-exynos-gs.ko",
         "drivers/pinctrl/pinctrl-slg51002.ko",
         "drivers/power/reset/debug-reboot.ko",
