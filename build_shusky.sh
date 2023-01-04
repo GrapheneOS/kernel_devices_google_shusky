@@ -8,6 +8,23 @@ function exit_if_error {
   fi
 }
 
+# Set KLEAF=1 to build with kleaf. This ignores all other command line options.
+if [ -n "${KLEAF}" ]; then
+  exec tools/bazel run --config=shusky --config=fast //private/devices/google/shusky:zuma_shusky_dist
+fi
+
+cat <<- EOF
+==================== NOTICE ==============================
+build.sh is going to be deprecated soon. All android14
+kernels are moving to kleaf. Please migrate to using kleaf
+by using the following command:
+
+  KLEAF=1 $0
+
+For any issues, file a bug using go/kleaf-bug.
+==========================================================
+EOF
+
 export GKI_KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp-staging"}
 export KLEAF_SUPPRESS_BUILD_SH_DEPRECATION_WARNING=1
 export LTO=${LTO:-thin}
