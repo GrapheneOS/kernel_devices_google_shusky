@@ -1335,6 +1335,9 @@ static void hk3_set_local_hbm_brightness(struct exynos_panel *ctx, bool is_first
 	static u8 cmd[LHBM_BRT_CMD_LEN];
 	int i;
 
+	if (!is_local_hbm_post_enabling_supported(ctx))
+		return;
+
 	dev_info(ctx->dev, "set LHBM brightness at %s stage\n", is_first_stage ? "1st" : "2nd");
 	if (is_first_stage) {
 		u32 gray = exynos_drm_connector_get_lhbm_gray_level(&ctx->exynos_connector);
