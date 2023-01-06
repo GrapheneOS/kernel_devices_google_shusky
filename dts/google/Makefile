@@ -14,6 +14,7 @@ shusky_overlays := \
 	zuma-shiba-proto1-wingboard.dtbo \
 	zuma-shiba-proto1_1.dtbo \
 	zuma-shiba-evt1.dtbo \
+	zuma-shiba-evt1_b0.dtbo \
 	zuma-shiba-evt1_1.dtbo \
 	zuma-shiba-dvt1.dtbo \
 	zuma-shiba-pvt1.dtbo \

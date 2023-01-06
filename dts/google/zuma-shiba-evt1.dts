@@ -17,7 +17,7 @@
 	fragment@boardbase {
 		target-path = "/";
 		__overlay__ {
-			model = "ZUMA SHIBA EVT 1.0 based on ZUMA";
+			model = "ZUMA SHIBA EVT 1.0 A0 based on ZUMA";
 			compatible = "google,ZUMA SHIBA", "google,ZUMA";
 		};
 	};
