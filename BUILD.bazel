@@ -5,9 +5,9 @@ load("//build/bazel_common_rules/dist:dist.bzl", "copy_to_dist_dir")
 load("//build/kernel/kleaf:constants.bzl", "aarch64_outs")
 load(
     "//build/kernel/kleaf:kernel.bzl",
+    "kernel_abi",
+    "kernel_abi_dist",
     "kernel_build",
-    "kernel_build_abi",
-    "kernel_build_abi_dist",
     "kernel_images",
     "kernel_module",
     "kernel_module_group",
@@ -139,7 +139,7 @@ kernel_module_group(
     ],
 )
 
-kernel_build_abi(
+kernel_build(
     name = "zuma_shusky",
     srcs = glob([
         "build.config.*",
@@ -177,8 +177,6 @@ kernel_build_abi(
     implicit_outs = _SHUSKY_DTBOS,
     kconfig_ext = "//private/google-modules/soc/gs:Kconfig.ext",
     kmi_symbol_list = "//{}:android/abi_gki_aarch64_pixel".format(_GKI_KERNEL_DIR),
-    kmi_symbol_list_add_only = True,
-    module_grouping = False,
     module_outs = [
         # keep sorted
         "drivers/i2c/i2c-dev.ko",
@@ -191,6 +189,13 @@ kernel_build_abi(
         "drivers/watchdog/softdog.ko",
     ],
     strip_modules = True,
+)
+
+kernel_abi(
+    name = "zuma_shusky_abi",
+    kernel_build = ":zuma_shusky",
+    kmi_symbol_list_add_only = True,
+    module_grouping = False,
 )
 
 kernel_module(
@@ -471,11 +476,11 @@ copy_to_dist_dir(
     log = "info",
 )
 
-kernel_build_abi_dist(
+kernel_abi_dist(
     name = "zuma_shusky_abi_dist",
     data = _zuma_shusky_dist_targets,
     dist_dir = "out/shusky/dist",
     flat = True,
-    kernel_build_abi = ":zuma_shusky",
+    kernel_abi = ":zuma_shusky_abi",
     log = "info",
 )
