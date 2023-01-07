@@ -194,6 +194,7 @@ kernel_build(
 kernel_abi(
     name = "zuma_shusky_abi",
     kernel_build = ":zuma_shusky",
+    kernel_modules = [":shusky_ext_modules"],
     kmi_symbol_list_add_only = True,
     module_grouping = False,
 )
