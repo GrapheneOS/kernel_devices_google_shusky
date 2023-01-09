@@ -265,6 +265,9 @@ static const struct drm_dsc_config fhd_pps_config = {
 #define HK3_TE2_FALLING_EDGE_OFFSET 0x30
 #define HK3_TE2_FALLING_EDGE_OFFSET_NS 0x25
 
+#define HK3_TE_USEC_60HZ_HS 8500
+#define HK3_TE_USEC_60HZ_NS 346
+
 static const u8 unlock_cmd_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 lock_cmd_f0[]   = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
@@ -1564,6 +1567,21 @@ static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 	exynos_panel_get_panel_rev(ctx, rev);
 }
 
+static unsigned int hk3_get_te_usec(struct exynos_panel *ctx,
+				    const struct exynos_panel_mode *pmode)
+{
+	const int vrefresh = drm_mode_vrefresh(&pmode->mode);
+
+	if (vrefresh != 60) {
+		return pmode->exynos_mode.te_usec;
+	} else {
+		struct hk3_panel *spanel = to_spanel(ctx);
+
+		return (test_bit(FEAT_OP_NS, spanel->feat) ? HK3_TE_USEC_60HZ_NS :
+							     HK3_TE_USEC_60HZ_HS);
+	}
+}
+
 static const struct exynos_display_underrun_param underrun_param = {
 	.te_idle_us = 350,
 	.te_var = 1,
@@ -2045,6 +2063,7 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.set_self_refresh = hk3_set_self_refresh,
 	.set_op_hz = hk3_set_op_hz,
 	.read_id = hk3_read_id,
+	.get_te_usec = hk3_get_te_usec,
 };
 
 const struct brightness_capability hk3_brightness_capability = {
