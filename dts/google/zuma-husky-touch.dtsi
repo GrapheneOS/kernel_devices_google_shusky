@@ -38,6 +38,7 @@
 	goog,offload-caps-cancel-reporting;
         goog,offload-caps-rotation-reporting;
 	goog,touch_offload_id = /bits/ 8 <'h' 'k' '3' '0'>;
+	goog,tbn-enabled;
 	goog,display-resolution = /bits/ 16 <1344 2992>;
 	goog,channel-num = /bits/ 16 <18 39>;
 };
