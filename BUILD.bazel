@@ -16,9 +16,8 @@ load(
     "merged_kernel_uapi_headers",
 )
 load(
-    "//private/google-modules/soc/gs:debug_build_configs.bzl",
-    "debug_build_configs",
-    "staging_build_config",
+    "//private/google-modules/soc/gs:device_build_configs.bzl",
+    "device_build_configs",
 )
 
 # TODO: make this configurable to allow switching between aosp/ and
@@ -27,19 +26,13 @@ _GKI_KERNEL_DIR = "aosp-staging"
 
 _GKI_BUILD_CONFIG_FRAGMENT = "//private/devices/google/shusky:build.config.shusky.gki.fragment"
 
-staging_build_config(
-    name = "build.config.shusky_staging",
-    base_build_config = ":build.config.shusky",
-    device_name = "shusky",
-    gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
-)
-
-debug_build_configs(
+device_build_configs(
     name = "build.config.shusky",
     base_build_config = ":build.config.shusky",
     device_name = "shusky",
     gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
     gki_kernel_dir = _GKI_KERNEL_DIR,
+    staging_kernel = True,
 )
 
 # TODO(b/221278445): Use real GKI. Delete the shusky_gki targets.
@@ -63,7 +56,7 @@ kernel_build(
         "//private/google-modules/soc/gs:build.config.slider.khwasan",
     ],
     outs = aarch64_outs,
-    build_config = "//private/google-modules/soc/gs:gki_build_config",
+    build_config = ":gki_build_config",
     collect_unstripped_modules = True,
     # For building system_dlkm (b/241855743)
     # Device fragments need to add: '# CONFIG_MODULE_SIG_ALL is not set'
@@ -173,7 +166,7 @@ kernel_build(
     # TODO(b/221278445): Use real GKI
     # base_kernel = "//{}:kernel_aarch64".format(_GKI_KERNEL_DIR),
     base_kernel = ":shusky_gki",
-    build_config = "//private/google-modules/soc/gs:device_build_config",
+    build_config = ":device_build_config",
     collect_unstripped_modules = True,
     dtstree = "//private/devices/google/shusky/dts:shusky.dt",
     implicit_outs = _SHUSKY_DTBOS,
