@@ -153,6 +153,14 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x36, 0xC5), /* Global Para */
 	EXYNOS_DSI_CMD_SEQ(0xC5, 0x11, 0x10, 0x50, 0x05), /* FFC ON */
 	EXYNOS_DSI_CMD_SEQ(0xFC, 0xA5, 0xA5), /* Test Key Disable */
+
+	/* DBV Voltage Workaround */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_EVT1, 0x60, 0x00, 0x00), /* 120Hz HS */
+	EXYNOS_DSI_CMD0_REV(freq_update, PANEL_REV_EVT1), /* Freq Update */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_EVT1, 0x71, 0xC6, 0x00, 0x00, 0xC8), /* Setting Enable */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_EVT1, 0x6C, 0xEC, 0xFD, 0x0D, 0x1D, 0x2D, /* Voltage Set */
+						0x39, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8,
+						0x39, 0x39, 0x39,0x00,0x00),
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
