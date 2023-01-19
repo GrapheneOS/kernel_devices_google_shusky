@@ -5,9 +5,9 @@ load("//build/bazel_common_rules/dist:dist.bzl", "copy_to_dist_dir")
 load("//build/kernel/kleaf:constants.bzl", "aarch64_outs")
 load(
     "//build/kernel/kleaf:kernel.bzl",
+    "kernel_abi",
+    "kernel_abi_dist",
     "kernel_build",
-    "kernel_build_abi",
-    "kernel_build_abi_dist",
     "kernel_images",
     "kernel_module",
     "kernel_module_group",
@@ -16,9 +16,8 @@ load(
     "merged_kernel_uapi_headers",
 )
 load(
-    "//private/google-modules/soc/gs:debug_build_configs.bzl",
-    "debug_build_configs",
-    "staging_build_config",
+    "//private/google-modules/soc/gs:device_build_configs.bzl",
+    "device_build_configs",
 )
 
 # TODO: make this configurable to allow switching between aosp/ and
@@ -27,19 +26,13 @@ _GKI_KERNEL_DIR = "aosp-staging"
 
 _GKI_BUILD_CONFIG_FRAGMENT = "//private/devices/google/shusky:build.config.shusky.gki.fragment"
 
-staging_build_config(
-    name = "build.config.shusky_staging",
-    base_build_config = ":build.config.shusky",
-    device_name = "shusky",
-    gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
-)
-
-debug_build_configs(
+device_build_configs(
     name = "build.config.shusky",
     base_build_config = ":build.config.shusky",
     device_name = "shusky",
     gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
     gki_kernel_dir = _GKI_KERNEL_DIR,
+    staging_kernel = True,
 )
 
 # TODO(b/221278445): Use real GKI. Delete the shusky_gki targets.
@@ -63,7 +56,7 @@ kernel_build(
         "//private/google-modules/soc/gs:build.config.slider.khwasan",
     ],
     outs = aarch64_outs,
-    build_config = "//private/google-modules/soc/gs:gki_build_config",
+    build_config = ":gki_build_config",
     collect_unstripped_modules = True,
     # For building system_dlkm (b/241855743)
     # Device fragments need to add: '# CONFIG_MODULE_SIG_ALL is not set'
@@ -90,8 +83,10 @@ kernel_images(
 )
 
 _SOC_REVS = [
-    "a0",
-    "b0",
+    "a0-foplp",
+    "a0-ipop",
+    "b0-foplp",
+    "b0-ipop",
 ]
 
 _SHUSKY_DTBOS = [
@@ -139,7 +134,7 @@ kernel_module_group(
     ],
 )
 
-kernel_build_abi(
+kernel_build(
     name = "zuma_shusky",
     srcs = glob([
         "build.config.*",
@@ -171,14 +166,12 @@ kernel_build_abi(
     # TODO(b/221278445): Use real GKI
     # base_kernel = "//{}:kernel_aarch64".format(_GKI_KERNEL_DIR),
     base_kernel = ":shusky_gki",
-    build_config = "//private/google-modules/soc/gs:device_build_config",
+    build_config = ":device_build_config",
     collect_unstripped_modules = True,
     dtstree = "//private/devices/google/shusky/dts:shusky.dt",
     implicit_outs = _SHUSKY_DTBOS,
     kconfig_ext = "//private/google-modules/soc/gs:Kconfig.ext",
     kmi_symbol_list = "//{}:android/abi_gki_aarch64_pixel".format(_GKI_KERNEL_DIR),
-    kmi_symbol_list_add_only = True,
-    module_grouping = False,
     module_outs = [
         # keep sorted
         "drivers/i2c/i2c-dev.ko",
@@ -189,8 +182,18 @@ kernel_build_abi(
         "drivers/scsi/sg.ko",
         "drivers/spi/spidev.ko",
         "drivers/watchdog/softdog.ko",
+        "net/mac80211/mac80211.ko",
+        "net/wireless/cfg80211.ko",
     ],
     strip_modules = True,
+)
+
+kernel_abi(
+    name = "zuma_shusky_abi",
+    kernel_build = ":zuma_shusky",
+    kernel_modules = [":shusky_ext_modules"],
+    kmi_symbol_list_add_only = True,
+    module_grouping = False,
 )
 
 kernel_module(
@@ -293,7 +296,9 @@ kernel_module(
         "drivers/soc/google/gsa/gsa_gsc.ko",
         "drivers/soc/google/hardlockup-debug.ko",
         "drivers/soc/google/hardlockup-watchdog.ko",
-        "drivers/soc/google/pkvm-s2mpu.ko",
+        "drivers/soc/google/pixel_stat/mm/pixel_stat_mm.ko",
+        "drivers/soc/google/pixel_stat/pixel_stat_sysfs.ko",
+        "drivers/soc/google/pkvm-s2mpu/pkvm-s2mpu.ko",
         "drivers/soc/google/pt/slc_acpm.ko",
         "drivers/soc/google/pt/slc_dummy.ko",
         "drivers/soc/google/pt/slc_pmon.ko",
@@ -432,9 +437,7 @@ _GKI_MODULES = [
     # keep sorted
     ":shusky_gki/lib/crypto/libarc4.ko",
     ":shusky_gki/mm/zsmalloc.ko",
-    ":shusky_gki/net/mac80211/mac80211.ko",
     ":shusky_gki/net/rfkill/rfkill.ko",
-    ":shusky_gki/net/wireless/cfg80211.ko",
 ]
 
 _zuma_shusky_dist_targets = [
@@ -471,11 +474,11 @@ copy_to_dist_dir(
     log = "info",
 )
 
-kernel_build_abi_dist(
+kernel_abi_dist(
     name = "zuma_shusky_abi_dist",
     data = _zuma_shusky_dist_targets,
     dist_dir = "out/shusky/dist",
     flat = True,
-    kernel_build_abi = ":zuma_shusky",
+    kernel_abi = ":zuma_shusky_abi",
     log = "info",
 )

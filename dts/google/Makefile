@@ -14,12 +14,17 @@ shusky_overlays := \
 	zuma-shiba-proto1-wingboard.dtbo \
 	zuma-shiba-proto1_1.dtbo \
 	zuma-shiba-evt1.dtbo \
+	zuma-shiba-evt1_b0.dtbo \
 	zuma-shiba-evt1_1.dtbo \
 	zuma-shiba-dvt1.dtbo \
 	zuma-shiba-pvt1.dtbo \
 	zuma-shiba-mp.dtbo
 
-shusky_dtbs := ../google-dts-base/zuma-a0.dtb ../google-dts-base/zuma-b0.dtb
+shusky_dtbs := \
+	../google-dts-base/zuma-a0-foplp.dtb \
+	../google-dts-base/zuma-a0-ipop.dtb \
+	../google-dts-base/zuma-b0-foplp.dtb \
+	../google-dts-base/zuma-b0-ipop.dtb
 
 # Usage:
 #   $(call DTBS_overlay_template, overlay, base_dtb, suffix)

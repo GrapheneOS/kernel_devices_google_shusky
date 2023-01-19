@@ -123,7 +123,8 @@
 	pinctrl-0 = <>;
 
 	num-cs = <2>;
-	cs-gpios = <&gpn3 0 GPIO_ACTIVE_LOW>, <&gpn1 0 GPIO_ACTIVE_LOW>;
+	cs-gpios = <0
+		    &gpn1 0 GPIO_ACTIVE_LOW>;
 
 	cs35l41_1: cs35l41@0 {
 		#sound-dai-cells = <1>;

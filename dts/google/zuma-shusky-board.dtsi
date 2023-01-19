@@ -6,6 +6,7 @@
  */
 
 #include "../google-dts-base/zuma-board.dtsi"
+#include "../google-dts-base/zuma-board-gps.dtsi"
 
 #include "zuma-ripcurrent-camera-pmic.dtsi"
 #include "zuma-shusky-usb.dtsi"
