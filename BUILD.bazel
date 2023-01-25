@@ -473,12 +473,3 @@ copy_to_dist_dir(
     flat = True,
     log = "info",
 )
-
-kernel_abi_dist(
-    name = "zuma_shusky_abi_dist",
-    data = _zuma_shusky_dist_targets,
-    dist_dir = "out/shusky/dist",
-    flat = True,
-    kernel_abi = ":zuma_shusky_abi",
-    log = "info",
-)
