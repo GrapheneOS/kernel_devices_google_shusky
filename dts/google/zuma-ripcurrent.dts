@@ -14,14 +14,15 @@
 
 #include "../google-dts-base/zuma-common.dtsi"
 
-#include "zuma-ripcurrent-usb.dtsi"
+#include "zuma-ripcurrent-battery.dtsi"
 #include "zuma-ripcurrent-camera-pmic.dtsi"
 #include "zuma-ripcurrent-camera.dtsi"
-#include "zuma-ripcurrent-display.dtsi"
-#include "zuma-ripcurrent-battery.dtsi"
 #include "zuma-ripcurrent-charging.dtsi"
+#include "zuma-ripcurrent-display.dtsi"
 #include "zuma-ripcurrent-gsa-gsc.dtsi"
+#include "zuma-ripcurrent-pmic.dtsi"
 #include "zuma-ripcurrent-touch.dtsi"
+#include "zuma-ripcurrent-usb.dtsi"
 #include "zuma-ripcurrent-usecases.dtsi"
 #include "zuma-ripcurrent-wcharger.dtsi"
 #include "../google-dts-base/zuma-board-wlan.dtsi"

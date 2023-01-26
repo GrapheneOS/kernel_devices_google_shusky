@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Ripcurrent PMIC settings
+ *
+ * Copyright 2023 Google LLC.
+ *
+ */
+
+&m_ldo7_reg {
+	regulator-always-on;
+	regulator-initial-mode = <SEC_OPMODE_ON>;
+};
+
+&m_ldo23_reg {
+	regulator-always-on;
+	regulator-initial-mode = <SEC_OPMODE_ON>;
+	schematic-name = "L23M_DMIC2";
+	subsys-name = "DMIC";
+};
+
