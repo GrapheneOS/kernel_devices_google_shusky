@@ -124,6 +124,7 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 	status = "okay";
+	clock-frequency = <400000>;
 
 	pinctrl-names = "default";
 	pinctrl-0 = <&hsi2c9_bus>;
