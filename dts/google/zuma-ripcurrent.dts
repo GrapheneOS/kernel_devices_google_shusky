@@ -35,7 +35,7 @@
 #include "zuma-ripcurrent-audio.dtsi"
 #include "../google-dts-base/zuma-board-pcie.dtsi"
 #include "zuma-ripcurrent-haptics.dtsi"
-#include "zuma-ripcurrent-uwb.dtsi"
+#include "../google-dts-base/zuma-board-uwb.dtsi"
 #include "zuma-ripcurrent-thermal.dtsi"
 #include "zuma-ripcurrent-sbbm.dtsi"
 #include "zuma-ripcurrent-bcl.dtsi"
