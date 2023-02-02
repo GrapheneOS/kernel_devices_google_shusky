@@ -17,6 +17,17 @@
 	aoc-board-rev = <0x10000>;
 };
 
+&dai_be_dp_rx {
+	codec {
+		sound-dai = <&drmdp_adma_pb>;
+	};
+};
+
+&drmdp_adma {
+	status = "okay";
+	memory-region = <&dpado_mem>;
+};
+
 &dai_be_tdm0_rx {
 	codec {
 		sound-dai = <&cs35l41_1 0>,
