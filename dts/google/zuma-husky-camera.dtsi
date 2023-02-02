@@ -519,6 +519,16 @@
 					 0
 					 1000>;
 
+				/* resume sequence */
+				resume-seqs = "reset";
+				resume-seq-types = "gpio";
+				resume-seq-delays-us = <7600>;
+
+				/* suspend sequence */
+				suspend-seqs = "reset";
+				suspend-seq-types = "gpio";
+				suspend-seq-delays-us = <0>;
+
 				/* Thread priority */
 				transaction-thread-priority = <99>;
 			};
