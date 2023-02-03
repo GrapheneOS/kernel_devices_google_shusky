@@ -255,25 +255,25 @@
 
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
 					"enable",
 					"ldo8",
 					"s2mpg15_ldo12",
-					"ldo1",
 					"ldo4",
 					"reset",
 					"mclk_on";
 				power-up-seq-types =
-					"gpio",
 					"regulator",
+					"gpio",
 					"regulator",
 					"regulator",
 					"regulator",
 					"gpio",
 					"pinctrl";
 				power-up-seq-delays-us =
-					<500
-					 1000
-					 0
+					<10
+					 10
+					 10
 					 0
 					 2000
 					 1000
@@ -284,18 +284,18 @@
 					"mclk_off",
 					"reset",
 					"ldo4",
-					"ldo1",
 					"s2mpg15_ldo12",
 					"ldo8",
-					"enable";
+					"enable",
+					"ldo1";
 				power-down-seq-types =
 					"pinctrl",
 					"gpio",
 					"regulator",
 					"regulator",
 					"regulator",
-					"regulator",
-					"gpio";
+					"gpio",
+					"regulator";
 				power-down-seq-delays-us =
 					<1000
 					 1000
