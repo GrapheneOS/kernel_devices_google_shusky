@@ -21,7 +21,8 @@
 /**
  * enum hk3_panel_feature - features supported by this panel
  * @FEAT_HBM: high brightness mode
- * @FEAT_IRC_OFF: IRC compensation off state
+ * @FEAT_IRC_OFF: IR compensation off state
+ * @FEAT_IRC_Z_MODE: IR compensation on state and use Flat Z mode
  * @FEAT_EARLY_EXIT: early exit from a long frame
  * @FEAT_OP_NS: normal speed (not high speed)
  * @FEAT_FRAME_AUTO: automatic (not manual) frame control
@@ -33,6 +34,7 @@
 enum hk3_panel_feature {
 	FEAT_HBM = 0,
 	FEAT_IRC_OFF,
+	FEAT_IRC_Z_MODE,
 	FEAT_EARLY_EXIT,
 	FEAT_OP_NS,
 	FEAT_FRAME_AUTO,
@@ -344,7 +346,7 @@ static const struct exynos_binned_lp hk3_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, hk3_lp_off_cmds),
 	BINNED_LP_MODE_TIMING("low", 80, hk3_lp_low_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET),
-	BINNED_LP_MODE_TIMING("high", 2047, hk3_lp_high_cmds,
+	BINNED_LP_MODE_TIMING("high", 3307, hk3_lp_high_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET)
 };
 
@@ -505,7 +507,9 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 		test_bit(FEAT_OP_NS, spanel->feat) ? "ns" : "hs",
 		test_bit(FEAT_EARLY_EXIT, spanel->feat) ? "on" : "off",
 		test_bit(FEAT_HBM, spanel->feat) ? "on" : "off",
-		test_bit(FEAT_IRC_OFF, spanel->feat) ? "off" : "on",
+		ctx->panel_rev >= PANEL_REV_EVT1 ?
+			(test_bit(FEAT_IRC_Z_MODE, spanel->feat) ? "flat_z" : "flat") :
+			(test_bit(FEAT_IRC_OFF, spanel->feat) ? "off" : "on"),
 		test_bit(FEAT_FRAME_AUTO, spanel->feat) ? "auto" : "manual",
 		vrefresh,
 		idle_vrefresh);
@@ -545,11 +549,32 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 	if (test_bit(FEAT_OP_NS, changed_feat))
 		hk3_update_te2_internal(ctx, false);
 
-	/* HBM IRC setting */
-	if (test_bit(FEAT_IRC_OFF, changed_feat)) {
-		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x01, 0x9B, 0x92);
-		val = test_bit(FEAT_IRC_OFF, spanel->feat) ? 0x07 : 0x27;
-		EXYNOS_DCS_BUF_ADD(ctx, 0x92, val);
+	/*
+	 * HBM IRC setting
+	 *
+	 * Description: after EVT1, IRC will be always on. "Flat mode" is used to
+	 * replace IRC on for normal mode and HDR video, and "Flat Z mode" is used
+	 * to replace IRC off for sunlight environment.
+	 */
+	if (ctx->panel_rev >= PANEL_REV_EVT1) {
+		if (test_bit(FEAT_IRC_Z_MODE, changed_feat)) {
+			EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0x00, 0x92);
+			if (test_bit(FEAT_IRC_Z_MODE, spanel->feat)) {
+				EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0xBE, 0x98);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0xF3, 0x68);
+				EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x97, 0x87, 0x87, 0xFB, 0xFD, 0xF1);
+			} else {
+				EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0x00, 0x00);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0xF3, 0x68);
+				EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x71, 0x81, 0x59, 0x90, 0xA2, 0x80);
+			}
+		}
+	} else {
+		if (test_bit(FEAT_IRC_OFF, changed_feat)) {
+			EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x01, 0x9B, 0x92);
+			val = test_bit(FEAT_IRC_OFF, spanel->feat) ? 0x07 : 0x27;
+			EXYNOS_DCS_BUF_ADD(ctx, 0x92, val);
+		}
 	}
 
 	/*
@@ -1107,7 +1132,14 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 		bool enable_acl = (br >= dbv_th && IS_HBM_ON(ctx->hbm_mode));
 
 		if (spanel->hw_acl_enabled != enable_acl) {
-			/* ACL setting - 0x01: 5%, 0x02: 7.5%, 0x00: off */
+			/*
+			 * ACL setting:
+			 *
+			 * P1.0 - 5% (0x01)
+			 * P1.1 - 7.5% (0x02)
+			 * EVT1 and later - 12% (0x02)
+			 * Set 0x00 to disable it
+			 */
 			u8 val = 0;
 
 			if (enable_acl)
@@ -1116,7 +1148,9 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 			spanel->hw_acl_enabled = enable_acl;
 			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
 
-			hk3_update_za(ctx);
+			/* Keep ZA off after EVT1 */
+			if (ctx->panel_rev < PANEL_REV_EVT1)
+				hk3_update_za(ctx);
 		}
 	}
 
@@ -1399,17 +1433,20 @@ static void hk3_set_hbm_mode(struct exynos_panel *ctx,
 	if (IS_HBM_ON(mode)) {
 		set_bit(FEAT_HBM, spanel->feat);
 		/* enforce IRC on for factory builds */
-#ifndef DPU_FACTORY_BUILD
+#ifndef PANEL_FACTORY_BUILD
 		if (mode == HBM_ON_IRC_ON)
-			clear_bit(FEAT_IRC_OFF, spanel->feat);
+			clear_bit(ctx->panel_rev >= PANEL_REV_EVT1 ?
+				  FEAT_IRC_Z_MODE : FEAT_IRC_OFF, spanel->feat);
 		else
-			set_bit(FEAT_IRC_OFF, spanel->feat);
+			set_bit(ctx->panel_rev >= PANEL_REV_EVT1 ?
+				FEAT_IRC_Z_MODE : FEAT_IRC_OFF, spanel->feat);
 #endif
 		hk3_update_panel_feat(ctx, NULL, false);
 		hk3_write_display_mode(ctx, &pmode->mode);
 	} else {
 		clear_bit(FEAT_HBM, spanel->feat);
-		clear_bit(FEAT_IRC_OFF, spanel->feat);
+		clear_bit(ctx->panel_rev >= PANEL_REV_EVT1 ?
+			  FEAT_IRC_Z_MODE : FEAT_IRC_OFF, spanel->feat);
 		hk3_write_display_mode(ctx, &pmode->mode);
 		hk3_update_panel_feat(ctx, NULL, false);
 	}
@@ -1588,7 +1625,7 @@ static const struct exynos_display_underrun_param underrun_param = {
 };
 
 static const u32 hk3_bl_range[] = {
-	94, 180, 270, 360, 2047
+	94, 180, 270, 360, 3307
 };
 
 #define HK3_WQHD_DSC {\
@@ -2070,28 +2107,28 @@ const struct brightness_capability hk3_brightness_capability = {
 	.normal = {
 		.nits = {
 			.min = 2,
-			.max = 800,
+			.max = 1000,
 		},
 		.level = {
 			.min = 196,
-			.max = 2989,
+			.max = 3307,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 50,
+			.max = 63,
 		},
 	},
 	.hbm = {
 		.nits = {
-			.min = 800,
+			.min = 1000,
 			.max = 1600,
 		},
 		.level = {
-			.min = 2990,
+			.min = 3308,
 			.max = 4095,
 		},
 		.percentage = {
-			.min = 50,
+			.min = 63,
 			.max = 100,
 		},
 	},
@@ -2100,7 +2137,7 @@ const struct brightness_capability hk3_brightness_capability = {
 const struct exynos_panel_desc google_hk3 = {
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
-	.dft_brightness = 1023,
+	.dft_brightness = 1653,
 	.brt_capability = &hk3_brightness_capability,
 	.dbv_extra_frame = true,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */

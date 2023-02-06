@@ -9,6 +9,17 @@
 #include <dt-bindings/thermal/thermal.h>
 #include <dt-bindings/soc/google/zuma-bcl.h>
 
+&pinctrl_12 {
+	bcl_rffe_modem: bcl-rffe-modem {
+		samsung,pins = "gpp22-2";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
+	};
+	bcl_batoilo_modem: bcl-batoilo-modem {
+		samsung,pins = "gpp22-3";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
+	};
+};
+
 / {
 	fragment@battery {
 		target-path = "/";
@@ -34,100 +45,42 @@
 				odpm_ratio = <3>;
 				gpios = <&gpa9 5 0>,		/* VDROOP1 */
 					<&gpa9 6 0>,		/* VDROOP2 */
-					<&gpp19 2 0>,		/* MODEM 1 */
-					<&gpp10 0 0>;		/* MODEM 2 */
+					<&gpp22 2 0>,		/* MODEM 1 */
+					<&gpp22 3 0>;		/* MODEM 2 */
+				rffe_channel = <11>;
+				pinctrl-names = "bcl-rffe-modem", "bcl-batoilo-modem";
+				pinctrl-0 = <&bcl_rffe_modem>;
+				pinctrl-1 = <&bcl_batoilo_modem>;
 
 				main_limit {
 					pmic = "main_limit";
-					ch1 {
-						/* BUCK1M Min: 0.006868132 mW Max: 14403.51 mW */
-						setting = <255>;   /* BUCK1M LSB: 0.006868132 mW */
-					};
-					ch2 {
-						/* BUCK2M Min: 0.013736264 mW Max: 28807.01 mW */
-						setting = <255>;   /* BUCK2M LSB: 0.013736264 mW */
-					};
-					ch3 {
-						/* BUCK3M Min: 0.020604396 mW Max: 43210.53 mW */
-						setting = <255>;   /* BUCK3M LSB: 0.020604396 mW */
-					};
-					ch4 {
-						/* BUCK4M Min: 0.013736264 mW Max: 28807.01 mW */
-						setting = <255>;   /* BUCK4M LSB: 0.013736264 mW */
-					};
-					ch5 {
-						/* BUCK5M Min: 0.020604396 mW Max: 43210.53 mW */
-						setting = <255>;   /* BUCK5M LSB: 0.020604396 mW */
-					};
-					ch6 {
-						/* BUCK6M Min: 0.006868132 mW Max: 14403.51 mW */
-						setting = <255>;   /* BUCK6M LSB: 0.006868132 mW */
-					};
-					ch7 {
-						/* BUCK7M Min: 0.020604396 mW Max: 43210.53 mW */
-						setting = <255>;   /* BUCK7M LSB: 0.020604396 mW */
-					};
-					ch8 {
-						/* BUCK8M Min: 0.006868132 mW Max: 14403.51 mW */
-						setting = <255>;   /* BUCK8M LSB: 0.006868132 mW */
-					};
-					ch9 {
-						setting = <255>;   /* LDO15M LSB: 0.001831502 mW */
-					};
-					ch10 {
-						setting = <255>;   /* VSEN_C1 LSB: 0.0021978021 V */
-					};
-					ch11 {
-						setting = <255>;  /* VSEN_C2 LSB: 0.0021978021 V */
-					};
-					ch12 {
-						setting = <255>;  /* VSEN_C3 LSB: 0.0021978021 V */
-					};
+					ch1 { setting = <209>; };
+					ch2 { setting = <157>; };
+					ch3 { setting = <182>; };
+					ch4 { setting = <202>; };
+					ch5 { setting = <143>; };
+					ch6 { setting = <89>; };
+					ch7 { setting = <238>; };
+					ch8 { setting = <74>; };
+					ch9 { setting = <177>; };
+					ch10 { setting = <171>; };
+					ch11 { setting = <60>; };
+					ch12 { setting = <60>; };
 				};
 				sub_limit {
 					pmic = "sub_limit";
-					ch1 {
-						/* BUCK1S Min: 0.013736264 mW Max: 28807.01 mW */
-						setting = <255>;   /* BUCK1S LSB: 0.013736264 mW */
-					};
-					ch2 {
-						/* BUCK2S Min: 0.013736264 mW Max: 28807.01 mW */
-						setting = <255>;   /* BUCK2S LSB: 0.013736264 mW */
-					};
-					ch3 {
-						/* BUCK4S Min: 0.006868132 mW Max: 14403.51 mW */
-						setting = <255>;   /* BUCK4S LSB: 0.006868132 mW */
-					};
-					ch4 {
-						/* BUCK5S Min: 0.006868132 mW Max: 14403.51 mW */
-						setting = <255>;   /* BUCK5S LSB: 0.006868132 mW */
-					};
-					ch5 {
-						/* BUCK8S Min: 0.006868132 mW Max: 14403.51 mW */
-						setting = <255>;   /* BUCK8S LSB: 0.006868132 mW */
-					};
-					ch6 {
-						/* BUCK9S Min: 0.006868132 mW Max: 14403.51 mW */
-						setting = <255>;   /* BUCK9S LSB: 0.006868132 mW */
-					};
-					ch7 {
-						setting = <255>;   /* LDO2S LSB: 0.001831502 mW */
-					};
-					ch8 {
-						setting = <255>;   /* LDO9S LSB: 0.000457875 mW */
-					};
-					ch9 {
-						setting = <255>;   /* LDO29S LSB: 0.000915751 mW */
-					};
-					ch10 {
-						setting = <255>;  /* VSEN_C4 LSB: 0.0021978021 V */
-					};
-					ch11 {
-						setting = <255>;  /* VSEN_C5 LSB: 0.0021978021 V */
-					};
-					ch12 {
-						setting = <255>;  /* VSEN_C6 LSB: 0.0021978021 V */
-					};
+					ch1 { setting = <85>; };
+					ch2 { setting = <144>; };
+					ch3 { setting = <107>; };
+					ch4 { setting = <25>; };
+					ch5 { setting = <40>; };
+					ch6 { setting = <34>; };
+					ch7 { setting = <199>; };
+					ch8 { setting = <113>; };
+					ch9 { setting = <85>; };
+					ch10 { setting = <114>; };
+					ch11 { setting = <137>; };
+					ch12 { setting = <106>; };
 				};
 			};
 		};

@@ -211,7 +211,9 @@ kernel_module(
         "drivers/clocksource/exynos_mct_v3.ko",
         "drivers/cpufreq/exynos-acme.ko",
         "drivers/devfreq/google/arm-memlat-mon.ko",
+        "drivers/devfreq/google/dsulat-devfreq.ko",
         "drivers/devfreq/google/exynos_devfreq.ko",
+        "drivers/devfreq/google/governor_dsulat.ko",
         "drivers/devfreq/google/governor_memlat.ko",
         "drivers/devfreq/google/memlat-devfreq.ko",
         "drivers/dma-buf/heaps/samsung/samsung_dma_heap.ko",
@@ -471,14 +473,5 @@ copy_to_dist_dir(
     data = _zuma_shusky_dist_targets,
     dist_dir = "out/shusky/dist",
     flat = True,
-    log = "info",
-)
-
-kernel_abi_dist(
-    name = "zuma_shusky_abi_dist",
-    data = _zuma_shusky_dist_targets,
-    dist_dir = "out/shusky/dist",
-    flat = True,
-    kernel_abi = ":zuma_shusky_abi",
     log = "info",
 )
