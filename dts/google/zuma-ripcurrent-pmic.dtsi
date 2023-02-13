@@ -47,8 +47,7 @@
 };
 
 &s_ldo16_reg {
-	regulator-always-on;
-	regulator-initial-mode = <SEC_OPMODE_ON>;
+	regulator-initial-mode = <SEC_OPMODE_OFF>;
 	schematic-name = "L16S_UWB";
 	subsys-name = "UWB";
 };
