@@ -270,6 +270,8 @@ static const struct drm_dsc_config fhd_pps_config = {
 #define HK3_TE_USEC_60HZ_HS 8500
 #define HK3_TE_USEC_60HZ_NS 346
 
+#define PROJECT "HK3"
+
 static const u8 unlock_cmd_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 lock_cmd_f0[]   = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
@@ -2070,6 +2072,11 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
+static void hk3_panel_config(struct exynos_panel *ctx)
+{
+	exynos_panel_model_init(ctx, PROJECT, 0);
+}
+
 static const struct drm_panel_funcs hk3_drm_funcs = {
 	.disable = hk3_disable,
 	.unprepare = exynos_panel_unprepare,
@@ -2091,6 +2098,7 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.is_mode_seamless = hk3_is_mode_seamless,
 	.mode_set = hk3_mode_set,
 	.panel_init = hk3_panel_init,
+	.panel_config = hk3_panel_config,
 	.get_panel_rev = hk3_get_panel_rev,
 	.get_te2_edges = exynos_panel_get_te2_edges,
 	.configure_te2_edges = exynos_panel_configure_te2_edges,

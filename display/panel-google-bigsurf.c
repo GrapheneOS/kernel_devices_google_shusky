@@ -22,6 +22,8 @@
 #define WIDTH_MM 64
 #define HEIGHT_MM 143
 
+#define PROJECT "SB3"
+
 /**
  * struct bigsurf_panel - panel specific runtime info
  *
@@ -675,6 +677,11 @@ static int bigsurf_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
+static void bigsurf_panel_config(struct exynos_panel *ctx)
+{
+	exynos_panel_model_init(ctx, PROJECT, 0);
+}
+
 static const struct drm_panel_funcs bigsurf_drm_funcs = {
 	.disable = exynos_panel_disable,
 	.unprepare = exynos_panel_unprepare,
@@ -694,6 +701,7 @@ static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
 	.is_mode_seamless = bigsurf_is_mode_seamless,
 	.mode_set = bigsurf_mode_set,
 	.panel_init = bigsurf_panel_init,
+	.panel_config = bigsurf_panel_config,
 	.get_panel_rev = bigsurf_get_panel_rev,
 	.get_te2_edges = exynos_panel_get_te2_edges,
 	.configure_te2_edges = exynos_panel_configure_te2_edges,

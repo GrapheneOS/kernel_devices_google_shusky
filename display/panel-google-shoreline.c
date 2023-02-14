@@ -87,6 +87,8 @@ static const struct drm_dsc_config pps_config = {
 #define WIDTH_MM 64
 #define HEIGHT_MM 143
 
+#define PROJECT "SB3"
+
 static const u8 test_key_on_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 test_key_off_f0[] = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
@@ -520,6 +522,11 @@ static int shoreline_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
+static void shoreline_panel_config(struct exynos_panel *ctx)
+{
+	exynos_panel_model_init(ctx, PROJECT, 0);
+}
+
 static const struct exynos_display_underrun_param underrun_param = {
 	.te_idle_us = 280,
 	.te_var = 1,
@@ -642,6 +649,7 @@ static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.set_local_hbm_mode = shoreline_set_local_hbm_mode,
 	.is_mode_seamless = shoreline_is_mode_seamless,
 	.mode_set = shoreline_mode_set,
+	.panel_config = shoreline_panel_config,
 	.panel_init = shoreline_panel_init,
 	.get_panel_rev = shoreline_get_panel_rev,
 	.get_te2_edges = exynos_panel_get_te2_edges,
