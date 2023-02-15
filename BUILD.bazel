@@ -96,6 +96,9 @@ _SHUSKY_DTBOS = [
     "google/zuma-husky-proto1_1.dtbo",
     "google/zuma-shiba-proto1.dtbo",
     "google/zuma-shiba-proto1_1.dtbo",
+    "google-dts-base/zuma-dpm-eng.dtbo",
+    "google-dts-base/zuma-dpm-user.dtbo",
+    "google-dts-base/zuma-dpm-userdebug.dtbo",
 ]
 
 kernel_module_group(
@@ -162,14 +165,13 @@ kernel_build(
     outs = [
         "google-dts-base/zuma-{}.dtb".format(soc_rev)
         for soc_rev in _SOC_REVS
-    ],
+    ] + _SHUSKY_DTBOS,
     # TODO(b/221278445): Use real GKI
     # base_kernel = "//{}:kernel_aarch64".format(_GKI_KERNEL_DIR),
     base_kernel = ":shusky_gki",
     build_config = ":device_build_config",
     collect_unstripped_modules = True,
     dtstree = "//private/devices/google/shusky/dts:shusky.dt",
-    implicit_outs = _SHUSKY_DTBOS,
     kconfig_ext = "//private/google-modules/soc/gs:Kconfig.ext",
     kmi_symbol_list = "//{}:android/abi_gki_aarch64_pixel".format(_GKI_KERNEL_DIR),
     module_outs = [

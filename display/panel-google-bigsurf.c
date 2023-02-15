@@ -68,8 +68,8 @@ static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, bigsurf_lp_off_cmds),
 	/* rising = 0, falling = 32 */
-	BINNED_LP_MODE_TIMING("low", 648, bigsurf_lp_low_cmds, 0, 32),
-	BINNED_LP_MODE_TIMING("high", 3789, bigsurf_lp_high_cmds, 0, 32),
+	BINNED_LP_MODE_TIMING("low", 332, bigsurf_lp_low_cmds, 0, 32),
+	BINNED_LP_MODE_TIMING("high", 3574, bigsurf_lp_high_cmds, 0, 32),
 };
 
 static const struct exynos_dsi_cmd bigsurf_off_cmds[] = {
@@ -256,12 +256,17 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 				const enum exynos_hbm_mode hbm_mode,
 				const int vrefresh)
 {
+	const u16 level = exynos_panel_get_brightness(ctx);
+
 	if (!IS_HBM_ON(hbm_mode)) {
 		dev_info(ctx->dev, "hbm is off, skip update irc\n");
 		return;
 	}
 
 	if (IS_HBM_ON_IRC_OFF(hbm_mode)) {
+		if (ctx->panel_rev >= PANEL_REV_EVT1 &&
+		    level == ctx->desc->brt_capability->hbm.level.max)
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x0F, 0xFF);
 		EXYNOS_DCS_BUF_ADD(ctx, 0x5F, 0x01);
 		if (vrefresh == 120) {
 			if (ctx->hbm.local_hbm.enabled) {
@@ -287,6 +292,12 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 		} else {
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
 			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x00, 0x00);
+		}
+		if (ctx->panel_rev >= PANEL_REV_EVT1) {
+			const u8 val1 = level >> 8;
+			const u8 val2 = level & 0xff;
+
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, val1, val2);
 		}
 	}
 	/* Empty command is for flush */
@@ -390,6 +401,51 @@ static int bigsurf_enable(struct drm_panel *panel)
 	return 0;
 }
 
+static void bigsurf_set_lhbm_brightness(struct exynos_panel *ctx, u16 br)
+{
+	u16 level;
+	u8 val1, val2;
+
+	if (IS_HBM_ON_IRC_OFF(ctx->hbm_mode) && ctx->panel_rev >= PANEL_REV_EVT1 &&
+	    br == ctx->desc->brt_capability->hbm.level.max)
+		br = 0x0FFF;
+
+	level = br * 4;
+	val1 = level >> 8;
+	val2 = level & 0xff;
+
+	/* set LHBM background brightness */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x4C);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xDF, val1, val2, val1, val2, val1, val2);
+}
+
+static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
+{
+	u16 brightness;
+
+	if (ctx->current_mode->exynos_mode.is_lp_mode) {
+		const struct exynos_panel_funcs *funcs;
+
+		funcs = ctx->desc->exynos_panel_func;
+		if (funcs && funcs->set_binned_lp)
+			funcs->set_binned_lp(ctx, br);
+		return 0;
+	}
+
+	if (!br) {
+		// turn off panel and set brightness directly.
+		return exynos_dcs_set_brightness(ctx, 0);
+	}
+
+	if (ctx->hbm.local_hbm.enabled)
+		bigsurf_set_lhbm_brightness(ctx, br);
+
+	brightness = (br & 0xff) << 8 | br >> 8;
+
+	return exynos_dcs_set_brightness(ctx, brightness);
+}
+
 static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
 				 enum exynos_hbm_mode hbm_mode)
 {
@@ -413,17 +469,11 @@ static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 	int vrefresh = drm_mode_vrefresh(&pmode->mode);
 
 	if (local_hbm_en) {
-		u16 level = exynos_panel_get_brightness(ctx) * 4;
-		u8 val1 = level >> 8;
-		u8 val2 = level & 0xff;
+		u16 level = exynos_panel_get_brightness(ctx);
 
 		if (IS_HBM_ON(ctx->hbm_mode))
 			bigsurf_update_irc(ctx, ctx->hbm_mode, vrefresh);
-
-		/* set LHBM background brightness */
-		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
-		EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x4C);
-		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xDF, val1, val2, val1, val2, val1, val2);
+		bigsurf_set_lhbm_brightness(ctx, level);
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x87, 0x05);
 	} else {
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x87, 0x00);
@@ -634,7 +684,7 @@ static const struct drm_panel_funcs bigsurf_drm_funcs = {
 };
 
 static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
-	.set_brightness = exynos_panel_set_brightness,
+	.set_brightness = bigsurf_set_brightness,
 	.set_lp_mode = exynos_panel_set_lp_mode,
 	.set_nolp_mode = bigsurf_set_nolp_mode,
 	.set_binned_lp = exynos_panel_set_binned_lp,
@@ -655,28 +705,28 @@ const struct brightness_capability bigsurf_brightness_capability = {
 	.normal = {
 		.nits = {
 			.min = 2,
-			.max = 800,
+			.max = 1000,
 		},
 		.level = {
-			.min = 268,
-			.max = 3672,
+			.min = 1,
+			.max = 3574,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 57,
+			.max = 71,
 		},
 	},
 	.hbm = {
 		.nits = {
-			.min = 800,
+			.min = 1000,
 			.max = 1400,
 		},
 		.level = {
-			.min = 3673,
-			.max = 4094,
+			.min = 3575,
+			.max = 3827,
 		},
 		.percentage = {
-			.min = 57,
+			.min = 71,
 			.max = 100,
 		},
 	},

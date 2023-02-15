@@ -334,6 +334,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			/* FRONT CAMERA DOKKAEBI */
@@ -424,6 +426,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <1>;
 			};
 
 
@@ -531,6 +535,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
 			};
 
 			/* REAR Folded Tele Camera KRAKEN */
@@ -625,6 +631,11 @@
 					 0
 					 0
 					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
 			};
 
 			/* EEPROM DJINN for BOITATA*/
@@ -668,6 +679,8 @@
 					<1000
 					 0
 					 1000>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			/* EEPROM SMAUG for DOKKAEBI */
@@ -703,6 +716,8 @@
 					"regulator";
 				power-down-seq-delays-us =
 					<1000>;
+
+				i2c-lock-group-id = <1>;
 			};
 
 			/* EEPROM SMAUG for OKSOKO */
@@ -738,6 +753,8 @@
 					"regulator";
 				power-down-seq-delays-us =
 					<1000>;
+
+				i2c-lock-group-id = <2>;
 			};
 
 			/* EEPROM HUMBABA for KRAKEN */
@@ -792,6 +809,8 @@
 					 1000
 					 1000
 					 0>;
+
+				i2c-lock-group-id = <3>;
 			};
 
 			/* Actuator CORNERFOLK for BOITATA */
@@ -844,6 +863,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			/* Actuator CORNERFOLK for OKSOKO */
@@ -889,6 +910,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
 			};
 
 			/* Actuator CORNERFOLK for DOKKAEBI */
@@ -943,6 +966,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <1>;
 			};
 
 			/* OIS DJINN for BOITATA*/
@@ -1002,6 +1027,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			/* OIS HUMBABA for KRAKEN */
@@ -1063,6 +1090,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
 			};
 
 			flash0: flash@0 {
@@ -1155,6 +1184,8 @@
 					<1000
 					 0
 					 0>;
+
+				i2c-lock-group-id = <0>;
 			};
 		};
 	};
