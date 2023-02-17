@@ -677,11 +677,6 @@ static int bigsurf_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
-static void bigsurf_panel_config(struct exynos_panel *ctx)
-{
-	exynos_panel_model_init(ctx, PROJECT, 0);
-}
-
 static const struct drm_panel_funcs bigsurf_drm_funcs = {
 	.disable = exynos_panel_disable,
 	.unprepare = exynos_panel_unprepare,
@@ -689,6 +684,8 @@ static const struct drm_panel_funcs bigsurf_drm_funcs = {
 	.enable = bigsurf_enable,
 	.get_modes = exynos_panel_get_modes,
 };
+
+static int bigsurf_panel_config(struct exynos_panel *ctx);
 
 static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
 	.set_brightness = bigsurf_set_brightness,
@@ -709,43 +706,113 @@ static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
 	.read_id = bigsurf_read_id,
 };
 
-const struct brightness_capability bigsurf_brightness_capability = {
-	.normal = {
-		.nits = {
-			.min = 2,
-			.max = 1000,
-		},
-		.level = {
-			.min = 1,
-			.max = 3574,
-		},
-		.percentage = {
-			.min = 0,
-			.max = 71,
+static const struct exynos_brightness_configuration bigsurf_btr_configs[] = {
+	{
+		.panel_rev = PANEL_REV_EVT1 | PANEL_REV_EVT1_1 | PANEL_REV_LATEST,
+		.dft_brightness = 1023,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 1000,
+				},
+				.level = {
+					.min = 1,
+					.max = 3574,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 71,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 1000,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3575,
+					.max = 3827,
+				},
+				.percentage = {
+					.min = 71,
+					.max = 100,
+				},
+			},
 		},
 	},
-	.hbm = {
-		.nits = {
-			.min = 1000,
-			.max = 1400,
+	{
+		.panel_rev = PANEL_REV_PROTO1_1,
+		.dft_brightness = 1023,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 268,
+					.max = 3672,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 57,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3673,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 57,
+					.max = 100,
+				},
+			},
 		},
-		.level = {
-			.min = 3575,
-			.max = 3827,
-		},
-		.percentage = {
-			.min = 71,
-			.max = 100,
+	},
+	{
+		.panel_rev = PANEL_REV_PROTO1,
+		.dft_brightness = 1023,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 290,
+					.max = 3789,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 67,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1200,
+				},
+				.level = {
+					.min = 3790,
+					.max = 4094,
+				},
+				.percentage = {
+					.min = 67,
+					.max = 100,
+				},
+			},
 		},
 	},
 };
 
-const struct exynos_panel_desc google_bigsurf = {
+struct exynos_panel_desc google_bigsurf = {
 	.data_lane_cnt = 4,
-	.max_brightness = 4094,
-	.min_brightness = 268,
-	.dft_brightness = 1023,
-	.brt_capability = &bigsurf_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
 	.hdr_formats = BIT(2) | BIT(3),
 	.max_luminance = 10000000,
@@ -772,6 +839,25 @@ const struct exynos_panel_desc google_bigsurf = {
 		{PANEL_REG_ID_VDDI, 0},
 	},
 };
+
+static int bigsurf_panel_config(struct exynos_panel *ctx)
+{
+	int ret;
+
+	exynos_panel_model_init(ctx, PROJECT, 0);
+
+	ret = exynos_panel_init_brightness(&google_bigsurf,
+						bigsurf_btr_configs,
+						ARRAY_SIZE(bigsurf_btr_configs),
+						ctx->panel_rev);
+
+	if (ctx->panel_rev == PANEL_REV_EVT1) {
+		google_bigsurf.min_brightness = 268;
+		google_bigsurf.max_brightness = 4095;
+	}
+
+	return ret;
+}
 
 static const struct of_device_id exynos_panel_of_match[] = {
 	{ .compatible = "google,bigsurf", .data = &google_bigsurf },

@@ -2072,9 +2072,11 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
-static void hk3_panel_config(struct exynos_panel *ctx)
+static int hk3_panel_config(struct exynos_panel *ctx)
 {
 	exynos_panel_model_init(ctx, PROJECT, 0);
+
+	return 0;
 }
 
 static const struct drm_panel_funcs hk3_drm_funcs = {
