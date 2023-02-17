@@ -76,6 +76,20 @@ enum hk3_lhbm_brt_overdrive_group {
 	LHBM_OVERDRIVE_GRP_MAX
 };
 
+/**
+ * enum hk3_material - different materials in HW
+ * @MATERIAL_E6: EVT1 material E6
+ * @MATERIAL_E7_DOE: EVT1 material E7
+ * @MATERIAL_E7: EVT1.1 maetrial E7
+ * @MATERIAL_LPC5: EVT1.1 material LPC5
+ */
+enum hk3_material {
+	MATERIAL_E6 = 0,
+	MATERIAL_E7_DOE,
+	MATERIAL_E7,
+	MATERIAL_LPC5
+};
+
 struct hk3_lhbm_ctl {
 	/** @brt_normal: normal LHBM brightness parameters */
 	u8 brt_normal[LHBM_BRT_LEN];
@@ -88,12 +102,11 @@ struct hk3_lhbm_ctl {
 };
 
 /**
- * struct hk3_panel - panel specific runtime info
+ * struct hk3_panel - panel specific info
  *
- * This struct maintains hk3 panel specific runtime info, any fixed details about panel should
- * most likely go into struct exynos_panel_desc. The variables with the prefix hw_ keep track of the
- * features that were actually committed to hardware, and should be modified after sending cmds to panel,
- * i.e. updating hw state.
+ * This struct maintains hk3 panel specific info. The variables with the prefix hw_ keep
+ * track of the features that were actually committed to hardware, and should be modified
+ * after sending cmds to panel, i.e. updating hw state.
  */
 struct hk3_panel {
 	/** @base: base panel struct */
@@ -123,7 +136,8 @@ struct hk3_panel {
 	bool force_za_off;
 	/** @lhbm_ctl: lhbm brightness control */
 	struct hk3_lhbm_ctl lhbm_ctl;
-
+	/** @material: the material version used in panel */
+	enum hk3_material material;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -1248,6 +1262,17 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 };
 static DEFINE_EXYNOS_CMD_SET(hk3_init);
 
+static const struct exynos_dsi_cmd hk3_ns_gamma_fix_cmds[] = {
+	EXYNOS_DSI_CMD0(unlock_cmd_f0),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x02, 0x3F, 0xCB),
+	EXYNOS_DSI_CMD_SEQ(0xCB, 0x0A),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x02, 0x45, 0xCB),
+	EXYNOS_DSI_CMD_SEQ(0xCB, 0x0A),
+	EXYNOS_DSI_CMD0(freq_update),
+	EXYNOS_DSI_CMD0(lock_cmd_f0),
+};
+static DEFINE_EXYNOS_CMD_SET(hk3_ns_gamma_fix);
+
 static void hk3_lhbm_luminance_opr_setting(struct exynos_panel *ctx)
 {
 	struct hk3_panel *spanel = to_spanel(ctx);
@@ -1308,6 +1333,8 @@ static int hk3_enable(struct drm_panel *panel)
 	if (needs_reset) {
 		EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 120, MIPI_DCS_EXIT_SLEEP_MODE);
 		exynos_panel_send_cmd_set(ctx, &hk3_init_cmd_set);
+		if (spanel->material == MATERIAL_E7_DOE)
+			exynos_panel_send_cmd_set(ctx, &hk3_ns_gamma_fix_cmd_set);
 		if (ctx->panel_rev == PANEL_REV_PROTO1)
 			hk3_lhbm_luminance_opr_setting(ctx);
 	}
@@ -1597,6 +1624,33 @@ static int hk3_read_id(struct exynos_panel *ctx)
 	return exynos_panel_read_ddic_id(ctx);
 }
 
+/* Note the format is 0x<DAh><DBh><DCh> which is reverse of bootloader (0x<DCh><DBh><DAh>) */
+static void hk3_get_panel_material(struct exynos_panel *ctx, u32 id)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	switch (id) {
+	case 0x000A4000:
+		spanel->material = MATERIAL_E6;
+		break;
+	case 0x000A4020:
+		spanel->material = MATERIAL_E7_DOE;
+		break;
+	case 0x000A4420:
+		spanel->material = MATERIAL_E7;
+		break;
+	case 0x000A4520:
+		spanel->material = MATERIAL_LPC5;
+		break;
+	default:
+		dev_warn(ctx->dev, "unknown material from panel (%#x), default to E7\n", id);
+		spanel->material = MATERIAL_E7;
+		break;
+	}
+
+	dev_info(ctx->dev, "%s: %d\n", __func__, spanel->material);
+}
+
 static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 {
 	/* extract command 0xDB */
@@ -1604,6 +1658,8 @@ static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 	u8 rev = ((build_code & 0xE0) >> 3) | ((build_code & 0x0C) >> 2);
 
 	exynos_panel_get_panel_rev(ctx, rev);
+
+	hk3_get_panel_material(ctx, id);
 }
 
 static unsigned int hk3_get_te_usec(struct exynos_panel *ctx,
