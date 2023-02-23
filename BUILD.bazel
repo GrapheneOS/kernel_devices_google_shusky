@@ -184,8 +184,6 @@ kernel_build(
         "drivers/scsi/sg.ko",
         "drivers/spi/spidev.ko",
         "drivers/watchdog/softdog.ko",
-        "net/mac80211/mac80211.ko",
-        "net/wireless/cfg80211.ko",
     ],
     strip_modules = True,
 )
@@ -441,7 +439,9 @@ _GKI_MODULES = [
     # keep sorted
     ":shusky_gki/lib/crypto/libarc4.ko",
     ":shusky_gki/mm/zsmalloc.ko",
+    ":shusky_gki/net/mac80211/mac80211.ko",
     ":shusky_gki/net/rfkill/rfkill.ko",
+    ":shusky_gki/net/wireless/cfg80211.ko",
 ]
 
 _zuma_shusky_dist_targets = [
