@@ -183,6 +183,10 @@
 		maxim,rsense-default = <500>;
 		maxim,batt-id-range-pct = <0>;
 
+		maxim,rc-enable;
+		maxim,rc-soc = <20>;
+		maxim,rc-temp = <50>;
+
 		maxim,psy-type-unknown;
 		maxim,fg-data {
 			#include "zuma-ripcurrent-battery-data.dtsi"

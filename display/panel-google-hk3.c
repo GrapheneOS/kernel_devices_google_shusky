@@ -1791,7 +1791,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
 			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
 		},
-		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
+		.idle_mode = IDLE_MODE_ON_SELF_REFRESH,
 	},
 	{
 		.mode = {
@@ -1850,7 +1850,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
 			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
 		},
-		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
+		.idle_mode = IDLE_MODE_ON_SELF_REFRESH,
 	},
 	{
 		.mode = {
