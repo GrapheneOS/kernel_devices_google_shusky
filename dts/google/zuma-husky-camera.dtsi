@@ -151,11 +151,11 @@
 };
 
 &pinctrl_2 {
-        ldaf_irq: ldaf-irq {
-                samsung,pins = "gpa5-4"; /* XEINT_4 */
-                samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
-                samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-        };
+	ldaf_irq: ldaf-irq {
+		samsung,pins = "gpa5-4"; /* XEINT_4 */
+		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+	};
 };
 
 &hsi2c_1 {
