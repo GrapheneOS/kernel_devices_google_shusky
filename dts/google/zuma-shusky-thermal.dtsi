@@ -14,6 +14,7 @@
 			compatible = "google,s2mpg15-spmic-thermal";
 			#thermal-sensor-cells = <1>;
 			adc_chan_en = /bits/ 8 <0xff>;
+			stats_en = /bits/ 8 <0xff>;
 		};
 	};
 };
