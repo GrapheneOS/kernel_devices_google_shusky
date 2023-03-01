@@ -29,6 +29,7 @@ export GKI_KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp-staging"}
 export KLEAF_SUPPRESS_BUILD_SH_DEPRECATION_WARNING=1
 export LTO=${LTO:-thin}
 export BUILD_CONFIG=private/devices/google/shusky/build.config.shusky
+export VENDOR_DLKM_ETC_FILES=private/devices/google/shusky/insmod_cfg/*
 
 # TODO(b/239987494): Remove this when the core GKI fragment is removed.
 # Since we can't have two build config fragments, any alternative use
