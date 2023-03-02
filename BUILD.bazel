@@ -70,7 +70,6 @@ kernel_build(
     kmi_symbol_list_strict_mode = False,
     module_implicit_outs = COMMON_GKI_MODULES_LIST,
     strip_modules = True,
-    # TODO(http://b/269674780#comment20): do we still need this?
     trim_nonlisted_kmi = True,
 )
 
@@ -191,8 +190,6 @@ kernel_build(
         "drivers/watchdog/softdog.ko",
     ],
     strip_modules = True,
-    # TODO(http://b/269674780#comment20): do we still need this?
-    trim_nonlisted_kmi = True,
 )
 
 kernel_abi(
