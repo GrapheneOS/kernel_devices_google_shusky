@@ -56,6 +56,7 @@ kernel_build(
         "//private/google-modules/soc/gs:build.config.slider.khwasan",
     ],
     outs = aarch64_outs,
+    additional_kmi_symbol_lists = ["//{}:android/abi_gki_aarch64_pixel".format(_GKI_KERNEL_DIR)],
     build_config = ":gki_build_config",
     collect_unstripped_modules = True,
     # For building system_dlkm (b/241855743)
@@ -65,8 +66,11 @@ kernel_build(
         "certs/signing_key.pem",
         "certs/signing_key.x509",
     ],
+    kmi_symbol_list = "//{}:android/abi_gki_aarch64".format(_GKI_KERNEL_DIR),
+    kmi_symbol_list_strict_mode = False,
     module_implicit_outs = COMMON_GKI_MODULES_LIST,
     strip_modules = True,
+    trim_nonlisted_kmi = True,
 )
 
 kernel_modules_install(
@@ -184,8 +188,6 @@ kernel_build(
         "drivers/scsi/sg.ko",
         "drivers/spi/spidev.ko",
         "drivers/watchdog/softdog.ko",
-        "net/mac80211/mac80211.ko",
-        "net/wireless/cfg80211.ko",
     ],
     strip_modules = True,
 )
@@ -441,7 +443,11 @@ _GKI_MODULES = [
     # keep sorted
     ":shusky_gki/lib/crypto/libarc4.ko",
     ":shusky_gki/mm/zsmalloc.ko",
+    ":shusky_gki/net/ieee802154/ieee802154.ko",
+    ":shusky_gki/net/mac80211/mac80211.ko",
+    ":shusky_gki/net/mac802154/mac802154.ko",
     ":shusky_gki/net/rfkill/rfkill.ko",
+    ":shusky_gki/net/wireless/cfg80211.ko",
 ]
 
 _zuma_shusky_dist_targets = [

@@ -51,6 +51,9 @@
 				pinctrl-names = "bcl-rffe-modem", "bcl-batoilo-modem";
 				pinctrl-0 = <&bcl_rffe_modem>;
 				pinctrl-1 = <&bcl_batoilo_modem>;
+				cpu0_cluster = <0>;
+				cpu1_cluster = <4>;
+				cpu2_cluster = <8>;
 
 				main_limit {
 					pmic = "main_limit";
@@ -81,6 +84,64 @@
 					ch10 { setting = <114>; };
 					ch11 { setting = <137>; };
 					ch12 { setting = <106>; };
+				};
+				freq_qos {
+					batoilo {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <649000>;
+						tpu = <627000>;
+					};
+					vdroop1 {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <723000>;
+						tpu = <627000>;
+					};
+					vdroop2 {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <580000>;
+						tpu = <455000>;
+					};
+					smpl_gm {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <649000>;
+						tpu = <627000>;
+					};
+					ocp_cpu2 {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
+					ocp_cpu1 {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
+					ocp_gpu {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
+					ocp_tpu {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
 				};
 			};
 		};

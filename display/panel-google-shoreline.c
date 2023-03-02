@@ -87,6 +87,8 @@ static const struct drm_dsc_config pps_config = {
 #define WIDTH_MM 64
 #define HEIGHT_MM 143
 
+#define PROJECT "SB3"
+
 static const u8 test_key_on_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 test_key_off_f0[] = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
@@ -520,6 +522,7 @@ static int shoreline_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
+
 static const struct exynos_display_underrun_param underrun_param = {
 	.te_idle_us = 280,
 	.te_var = 1,
@@ -632,6 +635,8 @@ static const struct drm_panel_funcs shoreline_drm_funcs = {
 	.get_modes = exynos_panel_get_modes,
 };
 
+static int shoreline_panel_config(struct exynos_panel *ctx);
+
 static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.set_brightness = exynos_panel_set_brightness,
 	.set_lp_mode = exynos_panel_set_lp_mode,
@@ -642,6 +647,7 @@ static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.set_local_hbm_mode = shoreline_set_local_hbm_mode,
 	.is_mode_seamless = shoreline_is_mode_seamless,
 	.mode_set = shoreline_mode_set,
+	.panel_config = shoreline_panel_config,
 	.panel_init = shoreline_panel_init,
 	.get_panel_rev = shoreline_get_panel_rev,
 	.get_te2_edges = exynos_panel_get_te2_edges,
@@ -650,43 +656,113 @@ static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.read_id = shoreline_read_id,
 };
 
-static const struct brightness_capability shoreline_brightness_capability = {
-	.normal = {
-		.nits = {
-			.min = 2,
-			.max = 1000,
-		},
-		.level = {
-			.min = 209,
-			.max = 3514,
-		},
-		.percentage = {
-			.min = 0,
-			.max = 71,
+static const struct exynos_brightness_configuration shoreline_btr_configs[] = {
+	{
+		.panel_rev = PANEL_REV_EVT1 | PANEL_REV_EVT1_1 | PANEL_REV_LATEST,
+		.dft_brightness = 1023,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 1000,
+				},
+				.level = {
+					.min = 209,
+					.max = 3514,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 71,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 1000,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3515,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 71,
+					.max = 100,
+				},
+			},
 		},
 	},
-	.hbm = {
-		.nits = {
-			.min = 1000,
-			.max = 1400,
+	{
+		.panel_rev = PANEL_REV_PROTO1_1,
+		.dft_brightness = 1023,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 209,
+					.max = 3175,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 57,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3176,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 57,
+					.max = 100,
+				},
+			},
 		},
-		.level = {
-			.min = 3515,
-			.max = 4095,
-		},
-		.percentage = {
-			.min = 71,
-			.max = 100,
+	},
+	{
+		.panel_rev = PANEL_REV_PROTO1,
+		.dft_brightness = 1023,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 2,
+					.max = 2047,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 67,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1200,
+				},
+				.level = {
+					.min = 2048,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 67,
+					.max = 100,
+				},
+			},
 		},
 	},
 };
 
-static const struct exynos_panel_desc google_shoreline = {
+static struct exynos_panel_desc google_shoreline = {
 	.data_lane_cnt = 4,
-	.max_brightness = 4095,
-	.min_brightness = 209,
-	.dft_brightness = 1023,
-	.brt_capability = &shoreline_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
 	.hdr_formats = BIT(2) | BIT(3),
 	.max_luminance = 10000000,
@@ -715,6 +791,16 @@ static const struct exynos_panel_desc google_shoreline = {
 		{PANEL_REG_ID_VDDI, 0},
 	},
 };
+
+static int shoreline_panel_config(struct exynos_panel *ctx)
+{
+	exynos_panel_model_init(ctx, PROJECT, 0);
+
+	return exynos_panel_init_brightness(&google_shoreline,
+						shoreline_btr_configs,
+						ARRAY_SIZE(shoreline_btr_configs),
+						ctx->panel_rev);
+}
 
 static const struct of_device_id exynos_panel_of_match[] = {
 	{ .compatible = "google,shoreline", .data = &google_shoreline },
