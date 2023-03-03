@@ -426,7 +426,7 @@ static int bigsurf_enable(struct drm_panel *panel)
 			/* Gamma update setting */
 			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
 			EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCC, 0x10);
-			usleep_range(9000, 9100);
+			exynos_panel_msleep(9);
 		}
 	} else {
 		exynos_panel_set_lp_mode(ctx, pmode);

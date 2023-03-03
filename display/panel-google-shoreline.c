@@ -427,7 +427,7 @@ static void shoreline_set_nolp_mode(struct exynos_panel *ctx,
 	shoreline_update_wrctrld(ctx);
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 	shoreline_change_frequency(ctx, vrefresh);
-	usleep_range(delay_us, delay_us + 10);
+	exynos_panel_msleep(delay_us / 1000);
 	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	dev_info(ctx->dev, "exit LP mode\n");

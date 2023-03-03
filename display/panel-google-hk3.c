@@ -1247,7 +1247,7 @@ static void hk3_set_nolp_mode(struct exynos_panel *ctx,
 	hk3_write_display_mode(ctx, &pmode->mode);
 	hk3_change_frequency(ctx, pmode);
 
-	usleep_range(delay_us, delay_us + 10);
+	exynos_panel_msleep(delay_us / 1000);
 	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	dev_info(ctx->dev, "exit LP mode\n");
