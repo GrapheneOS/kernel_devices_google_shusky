@@ -67,8 +67,8 @@ private/google-modules/bms
 private/google-modules/display
 private/devices/google/shusky/display
 private/google-modules/edgetpu/rio/drivers/edgetpu
-private/google-modules/gpu/mali_kbase
 private/google-modules/gpu/mali_pixel
+private/google-modules/gpu/mali_kbase
 private/google-modules/gxp/zuma
 private/google-modules/lwis
 private/google-modules/nfc
