@@ -138,6 +138,8 @@ struct hk3_panel {
 	struct hk3_lhbm_ctl lhbm_ctl;
 	/** @material: the material version used in panel */
 	enum hk3_material material;
+	/** @rrs_in_progress: indicate whether RRS (Runtime Resolution Switch) is in progress */
+	bool rrs_in_progress;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -394,6 +396,11 @@ static void hk3_update_te2_internal(struct exynos_panel *ctx, bool lock)
 
 	if (!ctx)
 		return;
+
+	if (spanel->rrs_in_progress) {
+		dev_dbg(ctx->dev, "%s: RRS in progress, skip\n", __func__);
+		return;
+	}
 
 	if (test_bit(FEAT_OP_NS, spanel->feat)) {
 		rising = HK3_TE2_RISING_EDGE_OFFSET;
@@ -1319,7 +1326,9 @@ static int hk3_enable(struct drm_panel *panel)
 	mode = &pmode->mode;
 	is_fhd = mode->hdisplay == 1008;
 
-	dev_info(ctx->dev, "%s\n", __func__);
+	dev_info(ctx->dev, "%s (%s)\n", __func__, is_fhd ? "fhd" : "wqhd");
+
+	DPU_ATRACE_BEGIN(__func__);
 
 	if (needs_reset)
 		exynos_panel_reset(ctx);
@@ -1353,6 +1362,9 @@ static int hk3_enable(struct drm_panel *panel)
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	spanel->lhbm_ctl.hist_roi_configured = false;
+
+	DPU_ATRACE_END(__func__);
+
 	return 0;
 }
 
@@ -1363,8 +1375,10 @@ static int hk3_disable(struct drm_panel *panel)
 	int ret;
 
 	/* skip disable sequence if going through modeset */
-	if (ctx->panel_state == PANEL_STATE_MODESET)
+	if (ctx->panel_state == PANEL_STATE_MODESET) {
+		spanel->rrs_in_progress = true;
 		return 0;
+	}
 
 	ret = exynos_panel_disable(panel);
 	if (ret)
@@ -1437,8 +1451,16 @@ static void hk3_update_idle_state(struct exynos_panel *ctx)
 
 static void hk3_commit_done(struct exynos_panel *ctx)
 {
+	struct hk3_panel *spanel = to_spanel(ctx);
+
 	if (!ctx->current_mode)
 		return;
+
+	if (spanel->rrs_in_progress) {
+		/* we should finish RRS in this commit */
+		spanel->rrs_in_progress = false;
+		return;
+	}
 
 	hk3_update_idle_state(ctx);
 
@@ -2226,6 +2248,12 @@ const struct exynos_panel_desc google_hk3 = {
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
 	.is_panel_idle_supported = true,
 	.no_lhbm_rr_constraints = true,
+	/*
+	 * After waiting for TE, wait for extra time to make sure the frame start
+	 * happens after both DPU and panel PPS are set and before the next VSYNC.
+	 * This reserves about 6ms for finishing both PPS and frame start.
+	 */
+	.delay_dsc_reg_init_us = 6000,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,
