@@ -9,7 +9,6 @@ load(
     "kernel_abi_dist",
     "kernel_build",
     "kernel_images",
-    "kernel_module",
     "kernel_module_group",
     "kernel_modules_install",
     "kernel_unstripped_modules_archive",
@@ -18,6 +17,7 @@ load(
 load(
     "//private/google-modules/soc/gs:device_build_configs.bzl",
     "device_build_configs",
+    "lto_dependant_kernel_module",
 )
 
 # TODO: make this configurable to allow switching between aosp/ and
@@ -200,7 +200,7 @@ kernel_abi(
     module_grouping = False,
 )
 
-kernel_module(
+lto_dependant_kernel_module(
     name = "zuma_soc.shusky",
     srcs = [
         "//private/google-modules/soc/gs:gs_soc_sources",
@@ -330,7 +330,6 @@ kernel_module(
         "drivers/trusty/trusty-virtio.ko",
         "drivers/tty/serial/exynos_tty.ko",
         "drivers/ufs/ufs-exynos-gs.ko",
-        "drivers/ufs/ufs-pixel-fips140.ko",
         "drivers/usb/dwc3/dwc3-exynos-usb.ko",
         "drivers/usb/gadget/function/usb_f_dm.ko",
         "drivers/usb/gadget/function/usb_f_dm1.ko",
@@ -345,6 +344,9 @@ kernel_module(
         "drivers/watchdog/s3c2410_wdt.ko",
     ],
     kernel_build = "//private/google-modules/soc/gs:gs_kernel_build",
+    lto_outs = [
+        "drivers/ufs/ufs-pixel-fips140.ko",
+    ],
     makefile = ["//private/google-modules/soc/gs:Makefile"],
     visibility = [
         # keep sorted
