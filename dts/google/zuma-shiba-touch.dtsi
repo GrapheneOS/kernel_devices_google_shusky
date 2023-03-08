@@ -54,6 +54,8 @@
 	goog,tbn-enabled;
 	goog,offload-caps-rotation-reporting;
 	goog,offload-caps-cancel-reporting;
+	goog,offload-caps-coord-filter;
+	goog,coord-filter-enabled;
 
 	controller-data {
 		samsung,spi-feedback-delay = <0>;
