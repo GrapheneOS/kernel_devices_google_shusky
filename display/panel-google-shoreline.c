@@ -659,7 +659,7 @@ static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 static const struct exynos_brightness_configuration shoreline_btr_configs[] = {
 	{
 		.panel_rev = PANEL_REV_EVT1 | PANEL_REV_EVT1_1 | PANEL_REV_LATEST,
-		.dft_brightness = 1023,
+		.dft_brightness = 1431,
 		.brt_capability = {
 			.normal = {
 				.nits = {
@@ -693,7 +693,7 @@ static const struct exynos_brightness_configuration shoreline_btr_configs[] = {
 	},
 	{
 		.panel_rev = PANEL_REV_PROTO1_1,
-		.dft_brightness = 1023,
+		.dft_brightness = 1454,
 		.brt_capability = {
 			.normal = {
 				.nits = {
@@ -727,7 +727,7 @@ static const struct exynos_brightness_configuration shoreline_btr_configs[] = {
 	},
 	{
 		.panel_rev = PANEL_REV_PROTO1,
-		.dft_brightness = 1023,
+		.dft_brightness = 374,
 		.brt_capability = {
 			.normal = {
 				.nits = {
