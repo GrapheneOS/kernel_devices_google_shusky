@@ -8,9 +8,12 @@ function exit_if_error {
   fi
 }
 
+# Enable kleaf by default
+KLEAF=${KLEAF:-1}
+
 # Set KLEAF=1 to build with kleaf. This ignores all other command line options.
-if [ -n "${KLEAF}" ]; then
-  exec tools/bazel run --config=shusky --config=fast //private/devices/google/shusky:zuma_shusky_dist
+if [ "${KLEAF}" = "1" ]; then
+  exec tools/bazel run --config=shusky --config=fast //private/devices/google/shusky:zuma_shusky_dist "$@"
 fi
 
 cat <<- EOF
