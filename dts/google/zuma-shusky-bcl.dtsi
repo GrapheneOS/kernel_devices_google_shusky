@@ -32,7 +32,10 @@
 				google,main-power = <&s2mpg14mfd>;
 				google,sub-power = <&s2mpg15mfd>;
 				ppm_settings = <0>;
-				mpmm_settings = <0x1a>;
+				lit_mpmm_settings = <0x100>;
+				mid_mpmm_settings = <0x100>;
+				big_mpmm_settings = <0x4>;
+				mpmm_en = <0x1>;
 				tpu_con_heavy = <0xfff041c3>;
 				tpu_con_light = <0xfff041c1>;
 				tpu_clkdivstep = <0x1>;
