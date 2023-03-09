@@ -1825,6 +1825,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		},
 		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
+#ifndef PANEL_FACTORY_BUILD
 	{
 		.mode = {
 			.name = "1008x2244x60",
@@ -1884,6 +1885,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		},
 		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
+#endif
 };
 
 static const struct exynos_panel_mode hk3_lp_modes[] = {
@@ -1913,6 +1915,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.is_lp_mode = true,
 		},
 	},
+#ifndef PANEL_FACTORY_BUILD
 	{
 		.mode = {
 			.name = "1008x2244x30",
@@ -1939,6 +1942,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.is_lp_mode = true,
 		},
 	},
+#endif
 };
 
 static void hk3_calc_lhbm_od_brightness(u8 n_fine, u8 n_coarse,
