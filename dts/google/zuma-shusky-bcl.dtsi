@@ -35,7 +35,7 @@
 				lit_mpmm_settings = <0x100>;
 				mid_mpmm_settings = <0x100>;
 				big_mpmm_settings = <0x4>;
-				mpmm_en = <0x1>;
+				mpmm_en = <0x1ff>;
 				tpu_con_heavy = <0xfff041c3>;
 				tpu_con_light = <0xfff041c1>;
 				tpu_clkdivstep = <0x1>;
