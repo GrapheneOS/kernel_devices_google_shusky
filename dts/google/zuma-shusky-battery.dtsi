@@ -23,14 +23,6 @@
 				/* charge table */
 				google,chg-temp-limits = <0 100 200 420 460 480 550>;
 				google,chg-cv-limits = <4200000 4300000 4350000 4480000>;
-				google,chg-cc-limits = <
-					 50   30    0   0
-					 70   30   30  30
-					120  120  120  50
-					100  100  100  50
-					 50   50    0   0
-					 30    0    0   0
-				>;
 
 				google,ttf-temp-idx= <2>;
 				google,ttf-adapter = <3000>;
