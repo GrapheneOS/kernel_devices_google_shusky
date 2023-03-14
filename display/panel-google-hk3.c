@@ -465,7 +465,6 @@ static inline bool is_auto_mode_allowed(struct exynos_panel *ctx)
 	return ctx->panel_idle_enabled;
 }
 
-#define HK3_DEFAULT_MIN_VREFRESH 10
 static u32 hk3_get_min_idle_vrefresh(struct exynos_panel *ctx,
 				     const struct exynos_panel_mode *pmode)
 {
@@ -475,9 +474,7 @@ static u32 hk3_get_min_idle_vrefresh(struct exynos_panel *ctx,
 	if ((min_idle_vrefresh < 0) || !is_auto_mode_allowed(ctx))
 		return 0;
 
-	if (!min_idle_vrefresh)
-		min_idle_vrefresh = HK3_DEFAULT_MIN_VREFRESH;
-	else if (min_idle_vrefresh == 1)
+	if (min_idle_vrefresh <= 1)
 		min_idle_vrefresh = 1;
 	else if (min_idle_vrefresh <= 10)
 		min_idle_vrefresh = 10;
