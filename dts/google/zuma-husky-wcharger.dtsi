@@ -12,5 +12,11 @@
 		fod_hpp = [AF FF 88 2A 83 0D 86 F1 88 E2 89 C9 00 00 01 48];
 		fod_hpp_hv = [AF 27 88 4A 83 3F 86 27 88 08 89 E3 00 00 01 48];
 		google,q_value = <52>;
+
+		google,alignment_scalar_low_current = <470>;
+		google,alignment_scalar_high_current = <100>;
+		google,alignment_offset_low_current = <128000>;
+		google,alignment_offset_high_current = <148000>;
+		google,alignment_current_threshold = <500>;
 	};
 };

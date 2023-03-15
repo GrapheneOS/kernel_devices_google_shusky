@@ -76,6 +76,20 @@ enum hk3_lhbm_brt_overdrive_group {
 	LHBM_OVERDRIVE_GRP_MAX
 };
 
+/**
+ * enum hk3_material - different materials in HW
+ * @MATERIAL_E6: EVT1 material E6
+ * @MATERIAL_E7_DOE: EVT1 material E7
+ * @MATERIAL_E7: EVT1.1 maetrial E7
+ * @MATERIAL_LPC5: EVT1.1 material LPC5
+ */
+enum hk3_material {
+	MATERIAL_E6 = 0,
+	MATERIAL_E7_DOE,
+	MATERIAL_E7,
+	MATERIAL_LPC5
+};
+
 struct hk3_lhbm_ctl {
 	/** @brt_normal: normal LHBM brightness parameters */
 	u8 brt_normal[LHBM_BRT_LEN];
@@ -88,12 +102,11 @@ struct hk3_lhbm_ctl {
 };
 
 /**
- * struct hk3_panel - panel specific runtime info
+ * struct hk3_panel - panel specific info
  *
- * This struct maintains hk3 panel specific runtime info, any fixed details about panel should
- * most likely go into struct exynos_panel_desc. The variables with the prefix hw_ keep track of the
- * features that were actually committed to hardware, and should be modified after sending cmds to panel,
- * i.e. updating hw state.
+ * This struct maintains hk3 panel specific info. The variables with the prefix hw_ keep
+ * track of the features that were actually committed to hardware, and should be modified
+ * after sending cmds to panel, i.e. updating hw state.
  */
 struct hk3_panel {
 	/** @base: base panel struct */
@@ -123,7 +136,10 @@ struct hk3_panel {
 	bool force_za_off;
 	/** @lhbm_ctl: lhbm brightness control */
 	struct hk3_lhbm_ctl lhbm_ctl;
-
+	/** @material: the material version used in panel */
+	enum hk3_material material;
+	/** @rrs_in_progress: indicate whether RRS (Runtime Resolution Switch) is in progress */
+	bool rrs_in_progress;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -380,6 +396,11 @@ static void hk3_update_te2_internal(struct exynos_panel *ctx, bool lock)
 
 	if (!ctx)
 		return;
+
+	if (spanel->rrs_in_progress) {
+		dev_dbg(ctx->dev, "%s: RRS in progress, skip\n", __func__);
+		return;
+	}
 
 	if (test_bit(FEAT_OP_NS, spanel->feat)) {
 		rising = HK3_TE2_RISING_EDGE_OFFSET;
@@ -1248,6 +1269,17 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 };
 static DEFINE_EXYNOS_CMD_SET(hk3_init);
 
+static const struct exynos_dsi_cmd hk3_ns_gamma_fix_cmds[] = {
+	EXYNOS_DSI_CMD0(unlock_cmd_f0),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x02, 0x3F, 0xCB),
+	EXYNOS_DSI_CMD_SEQ(0xCB, 0x0A),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x02, 0x45, 0xCB),
+	EXYNOS_DSI_CMD_SEQ(0xCB, 0x0A),
+	EXYNOS_DSI_CMD0(freq_update),
+	EXYNOS_DSI_CMD0(lock_cmd_f0),
+};
+static DEFINE_EXYNOS_CMD_SET(hk3_ns_gamma_fix);
+
 static void hk3_lhbm_luminance_opr_setting(struct exynos_panel *ctx)
 {
 	struct hk3_panel *spanel = to_spanel(ctx);
@@ -1294,7 +1326,9 @@ static int hk3_enable(struct drm_panel *panel)
 	mode = &pmode->mode;
 	is_fhd = mode->hdisplay == 1008;
 
-	dev_info(ctx->dev, "%s\n", __func__);
+	dev_info(ctx->dev, "%s (%s)\n", __func__, is_fhd ? "fhd" : "wqhd");
+
+	DPU_ATRACE_BEGIN(__func__);
 
 	if (needs_reset)
 		exynos_panel_reset(ctx);
@@ -1308,6 +1342,8 @@ static int hk3_enable(struct drm_panel *panel)
 	if (needs_reset) {
 		EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 120, MIPI_DCS_EXIT_SLEEP_MODE);
 		exynos_panel_send_cmd_set(ctx, &hk3_init_cmd_set);
+		if (spanel->material == MATERIAL_E7_DOE)
+			exynos_panel_send_cmd_set(ctx, &hk3_ns_gamma_fix_cmd_set);
 		if (ctx->panel_rev == PANEL_REV_PROTO1)
 			hk3_lhbm_luminance_opr_setting(ctx);
 	}
@@ -1326,6 +1362,9 @@ static int hk3_enable(struct drm_panel *panel)
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	spanel->lhbm_ctl.hist_roi_configured = false;
+
+	DPU_ATRACE_END(__func__);
+
 	return 0;
 }
 
@@ -1336,8 +1375,10 @@ static int hk3_disable(struct drm_panel *panel)
 	int ret;
 
 	/* skip disable sequence if going through modeset */
-	if (ctx->panel_state == PANEL_STATE_MODESET)
+	if (ctx->panel_state == PANEL_STATE_MODESET) {
+		spanel->rrs_in_progress = true;
 		return 0;
+	}
 
 	ret = exynos_panel_disable(panel);
 	if (ret)
@@ -1410,8 +1451,16 @@ static void hk3_update_idle_state(struct exynos_panel *ctx)
 
 static void hk3_commit_done(struct exynos_panel *ctx)
 {
+	struct hk3_panel *spanel = to_spanel(ctx);
+
 	if (!ctx->current_mode)
 		return;
+
+	if (spanel->rrs_in_progress) {
+		/* we should finish RRS in this commit */
+		spanel->rrs_in_progress = false;
+		return;
+	}
 
 	hk3_update_idle_state(ctx);
 
@@ -1597,6 +1646,33 @@ static int hk3_read_id(struct exynos_panel *ctx)
 	return exynos_panel_read_ddic_id(ctx);
 }
 
+/* Note the format is 0x<DAh><DBh><DCh> which is reverse of bootloader (0x<DCh><DBh><DAh>) */
+static void hk3_get_panel_material(struct exynos_panel *ctx, u32 id)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	switch (id) {
+	case 0x000A4000:
+		spanel->material = MATERIAL_E6;
+		break;
+	case 0x000A4020:
+		spanel->material = MATERIAL_E7_DOE;
+		break;
+	case 0x000A4420:
+		spanel->material = MATERIAL_E7;
+		break;
+	case 0x000A4520:
+		spanel->material = MATERIAL_LPC5;
+		break;
+	default:
+		dev_warn(ctx->dev, "unknown material from panel (%#x), default to E7\n", id);
+		spanel->material = MATERIAL_E7;
+		break;
+	}
+
+	dev_info(ctx->dev, "%s: %d\n", __func__, spanel->material);
+}
+
 static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 {
 	/* extract command 0xDB */
@@ -1604,6 +1680,8 @@ static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 	u8 rev = ((build_code & 0xE0) >> 3) | ((build_code & 0x0C) >> 2);
 
 	exynos_panel_get_panel_rev(ctx, rev);
+
+	hk3_get_panel_material(ctx, id);
 }
 
 static unsigned int hk3_get_te_usec(struct exynos_panel *ctx,
@@ -1825,6 +1903,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		},
 		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
+#ifndef PANEL_FACTORY_BUILD
 	{
 		.mode = {
 			.name = "1008x2244x60",
@@ -1884,6 +1963,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		},
 		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
+#endif
 };
 
 static const struct exynos_panel_mode hk3_lp_modes[] = {
@@ -1913,6 +1993,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.is_lp_mode = true,
 		},
 	},
+#ifndef PANEL_FACTORY_BUILD
 	{
 		.mode = {
 			.name = "1008x2244x30",
@@ -1939,6 +2020,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.is_lp_mode = true,
 		},
 	},
+#endif
 };
 
 static void hk3_calc_lhbm_od_brightness(u8 n_fine, u8 n_coarse,
@@ -2166,6 +2248,12 @@ const struct exynos_panel_desc google_hk3 = {
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
 	.is_panel_idle_supported = true,
 	.no_lhbm_rr_constraints = true,
+	/*
+	 * After waiting for TE, wait for extra time to make sure the frame start
+	 * happens after both DPU and panel PPS are set and before the next VSYNC.
+	 * This reserves about 6ms for finishing both PPS and frame start.
+	 */
+	.delay_dsc_reg_init_us = 6000,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,

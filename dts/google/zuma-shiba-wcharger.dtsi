@@ -12,5 +12,11 @@
 		fod_hpp = [C6 17 8A 4B 83 28 86 37 85 32 8B E2 00 00 01 48];
 		fod_hpp_hv = [C6 38 8A 7F 83 74 86 5D 85 64 8B 18 00 00 01 48];
 		google,q_value = <41>;
+
+		google,alignment_scalar_low_current = <430>;
+		google,alignment_scalar_high_current = <83>;
+		google,alignment_offset_low_current = <128000>;
+		google,alignment_offset_high_current = <144000>;
+		google,alignment_current_threshold = <500>;
 	};
 };
