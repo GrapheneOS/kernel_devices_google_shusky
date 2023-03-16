@@ -78,6 +78,15 @@
 	};
 };
 
+/* GPIO_ALIVE */
+&pinctrl_0 {
+	cs35l41_2_irq: cs35l41-2-irq {
+		samsung,pins = "gpa7-2"; /* XEINT_16 */
+		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+	};
+};
+
 /* GPIO_FAR_ALIVE */
 &pinctrl_2 {
 	cs35l41_1_irq: cs35l41-1-irq {
@@ -87,11 +96,6 @@
 	};
 	cs35l41_3_irq: cs35l41-3-irq {
 		samsung,pins = "gpa5-5"; /* XEINT_5 */
-		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
-		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-	};
-	cs35l41_2_irq: cs35l41-2-irq {
-		samsung,pins = "gpa7-2"; /* XEINT_16 */
 		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
 	};
