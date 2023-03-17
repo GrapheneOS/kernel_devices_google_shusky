@@ -465,6 +465,7 @@ kernel_images(
     build_system_dlkm = True,
     build_vendor_dlkm = True,
     build_vendor_kernel_boot = True,
+    dedup_dlkm_modules = True,
     dtbo_srcs = [":zuma_shusky/" + file for file in _SHUSKY_DTBOS],
     kernel_build = ":zuma_shusky",
     kernel_modules_install = ":zuma_shusky_modules_install",
