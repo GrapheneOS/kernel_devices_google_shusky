@@ -2,12 +2,12 @@
 
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//aosp-staging:modules.bzl", "COMMON_GKI_MODULES_LIST")
+load("//build/bazel_common_rules/exec:exec.bzl", "exec")
 load("//build/bazel_common_rules/dist:dist.bzl", "copy_to_dist_dir")
 load("//build/kernel/kleaf:constants.bzl", "aarch64_outs")
 load(
     "//build/kernel/kleaf:kernel.bzl",
     "kernel_abi",
-    "kernel_abi_dist",
     "kernel_build",
     "kernel_images",
     "kernel_module_group",
@@ -540,9 +540,18 @@ _zuma_shusky_dist_targets = [
 ] + [":shusky_gki/{}".format(m) for m in _GKI_MODULES]
 
 copy_to_dist_dir(
-    name = "zuma_shusky_dist",
+    name = "zuma_shusky_dist_copy_to_dist_dir",
     data = _zuma_shusky_dist_targets,
     dist_dir = "out/shusky/dist",
     flat = True,
     log = "info",
+)
+
+exec(
+    name = "zuma_shusky_dist",
+    data = [":zuma_shusky_dist_copy_to_dist_dir"],
+    script = """
+        echo {gki_kernel_dir}: $(git -C $BUILD_WORKSPACE_DIRECTORY/{gki_kernel_dir} rev-parse HEAD)
+        $(rootpath :zuma_shusky_dist_copy_to_dist_dir) $@
+    """.format(gki_kernel_dir = _GKI_KERNEL_DIR),
 )
