@@ -7,6 +7,11 @@
 
 &udc {
 	extcon = <&max77759tcpc>;
+	force_gen1;
+};
+
+&usbdrd_dwc3 {
+	maximum-speed = "super-speed";
 };
 
 &usbdrd_phy0 {
