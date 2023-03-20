@@ -13,6 +13,7 @@
 #include <linux/debugfs.h>
 #include <linux/module.h>
 #include <linux/of_platform.h>
+#include <linux/thermal.h>
 #include <video/mipi_display.h>
 
 #include "include/trace/dpu_trace.h"
@@ -142,6 +143,14 @@ struct hk3_panel {
 	enum hk3_material material;
 	/** @rrs_in_progress: indicate whether RRS (Runtime Resolution Switch) is in progress */
 	bool rrs_in_progress;
+	/** @tz: thermal zone device for reading temperature */
+	struct thermal_zone_device *tz;
+	/** @hw_temp: the temperature applied into panel */
+	u32 hw_temp;
+	/** @pending_temp_update: whether there is pending temperature update. It will be
+	 *			  handled in the commit_done function.
+	 */
+	bool pending_temp_update;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -324,6 +333,49 @@ static const struct exynos_binned_lp hk3_binned_lp[] = {
 	BINNED_LP_MODE_TIMING("high", 3307, hk3_lp_high_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET)
 };
+
+static inline bool is_in_comp_range(int temp)
+{
+	return (temp >= 10 && temp <= 49);
+}
+
+/* Read temperature and apply appropriate gain into DDIC for burn-in compensation if needed */
+static void hk3_update_disp_therm(struct exynos_panel *ctx)
+{
+	/* temperature*1000 in celsius */
+	int temp, ret;
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	if (IS_ERR_OR_NULL(spanel->tz))
+		return;
+
+	if (ctx->panel_rev < PANEL_REV_EVT1_1 || ctx->panel_state != PANEL_STATE_NORMAL)
+		return;
+
+	spanel->pending_temp_update = false;
+
+	ret = thermal_zone_get_temp(spanel->tz, &temp);
+	if (ret) {
+		dev_err(ctx->dev, "%s: fail to read temperature ret:%d\n", __func__, ret);
+		return;
+	}
+
+	temp = DIV_ROUND_CLOSEST(temp, 1000);
+	dev_dbg(ctx->dev, "%s: temp=%d\n", __func__, temp);
+	if (temp == spanel->hw_temp || !is_in_comp_range(temp))
+		return;
+
+	dev_dbg(ctx->dev, "%s: apply gain into ddic at %ddeg c\n", __func__, temp);
+
+	DPU_ATRACE_BEGIN(__func__);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x03, 0x67);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x67, temp);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+	DPU_ATRACE_END(__func__);
+
+	spanel->hw_temp = temp;
+}
 
 static u8 hk3_get_te2_option(struct exynos_panel *ctx)
 {
@@ -898,6 +950,9 @@ static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 		backlight_state_changed(ctx->bl);
 		return false;
 	}
+
+	if (spanel->pending_temp_update && enable)
+		hk3_update_disp_therm(ctx);
 
 	idle_vrefresh = hk3_get_min_idle_vrefresh(ctx, pmode);
 
@@ -1528,6 +1583,9 @@ static void hk3_commit_done(struct exynos_panel *ctx)
 	hk3_update_idle_state(ctx);
 
 	hk3_update_za(ctx);
+
+	if (spanel->pending_temp_update)
+		hk3_update_disp_therm(ctx);
 }
 
 static void hk3_set_hbm_mode(struct exynos_panel *ctx,
@@ -1761,6 +1819,17 @@ static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 	exynos_panel_get_panel_rev(ctx, rev);
 
 	hk3_get_panel_material(ctx, id);
+}
+
+static void hk3_normal_mode_work(struct exynos_panel *ctx)
+{
+	if (ctx->self_refresh_active) {
+		hk3_update_disp_therm(ctx);
+	} else {
+		struct hk3_panel *spanel = to_spanel(ctx);
+
+		spanel->pending_temp_update = true;
+	}
 }
 
 static const struct exynos_display_underrun_param underrun_param = {
@@ -2216,6 +2285,11 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x04, 0xF6);
 	EXYNOS_DCS_BUF_ADD(ctx, 0xF6, 0x5A);
 	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+
+	spanel->tz = thermal_zone_get_zone_by_name("disp_therm");
+	if (IS_ERR_OR_NULL(spanel->tz))
+		dev_err(ctx->dev, "%s: failed to get thermal zone disp_therm\n",
+			__func__);
 }
 
 static int hk3_panel_probe(struct mipi_dsi_device *dsi)
@@ -2231,6 +2305,10 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 	spanel->hw_acl_enabled = false;
 	spanel->hw_za_enabled = false;
 	spanel->hw_dbv = 0;
+	/* ddic default temp */
+	spanel->hw_temp = 25;
+	spanel->pending_temp_update = false;
+
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
@@ -2273,6 +2351,7 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.read_id = hk3_read_id,
 	.get_te_usec = hk3_get_te_usec,
 	.set_acl_mode = hk3_set_acl_mode,
+	.run_normal_mode_work = hk3_normal_mode_work,
 };
 
 const struct brightness_capability hk3_brightness_capability = {
@@ -2337,6 +2416,7 @@ const struct exynos_panel_desc google_hk3 = {
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,
 	.lhbm_post_cmd_delay_frames = 1,
+	.normal_mode_work_delay_ms = 30000,
 	.reset_timing_ms = {1, 1, 5},
 	.reg_ctrl_enable = {
 		{PANEL_REG_ID_VDDI, 1},
