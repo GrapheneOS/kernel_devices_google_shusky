@@ -130,6 +130,8 @@ struct hk3_panel {
 	bool force_changeable_te2;
 	/** @hw_acl_enabled: whether automatic current limiting is enabled */
 	bool hw_acl_enabled;
+	/** @hw_dbv: indecate the current dbv */
+	u16 hw_dbv;
 	/** @hw_za_enabled: whether zonal attenuation is enabled */
 	bool hw_za_enabled;
 	/** @force_za_off: force to turn off zonal attenuation */
@@ -1141,11 +1143,49 @@ static void hk3_update_za(struct exynos_panel *ctx)
 }
 
 #define HK3_ACL_ZA_THRESHOLD_DBV_P1_0 3917
-#define HK3_ACL_ZA_THRESHOLD_DBV 3781
+#define HK3_ACL_ZA_THRESHOLD_DBV_P1_1 3781
+#define HK3_ACL_ZA_THRESHOLD_DBV 3865
+
+/* updated za when acl mode changed */
+static void hk3_set_acl_mode(struct exynos_panel *ctx, bool on) {
+	struct hk3_panel *spanel = to_spanel(ctx);
+	u16 dbv_th;
+	u8 setting;
+	bool enable_acl = false;
+	/*
+	 * ACL setting:
+	 *
+	 * P1.0 - 5% (0x01)
+	 * P1.1 - 7.5% (0x02)
+	 * EVT1 and later - 17% (0x03)
+	 * Set 0x00 to disable it
+	 */
+	if (ctx->panel_rev == PANEL_REV_PROTO1) {
+		dbv_th = HK3_ACL_ZA_THRESHOLD_DBV_P1_0;
+		setting = 0x01;
+	} else if (ctx->panel_rev == PANEL_REV_PROTO1_1) {
+		dbv_th = HK3_ACL_ZA_THRESHOLD_DBV_P1_1;
+		setting = 0x02;
+	} else {
+		dbv_th = HK3_ACL_ZA_THRESHOLD_DBV;
+		setting = 0x03;
+	}
+	enable_acl = (spanel->hw_dbv >= dbv_th && IS_HBM_ON(ctx->hbm_mode) && on);
+	if (spanel->hw_acl_enabled != enable_acl) {
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, enable_acl ? setting : 0);
+		spanel->hw_acl_enabled = enable_acl;
+		dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
+		/* Keep ZA off after EVT1 */
+		if (ctx->panel_rev < PANEL_REV_EVT1)
+			hk3_update_za(ctx);
+	}
+}
+
 static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 {
 	int ret;
 	u16 brightness;
+	struct hk3_panel *spanel = to_spanel(ctx);
 
 	if (ctx->current_mode->exynos_mode.is_lp_mode) {
 		const struct exynos_panel_funcs *funcs;
@@ -1159,33 +1199,8 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 	brightness = (br & 0xff) << 8 | br >> 8;
 	ret = exynos_dcs_set_brightness(ctx, brightness);
 	if (!ret) {
-		struct hk3_panel *spanel = to_spanel(ctx);
-		u16 dbv_th =
-			(ctx->panel_rev == PANEL_REV_PROTO1) ? HK3_ACL_ZA_THRESHOLD_DBV_P1_0 :
-			HK3_ACL_ZA_THRESHOLD_DBV;
-		bool enable_acl = (br >= dbv_th && IS_HBM_ON(ctx->hbm_mode));
-
-		if (spanel->hw_acl_enabled != enable_acl) {
-			/*
-			 * ACL setting:
-			 *
-			 * P1.0 - 5% (0x01)
-			 * P1.1 - 7.5% (0x02)
-			 * EVT1 and later - 12% (0x02)
-			 * Set 0x00 to disable it
-			 */
-			u8 val = 0;
-
-			if (enable_acl)
-				val = (ctx->panel_rev == PANEL_REV_PROTO1) ? 0x01 : 0x02;
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, val);
-			spanel->hw_acl_enabled = enable_acl;
-			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
-
-			/* Keep ZA off after EVT1 */
-			if (ctx->panel_rev < PANEL_REV_EVT1)
-				hk3_update_za(ctx);
-		}
+		spanel->hw_dbv = br;
+		hk3_set_acl_mode(ctx, ctx->acl_mode);
 	}
 
 	return ret;
@@ -1402,6 +1417,7 @@ static int hk3_disable(struct drm_panel *panel)
 	spanel->hw_idle_vrefresh = 0;
 	spanel->hw_acl_enabled = false;
 	spanel->hw_za_enabled = false;
+	spanel->hw_dbv = 0;
 
 	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 20, MIPI_DCS_SET_DISPLAY_OFF);
 
@@ -2134,6 +2150,7 @@ static void hk3_lhbm_brightness_init(struct exynos_panel *ctx)
 
 static void hk3_panel_init(struct exynos_panel *ctx)
 {
+#ifdef CONFIG_DEBUG_FS
 	struct dentry *csroot = ctx->debugfs_cmdset_entry;
 	struct hk3_panel *spanel = to_spanel(ctx);
 
@@ -2144,6 +2161,9 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 				&spanel->force_changeable_te2);
 	debugfs_create_bool("force_za_off", 0644, ctx->debugfs_entry,
 				&spanel->force_za_off);
+	debugfs_create_bool("hw_acl_enabled", 0644, ctx->debugfs_entry,
+				&spanel->hw_acl_enabled);
+#endif
 
 #ifdef PANEL_FACTORY_BUILD
 	ctx->panel_idle_enabled = false;
@@ -2163,6 +2183,7 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 	spanel->hw_vrefresh = 60;
 	spanel->hw_acl_enabled = false;
 	spanel->hw_za_enabled = false;
+	spanel->hw_dbv = 0;
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
@@ -2205,6 +2226,7 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.set_op_hz = hk3_set_op_hz,
 	.read_id = hk3_read_id,
 	.get_te_usec = hk3_get_te_usec,
+	.set_acl_mode = hk3_set_acl_mode,
 };
 
 const struct brightness_capability hk3_brightness_capability = {
