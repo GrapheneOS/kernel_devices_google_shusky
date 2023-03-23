@@ -153,6 +153,7 @@ kernel_module_group(
         "//private/google-modules/uwb:uwb.qm35",
         "//private/google-modules/video/gchips:video.gchips",
         "//private/google-modules/wlan/bcm4398:bcmdhd4398",
+        "//private/google-modules/wlan/wlan_ptracker",
     ],
 )
 
@@ -180,6 +181,7 @@ kernel_build(
         "//private/google-modules/touch/common:touch.common.kconfig",
         "//private/google-modules/touch/fts/ftm5:ftm5.kconfig",
         "//private/google-modules/touch/sec:sec.kconfig",
+        "//private/google-modules/wlan/wlan_ptracker:wlan_ptracker.kconfig",
     ],
     outs = [
         "google-dts-base/zuma-{}.dtb".format(soc_rev)
