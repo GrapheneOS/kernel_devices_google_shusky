@@ -167,7 +167,13 @@
 
 		ln8411,psy_name = "dc-mains";
 
+		ln8411,input-itopoff = <500000>; /* 500mA */
+
+		/* USBC thermal zone */
+		google,usb-port-tz-name = "usbc-therm-adc";
+
 		ln8411,google_cpm = <&google_cpm>;
+		ln8411,input-current-limit = <3000000>;
 		status = "ok";
 	};
 };
