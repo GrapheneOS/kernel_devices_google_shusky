@@ -300,7 +300,7 @@
 				compatible = "google,lwis-i2c-device";
 
 				/* Device node name */
-				node-name = "tof-vl53l8";
+				node-name = "tof-tarasque";
 
 				/* I2C */
 				i2c-bus = <&hsi2c_1>;
