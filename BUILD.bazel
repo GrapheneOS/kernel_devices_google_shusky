@@ -202,7 +202,6 @@ kernel_build(
         "drivers/perf/arm_dsu_pmu.ko",
         "drivers/scsi/sg.ko",
         "drivers/spi/spidev.ko",
-        "drivers/usb/typec/altmodes/typec_displayport.ko",
         "drivers/watchdog/softdog.ko",
     ],
     strip_modules = True,
