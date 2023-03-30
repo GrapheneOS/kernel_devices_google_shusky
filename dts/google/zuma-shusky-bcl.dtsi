@@ -67,7 +67,7 @@
 					ch4 { setting = <248>; };
 					ch5 { setting = <181>; };
 					ch6 { setting = <126>; };
-					ch7 { setting = <256>; };
+					ch7 { setting = <255>; };
 					ch8 { setting = <101>; };
 					ch9 { setting = <171>; };
 					ch10 { setting = <197>; };
