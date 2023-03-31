@@ -68,6 +68,7 @@
 		idt,has_wlc_dc = <1>;
 		google,power_mitigate_threshold = <90>;
 		google,has-sw-ramp;
+		google,align_check;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&wc_irq &wc_en>;

@@ -16,7 +16,7 @@
 		fod_hpp_3 = [B3 7F 95 7E 88 7D 86 7A 85 75 8A 30 00 00 01 48];
 		google,q_value = <52>;
 
-		google,alignment_scalar_low_current = <470>;
+		google,alignment_scalar_low_current = <400>;
 		google,alignment_scalar_high_current = <100>;
 		google,alignment_offset_low_current = <128000>;
 		google,alignment_offset_high_current = <148000>;
