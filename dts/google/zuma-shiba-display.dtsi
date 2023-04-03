@@ -34,7 +34,6 @@
 
 &drmdp {
 	status = "okay";
-	extcon = <&max77759tcpc>;
 };
 
 &drmdecon2 {
