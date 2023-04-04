@@ -36,24 +36,33 @@
 	goodix,sleep-enable;
 	goodix,use-one-binary;
 
-	goodix,panel_map = <&google_bigsurf 0>,
+	goog,panel_map = <&google_bigsurf 0>,
 			<&google_shoreline 1>;
 
-	goodix,firmware_names = "goodix_firmware_bigsurf.bin",
+	goog,firmware_names = "goodix_firmware_bigsurf.bin",
 			"goodix_firmware_shoreline.bin";
 
-	goodix,test_limits_names = "goodix_test_limits_bigsurf.csv",
+	goog,test_limits_names = "goodix_test_limits_bigsurf.csv",
 			"goodix_test_limits_shoreline.csv";
+
+	goog,vrr-enabled;
+	goog,vrr-display-rate = /bits/ 32 <60 120>;
+	goog,vrr-touch-rate = /bits/ 32 <120 240>;
+	goog,vrr-up-delay = <0>;
+	goog,vrr-down-delay = <2>;
 
 	goog,offload-enabled;
 	goog,v4l2-enabled;
 	goog,offload-caps-scan-types = /bits/ 16 <0xC0>;
-	goog,touch_offload_id = /bits/ 8 <'s' 'b' '3' '0'>;
+	goog,offload-caps-context-channel-types = /bits/ 16 <0x0100>;
+	goog,touch_offload_ids = /bits/ 8 <'s' 'b' '3' '0' 's' 'b' '3' '1'>;
 	goog,display-resolution = /bits/ 16 <1080 2400>;
 	goog,channel-num = /bits/ 16 <16 36>;
 	goog,tbn-enabled;
 	goog,offload-caps-rotation-reporting;
 	goog,offload-caps-cancel-reporting;
+	goog,offload-caps-coord-filter;
+	goog,coord-filter-enabled;
 
 	controller-data {
 		samsung,spi-feedback-delay = <0>;

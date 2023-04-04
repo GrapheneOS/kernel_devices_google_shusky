@@ -9,6 +9,7 @@
 #include <dt-bindings/clock/zuma.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/samsung.h>
+#include <dt-bindings/lwis/platform/zuma/tof.h>
 
 &slg51002_ldo1 {
 	regulator-min-microvolt = <2250000>;
@@ -53,6 +54,11 @@
 &s_ldo12_reg {
 	regulator-min-microvolt = <1850000>;
 	regulator-max-microvolt = <1850000>;
+};
+
+&s_ldo26_reg {
+	regulator-min-microvolt = <3300000>;
+	regulator-max-microvolt = <3300000>;
 };
 
 &pinctrl_11 {
@@ -100,6 +106,24 @@
 		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
 	};
 
+	hsi2c14_bus: hsi2c14-bus {
+		samsung,pins = "gpp16-0", "gpp16-1";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_2>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
+		samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
+		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_NONE>;
+	};
+
+	/* GPP8[2] Flashlight Enable */
+	flash_en: flash-en {
+		samsung,pins = "gpp8-2";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+		samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
+		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_NONE>;
+	};
+
 	sensor_mclk1_out: sensor-mclk1-out {
 		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
 	};
@@ -117,6 +141,14 @@
 	};
 	sensor_mclk4_fn: sensor-mclk4-fn {
 		samsung,pin-drv = <ZUMA_PIN_DRV_X5>;
+	};
+};
+
+&pinctrl_2 {
+	ldaf_irq: ldaf-irq {
+		samsung,pins = "gpa5-4"; /* XEINT_4 */
+		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
 	};
 };
 
@@ -184,7 +216,7 @@
 	clock-frequency = <390000>;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
-	pinctrl-0 = <&hsi2c14_bus>;
+	pinctrl-0 = <&hsi2c14_bus &flash_en>;
 	pinctrl-1 = <&hsi2c14_bus>;
 	pinctrl-2 = <&hsi2c14_bus>;
 };
@@ -237,25 +269,25 @@
 
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
 					"enable",
 					"ldo8",
 					"s2mpg15_ldo12",
-					"ldo1",
 					"ldo4",
 					"reset",
 					"mclk_on";
 				power-up-seq-types =
-					"gpio",
 					"regulator",
+					"gpio",
 					"regulator",
 					"regulator",
 					"regulator",
 					"gpio",
 					"pinctrl";
 				power-up-seq-delays-us =
-					<500
-					 1000
-					 0
+					<10
+					 10
+					 10
 					 0
 					 2000
 					 1000
@@ -266,18 +298,18 @@
 					"mclk_off",
 					"reset",
 					"ldo4",
-					"ldo1",
 					"s2mpg15_ldo12",
 					"ldo8",
-					"enable";
+					"enable",
+					"ldo1";
 				power-down-seq-types =
 					"pinctrl",
 					"gpio",
 					"regulator",
 					"regulator",
 					"regulator",
-					"regulator",
-					"gpio";
+					"gpio",
+					"regulator";
 				power-down-seq-delays-us =
 					<1000
 					 1000
@@ -289,6 +321,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			/* FRONT CAMERA DOKKAEBI */
@@ -371,6 +405,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <1>;
 			};
 
 
@@ -459,8 +495,20 @@
 					 0
 					 1000>;
 
+				/* resume sequence */
+				resume-seqs = "reset";
+				resume-seq-types = "gpio";
+				resume-seq-delays-us = <10000>;
+
+				/* suspend sequence */
+				suspend-seqs = "reset";
+				suspend-seq-types = "gpio";
+				suspend-seq-delays-us = <0>;
+
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
 			};
 
 			/* EEPROM DJINN for BOITATA*/
@@ -497,6 +545,8 @@
 				power-down-seq-delays-us =
 					<1000
 					 1000>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			/* EEPROM SMAUG for DOKKAEBI */
@@ -532,6 +582,8 @@
 					"regulator";
 				power-down-seq-delays-us =
 					<1000>;
+
+				i2c-lock-group-id = <1>;
 			};
 
 			/* EEPROM SMAUG for SANDWORM */
@@ -567,6 +619,8 @@
 					"regulator";
 				power-down-seq-delays-us =
 					<1000>;
+
+				i2c-lock-group-id = <2>;
 			};
 
 			/* Actuator CORNERFOLK for BOITATA */
@@ -612,6 +666,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			/* Actuator CORNERFOLK for SANDWORM */
@@ -657,6 +713,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
 			};
 
 			/* OIS DJINN for BOITATA*/
@@ -709,6 +767,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			flash0: flash@0 {
@@ -733,6 +793,76 @@
 				/* HW_ENABLE GPP8[2] */
 				enable-gpios =
 					<&gpp8 2 GPIO_ACTIVE_HIGH>;
+			};
+
+			tof0: tof@0 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "tof-vl53l8";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0x29>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				/* VIO 1.8V */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				/* VADD 3.3V */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
+
+				/* XAPC_MCLK8: GPP15[0] */
+				reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
+
+				/* MCLK and TOF IRQ Control*/
+				pinctrl-names = "mclk_on", "mclk_off", "default";
+				pinctrl-0 = <&sensor_mclk8_fn>;
+				pinctrl-1 = <&sensor_mclk8_out>;
+				pinctrl-2 = <&ldaf_irq>;
+
+				/* XEINT_4: GPA5[4] */
+				irq-gpios = <&gpa5 4 GPIO_ACTIVE_LOW>;
+				irq-gpios-names = "tof-irq";
+				irq-gpios-events = <LWIS_PLATFORM_EVENT_ID_TOF_DATA_POLLING>;
+				/* IRQF_ONESHOT | IRQF_TRIGGER_FALLING */
+				irq-gpios-types = <0x2002>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"mclk_off",
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26",
+					"reset";
+				power-up-seq-types =
+					"pinctrl",
+					"regulator",
+					"regulator",
+					"gpio";
+				power-up-seq-delays-us =
+					<0
+					 0
+					 0
+					 1000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"reset",
+					"s2mpg15_ldo26",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"gpio",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<1000
+					 0
+					 0>;
+
+				i2c-lock-group-id = <0>;
 			};
 		};
 	};

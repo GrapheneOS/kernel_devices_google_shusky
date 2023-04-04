@@ -15,3 +15,5 @@
 #include "zuma-shusky-usecases.dtsi"
 #include "zuma-shusky-gsa-gsc.dtsi"
 #include "zuma-shusky-sbbm.dtsi"
+#include "zuma-shusky-pcie.dtsi"
+

@@ -32,7 +32,10 @@
 				google,main-power = <&s2mpg14mfd>;
 				google,sub-power = <&s2mpg15mfd>;
 				ppm_settings = <0>;
-				mpmm_settings = <0x1a>;
+				lit_mpmm_settings = <0x1AA>;
+				mid_mpmm_settings = <0x1AA>;
+				big_mpmm_settings = <0x6>;
+				mpmm_en = <0x1f0>;
 				tpu_con_heavy = <0xfff041c3>;
 				tpu_con_light = <0xfff041c1>;
 				tpu_clkdivstep = <0x1>;
@@ -42,6 +45,7 @@
 				cpu2_clkdivstep = <0x1>;
 				cpu1_clkdivstep = <0x1>;
 				cpu0_clkdivstep = <0x1>;
+				aur_clkdivstep = <0x1>;
 				odpm_ratio = <3>;
 				gpios = <&gpa9 5 0>,		/* VDROOP1 */
 					<&gpa9 6 0>,		/* VDROOP2 */
@@ -51,36 +55,97 @@
 				pinctrl-names = "bcl-rffe-modem", "bcl-batoilo-modem";
 				pinctrl-0 = <&bcl_rffe_modem>;
 				pinctrl-1 = <&bcl_batoilo_modem>;
+				cpu0_cluster = <0>;
+				cpu1_cluster = <4>;
+				cpu2_cluster = <8>;
 
 				main_limit {
 					pmic = "main_limit";
-					ch1 { setting = <209>; };
-					ch2 { setting = <157>; };
-					ch3 { setting = <182>; };
-					ch4 { setting = <202>; };
-					ch5 { setting = <143>; };
-					ch6 { setting = <89>; };
-					ch7 { setting = <238>; };
-					ch8 { setting = <74>; };
-					ch9 { setting = <177>; };
-					ch10 { setting = <171>; };
-					ch11 { setting = <60>; };
-					ch12 { setting = <60>; };
+					ch1 { setting = <252>; };
+					ch2 { setting = <219>; };
+					ch3 { setting = <207>; };
+					ch4 { setting = <248>; };
+					ch5 { setting = <181>; };
+					ch6 { setting = <126>; };
+					ch7 { setting = <255>; };
+					ch8 { setting = <101>; };
+					ch9 { setting = <171>; };
+					ch10 { setting = <197>; };
+					ch11 { setting = <166>; };
+					ch12 { setting = <83>; };
 				};
 				sub_limit {
 					pmic = "sub_limit";
-					ch1 { setting = <85>; };
-					ch2 { setting = <144>; };
-					ch3 { setting = <107>; };
-					ch4 { setting = <25>; };
-					ch5 { setting = <40>; };
-					ch6 { setting = <34>; };
-					ch7 { setting = <199>; };
-					ch8 { setting = <113>; };
-					ch9 { setting = <85>; };
-					ch10 { setting = <114>; };
-					ch11 { setting = <137>; };
-					ch12 { setting = <106>; };
+					ch1 { setting = <106>; };
+					ch2 { setting = <180>; };
+					ch3 { setting = <151>; };
+					ch4 { setting = <36>; };
+					ch5 { setting = <51>; };
+					ch6 { setting = <56>; };
+					ch7 { setting = <249>; };
+					ch8 { setting = <126>; };
+					ch9 { setting = <195>; };
+					ch10 { setting = <125>; };
+					ch11 { setting = <166>; };
+					ch12 { setting = <166>; };
+				};
+				freq_qos {
+					batoilo {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <649000>;
+						tpu = <627000>;
+					};
+					vdroop1 {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <723000>;
+						tpu = <627000>;
+					};
+					vdroop2 {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <580000>;
+						tpu = <455000>;
+					};
+					smpl_gm {
+						cpucl0 = <1475000>;
+						cpucl1 = <1549000>;
+						cpucl2 = <2147000>;
+						gpu = <649000>;
+						tpu = <627000>;
+					};
+					ocp_cpu2 {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
+					ocp_cpu1 {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
+					ocp_gpu {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
+					ocp_tpu {
+						cpucl0 = <2147000>;
+						cpucl1 = <2450000>;
+						cpucl2 = <3015000>;
+						gpu = <890000>;
+						tpu = <1119000>;
+					};
 				};
 			};
 		};

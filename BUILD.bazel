@@ -1,15 +1,15 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//aosp-staging:modules.bzl", "COMMON_GKI_MODULES_LIST")
+load("//build/bazel_common_rules/exec:exec.bzl", "exec")
 load("//build/bazel_common_rules/dist:dist.bzl", "copy_to_dist_dir")
 load("//build/kernel/kleaf:constants.bzl", "aarch64_outs")
 load(
     "//build/kernel/kleaf:kernel.bzl",
     "kernel_abi",
-    "kernel_abi_dist",
     "kernel_build",
     "kernel_images",
-    "kernel_module",
     "kernel_module_group",
     "kernel_modules_install",
     "kernel_unstripped_modules_archive",
@@ -18,6 +18,7 @@ load(
 load(
     "//private/google-modules/soc/gs:device_build_configs.bzl",
     "device_build_configs",
+    "lto_dependant_kernel_module",
 )
 
 # TODO: make this configurable to allow switching between aosp/ and
@@ -56,6 +57,7 @@ kernel_build(
         "//private/google-modules/soc/gs:build.config.slider.khwasan",
     ],
     outs = aarch64_outs,
+    additional_kmi_symbol_lists = ["//{}:android/abi_gki_aarch64_pixel".format(_GKI_KERNEL_DIR)],
     build_config = ":gki_build_config",
     collect_unstripped_modules = True,
     # For building system_dlkm (b/241855743)
@@ -65,8 +67,11 @@ kernel_build(
         "certs/signing_key.pem",
         "certs/signing_key.x509",
     ],
+    kmi_symbol_list = "//{}:android/abi_gki_aarch64".format(_GKI_KERNEL_DIR),
+    kmi_symbol_list_strict_mode = False,
     module_implicit_outs = COMMON_GKI_MODULES_LIST,
     strip_modules = True,
+    trim_nonlisted_kmi = True,
 )
 
 kernel_modules_install(
@@ -93,9 +98,25 @@ _SHUSKY_DTBOS = [
     # Sync with build.config.shusky
     "google/zuma-ripcurrent.dtbo",
     "google/zuma-husky-proto1.dtbo",
+    "google/zuma-husky-proto1-wingboard.dtbo",
     "google/zuma-husky-proto1_1.dtbo",
+    "google/zuma-husky-evt1.dtbo",
+    "google/zuma-husky-evt1_1.dtbo",
+    "google/zuma-husky-dvt1.dtbo",
+    "google/zuma-husky-pvt1.dtbo",
+    "google/zuma-husky-mp.dtbo",
     "google/zuma-shiba-proto1.dtbo",
+    "google/zuma-shiba-proto1-wingboard.dtbo",
     "google/zuma-shiba-proto1_1.dtbo",
+    "google/zuma-shiba-evt1.dtbo",
+    "google/zuma-shiba-evt1_b0.dtbo",
+    "google/zuma-shiba-evt1_1.dtbo",
+    "google/zuma-shiba-dvt1.dtbo",
+    "google/zuma-shiba-pvt1.dtbo",
+    "google/zuma-shiba-mp.dtbo",
+    "google-dts-base/zuma-dpm-eng.dtbo",
+    "google-dts-base/zuma-dpm-user.dtbo",
+    "google-dts-base/zuma-dpm-userdebug.dtbo",
 ]
 
 kernel_module_group(
@@ -162,14 +183,13 @@ kernel_build(
     outs = [
         "google-dts-base/zuma-{}.dtb".format(soc_rev)
         for soc_rev in _SOC_REVS
-    ],
+    ] + _SHUSKY_DTBOS,
     # TODO(b/221278445): Use real GKI
     # base_kernel = "//{}:kernel_aarch64".format(_GKI_KERNEL_DIR),
     base_kernel = ":shusky_gki",
     build_config = ":device_build_config",
     collect_unstripped_modules = True,
     dtstree = "//private/devices/google/shusky/dts:shusky.dt",
-    implicit_outs = _SHUSKY_DTBOS,
     kconfig_ext = "//private/google-modules/soc/gs:Kconfig.ext",
     kmi_symbol_list = "//{}:android/abi_gki_aarch64_pixel".format(_GKI_KERNEL_DIR),
     module_outs = [
@@ -182,8 +202,6 @@ kernel_build(
         "drivers/scsi/sg.ko",
         "drivers/spi/spidev.ko",
         "drivers/watchdog/softdog.ko",
-        "net/mac80211/mac80211.ko",
-        "net/wireless/cfg80211.ko",
     ],
     strip_modules = True,
 )
@@ -196,7 +214,7 @@ kernel_abi(
     module_grouping = False,
 )
 
-kernel_module(
+lto_dependant_kernel_module(
     name = "zuma_soc.shusky",
     srcs = [
         "//private/google-modules/soc/gs:gs_soc_sources",
@@ -211,7 +229,9 @@ kernel_module(
         "drivers/clocksource/exynos_mct_v3.ko",
         "drivers/cpufreq/exynos-acme.ko",
         "drivers/devfreq/google/arm-memlat-mon.ko",
+        "drivers/devfreq/google/dsulat-devfreq.ko",
         "drivers/devfreq/google/exynos_devfreq.ko",
+        "drivers/devfreq/google/governor_dsulat.ko",
         "drivers/devfreq/google/governor_memlat.ko",
         "drivers/devfreq/google/memlat-devfreq.ko",
         "drivers/dma-buf/heaps/samsung/samsung_dma_heap.ko",
@@ -291,6 +311,7 @@ kernel_module(
         "drivers/soc/google/exynos-pmu-if.ko",
         "drivers/soc/google/exynos-seclog.ko",
         "drivers/soc/google/exynos_pm_qos.ko",
+        "drivers/soc/google/gcma/gcma.ko",
         "drivers/soc/google/gs-chipid.ko",
         "drivers/soc/google/gsa/gsa.ko",
         "drivers/soc/google/gsa/gsa_gsc.ko",
@@ -304,6 +325,8 @@ kernel_module(
         "drivers/soc/google/pt/slc_pmon.ko",
         "drivers/soc/google/pt/slc_pt.ko",
         "drivers/soc/google/vh/kernel/cgroup/vh_cgroup.ko",
+        "drivers/soc/google/vh/kernel/metrics/pixel_metrics.ko",
+        "drivers/soc/google/vh/kernel/mm/vh_mm.ko",
         "drivers/soc/google/vh/kernel/pixel_em/pixel_em.ko",
         "drivers/soc/google/vh/kernel/sched/sched_tp.ko",
         "drivers/soc/google/vh/kernel/sched/vh_preemptirq_long.ko",
@@ -324,7 +347,6 @@ kernel_module(
         "drivers/trusty/trusty-virtio.ko",
         "drivers/tty/serial/exynos_tty.ko",
         "drivers/ufs/ufs-exynos-gs.ko",
-        "drivers/ufs/ufs-pixel-fips140.ko",
         "drivers/usb/dwc3/dwc3-exynos-usb.ko",
         "drivers/usb/gadget/function/usb_f_dm.ko",
         "drivers/usb/gadget/function/usb_f_dm1.ko",
@@ -339,6 +361,9 @@ kernel_module(
         "drivers/watchdog/s3c2410_wdt.ko",
     ],
     kernel_build = "//private/google-modules/soc/gs:gs_kernel_build",
+    lto_outs = [
+        "drivers/ufs/ufs-pixel-fips140.ko",
+    ],
     makefile = ["//private/google-modules/soc/gs:Makefile"],
     visibility = [
         # keep sorted
@@ -387,18 +412,80 @@ genrule(
     tools = ["//build/kernel:hermetic-tools/cat"],
 )
 
+_GKI_MODULES = [
+    # keep sorted
+    "drivers/bluetooth/btbcm.ko",
+    "drivers/bluetooth/btqca.ko",
+    "drivers/bluetooth/btsdio.ko",
+    "drivers/bluetooth/hci_uart.ko",
+    "drivers/net/can/dev/can-dev.ko",
+    "drivers/net/can/slcan.ko",
+    "drivers/net/can/vcan.ko",
+    "drivers/net/ppp/bsd_comp.ko",
+    "drivers/net/ppp/ppp_deflate.ko",
+    "drivers/net/ppp/ppp_generic.ko",
+    "drivers/net/ppp/ppp_mppe.ko",
+    "drivers/net/ppp/pppox.ko",
+    "drivers/net/ppp/pptp.ko",
+    "drivers/net/slip/slhc.ko",
+    "drivers/usb/class/cdc-acm.ko",
+    "drivers/usb/serial/ftdi_sio.ko",
+    "drivers/usb/serial/usbserial.ko",
+    "lib/crypto/libarc4.ko",
+    "mm/zsmalloc.ko",
+    "net/6lowpan/6lowpan.ko",
+    "net/6lowpan/nhc_dest.ko",
+    "net/6lowpan/nhc_fragment.ko",
+    "net/6lowpan/nhc_hop.ko",
+    "net/6lowpan/nhc_ipv6.ko",
+    "net/6lowpan/nhc_mobility.ko",
+    "net/6lowpan/nhc_routing.ko",
+    "net/6lowpan/nhc_udp.ko",
+    "net/8021q/8021q.ko",
+    "net/bluetooth/bluetooth.ko",
+    "net/bluetooth/hidp/hidp.ko",
+    "net/bluetooth/rfcomm/rfcomm.ko",
+    "net/can/can.ko",
+    "net/can/can-bcm.ko",
+    "net/can/can-gw.ko",
+    "net/can/can-raw.ko",
+    "net/ieee802154/6lowpan/ieee802154_6lowpan.ko",
+    "net/ieee802154/ieee802154.ko",
+    "net/ieee802154/ieee802154_socket.ko",
+    "net/l2tp/l2tp_core.ko",
+    "net/l2tp/l2tp_ppp.ko",
+    "net/mac80211/mac80211.ko",
+    "net/mac802154/mac802154.ko",
+    "net/nfc/nfc.ko",
+    "net/rfkill/rfkill.ko",
+    "net/tipc/diag.ko",
+    "net/tipc/tipc.ko",
+    "net/wireless/cfg80211.ko",
+]
+
+write_file(
+    name = "system_dlkm_modules_list",
+    out = "system_dlkm_modules_list.shusky",
+    content = _GKI_MODULES,
+)
+
 kernel_images(
     name = "zuma_shusky_images",
+    base_kernel_images = ":shusky_gki_images",
     build_boot = True,
     build_dtbo = True,
     build_initramfs = True,
+    build_system_dlkm = True,
     build_vendor_dlkm = True,
     build_vendor_kernel_boot = True,
+    dedup_dlkm_modules = True,
     dtbo_srcs = [":zuma_shusky/" + file for file in _SHUSKY_DTBOS],
     kernel_build = ":zuma_shusky",
     kernel_modules_install = ":zuma_shusky_modules_install",
     # Keep the following in sync with build.config.shusky:
     modules_list = ":vendor_kernel_boot_modules.shusky-cat",
+    system_dlkm_modules_list = ":system_dlkm_modules_list",
+    vendor_dlkm_etc_files = ["//private/devices/google/shusky:insmod_cfgs"],
     vendor_dlkm_modules_blocklist = "//private/google-modules/soc/gs:vendor_dlkm.blocklist.zuma",
     # No MODULES_BLOCKLIST
     vendor_dlkm_modules_list = "//private/google-modules/soc/gs:vendor_dlkm_modules.zuma",
@@ -408,6 +495,13 @@ kernel_images(
         # selinux_fc
         "//prebuilts/boot-artifacts/selinux:file_contexts",
     ],
+)
+
+filegroup(
+    name = "insmod_cfgs",
+    srcs = glob([
+        "insmod_cfg/*.cfg",
+    ]),
 )
 
 # TODO: support running ufdt_apply_overlay in a loop on each DTBO
@@ -433,20 +527,12 @@ kernel_images(
 #    ),
 #)
 
-_GKI_MODULES = [
-    # keep sorted
-    ":shusky_gki/lib/crypto/libarc4.ko",
-    ":shusky_gki/mm/zsmalloc.ko",
-    ":shusky_gki/net/rfkill/rfkill.ko",
-]
-
 _zuma_shusky_dist_targets = [
     # TODO(b/221278445) use real GKI; replace with //common:kernel_aarch64_additional_artifacts.
     # This will include abi.xml, abi_symbollist and abi_symbollist.report.
     ":shusky_gki",
     "shusky_gki_headers",
     "shusky_gki_kmi_symbol_list",
-    "shusky_gki_images",
     "//build/kernel:gki_certification_tools",
 
     # Device-specific artifacts
@@ -464,12 +550,22 @@ _zuma_shusky_dist_targets = [
     # TODO: support running ufdt_apply_overlay in a loop on each DTBO
     #":zuma_shusky_ufdt_overlay",
     ":zuma_shusky_unstripped_modules_archive",
-] + _GKI_MODULES
+    ":insmod_cfgs",
+] + [":shusky_gki/{}".format(m) for m in _GKI_MODULES]
 
 copy_to_dist_dir(
-    name = "zuma_shusky_dist",
+    name = "zuma_shusky_dist_copy_to_dist_dir",
     data = _zuma_shusky_dist_targets,
     dist_dir = "out/shusky/dist",
     flat = True,
     log = "info",
+)
+
+exec(
+    name = "zuma_shusky_dist",
+    data = [":zuma_shusky_dist_copy_to_dist_dir"],
+    script = """
+        echo {gki_kernel_dir}: $(git -C $BUILD_WORKSPACE_DIRECTORY/{gki_kernel_dir} rev-parse HEAD)
+        $(rootpath :zuma_shusky_dist_copy_to_dist_dir) $@
+    """.format(gki_kernel_dir = _GKI_KERNEL_DIR),
 )

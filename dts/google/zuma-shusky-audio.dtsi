@@ -56,15 +56,19 @@
 	};
 };
 
+/* GPIO_ALIVE */
+&pinctrl_0 {
+	cs35l41_2_irq: cs35l41-2-irq {
+		samsung,pins = "gpa7-2"; /* XEINT_16 */
+		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+	};
+};
+
 /* GPIO_FAR_ALIVE */
 &pinctrl_2 {
 	cs35l41_1_irq: cs35l41-1-irq {
 		samsung,pins = "gpa5-2"; /* XEINT_2 */
-		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
-		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-	};
-	cs35l41_2_irq: cs35l41-2-irq {
-		samsung,pins = "gpa7-2"; /* XEINT_16 */
 		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
 		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
 	};
@@ -152,7 +156,7 @@
 		cirrus,asp-sdout-hiz = <3>;
 		cirrus,tuning-has-prefix;
 		cirrus,hw-noise-gate-select = <63>;
-		//cirrus,hibernate-enable;
+		cirrus,hibernate-enable;
 
 		cirrus,gpio-config2 {
 			cirrus,gpio-src-select = <0x4>;
@@ -193,7 +197,7 @@
 		cirrus,asp-sdout-hiz = <3>;
 		cirrus,tuning-has-prefix;
 		cirrus,hw-noise-gate-select = <63>;
-		//cirrus,hibernate-enable;
+		cirrus,hibernate-enable;
 
 		cirrus,gpio-config2 {
 			cirrus,gpio-src-select = <0x4>;

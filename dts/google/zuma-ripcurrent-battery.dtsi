@@ -124,6 +124,7 @@
 	#address-cells = <1>;
 	#size-cells = <0>;
 	status = "okay";
+	clock-frequency = <400000>;
 
 	pinctrl-names = "default";
 	pinctrl-0 = <&hsi2c9_bus>;
@@ -181,6 +182,10 @@
 		maxim,gauge-type = <2>;
 		maxim,rsense-default = <500>;
 		maxim,batt-id-range-pct = <0>;
+
+		maxim,rc-enable;
+		maxim,rc-soc = <20>;
+		maxim,rc-temp = <50>;
 
 		maxim,psy-type-unknown;
 		maxim,fg-data {

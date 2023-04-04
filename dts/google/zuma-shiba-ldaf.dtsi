@@ -8,14 +8,6 @@
 
 #include <dt-bindings/gpio/gpio.h>
 
-&pinctrl_2 {
-	ldaf_irq: ldaf-irq {
-		samsung,pins = "gpa5-4"; /* XEINT_4 */
-		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
-		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
-	};
-};
-
 &s_ldo12_reg {
 	regulator-min-microvolt = <1850000>;
 	regulator-max-microvolt = <1850000>;

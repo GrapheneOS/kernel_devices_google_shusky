@@ -22,26 +22,3 @@
 		};
 	};
 };
-
-/* sync from zuma-b0.dts:
- * pa/2357080 28b25e825 arm64/dts: zuma: cpu: change CPU max freq for B0
- */
-&bts_smc0 {
-	reg = <0x0 0x27C4F534 0x4>;
-};
-
-&bts_smc1 {
-	reg = <0x0 0x27D4F534 0x4>;
-};
-
-&bts_smc2 {
-	reg = <0x0 0x27E4F534 0x4>;
-};
-
-&bts_smc3 {
-	reg = <0x0 0x27F4F534 0x4>;
-};
-
-&cpufreq_domain0 {
-	max-freq = <1880000>;
-};

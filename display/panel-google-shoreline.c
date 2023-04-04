@@ -87,9 +87,13 @@ static const struct drm_dsc_config pps_config = {
 #define WIDTH_MM 64
 #define HEIGHT_MM 143
 
+#define PROJECT "SB3"
+
 static const u8 test_key_on_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 test_key_off_f0[] = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
+static const u8 lhbm_brightness_index[] = { 0xB0, 0x03, 0xD7, 0x66 };
+static const u8 lhbm_brightness_reg = 0x66;
 
 static const struct exynos_dsi_cmd shoreline_off_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
@@ -126,7 +130,7 @@ static const struct exynos_binned_lp shoreline_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, shoreline_lp_off_cmds),
 	BINNED_LP_MODE_TIMING("low", 80, shoreline_lp_low_cmds,
 			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),
-	BINNED_LP_MODE_TIMING("high", 2047, shoreline_lp_high_cmds,
+	BINNED_LP_MODE_TIMING("high", 4095, shoreline_lp_high_cmds,
 			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),
 };
 
@@ -166,6 +170,52 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
 
 #define LHBM_GAMMA_CMD_SIZE 6
+
+/**
+ * enum shoreline_lhbm_brt - local hbm brightness
+ * @LHBM_R_COARSE: red coarse
+ * @LHBM_GB_COARSE: green and blue coarse
+ * @LHBM_R_FINE: red fine
+ * @LHBM_G_FINE: green fine
+ * @LHBM_B_FINE: blue fine
+ * @LHBM_BRT_LEN: local hbm brightness array length
+ */
+enum shoreline_lhbm_brt {
+	LHBM_R_COARSE = 0,
+	LHBM_GB_COARSE,
+	LHBM_R_FINE,
+	LHBM_G_FINE,
+	LHBM_B_FINE,
+	LHBM_BRT_LEN
+};
+
+/**
+ * enum shoreline_lhbm_brt_overdrive_group - lhbm brightness overdrive group number
+ * @LHBM_OVERDRIVE_GRP_0_NIT: group number for 0 nit
+ * @LHBM_OVERDRIVE_GRP_6_NIT: group number for 0-6 nits
+ * @LHBM_OVERDRIVE_GRP_50_NIT: group number for 6-50 nits
+ * @LHBM_OVERDRIVE_GRP_300_NIT: group number for 50-300 nits
+ * @LHBM_OVERDRIVE_GRP_MAX: maximum group number
+ */
+enum shoreline_lhbm_brt_overdrive_group {
+	LHBM_OVERDRIVE_GRP_0_NIT = 0,
+	LHBM_OVERDRIVE_GRP_6_NIT,
+	LHBM_OVERDRIVE_GRP_50_NIT,
+	LHBM_OVERDRIVE_GRP_300_NIT,
+	LHBM_OVERDRIVE_GRP_MAX
+};
+
+struct shoreline_lhbm_ctl {
+	/** @brt_normal: normal LHBM brightness parameters */
+	u8 brt_normal[LHBM_BRT_LEN];
+	/** @brt_overdrive: overdrive LHBM brightness parameters */
+	u8 brt_overdrive[LHBM_OVERDRIVE_GRP_MAX][LHBM_BRT_LEN];
+	/** @overdrived: whether LHBM is overdrived */
+	bool overdrived;
+	/** @hist_roi_configured: whether LHBM histogram configuration is done */
+	bool hist_roi_configured;
+};
+
 /**
  * struct shoreline_panel - panel specific runtime info
  *
@@ -181,6 +231,8 @@ struct shoreline_panel {
 		u8 hs_cmd[LHBM_GAMMA_CMD_SIZE];
 		u8 ns_cmd[LHBM_GAMMA_CMD_SIZE];
 	} local_hbm_gamma;
+	/** @lhbm_ctl: lhbm brightness control */
+	struct shoreline_lhbm_ctl lhbm_ctl;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct shoreline_panel, base)
@@ -305,6 +357,37 @@ static void shoreline_change_frequency(struct exynos_panel *ctx,
 	dev_dbg(ctx->dev, "frequency changed to %uhz\n", vrefresh);
 }
 
+static void shoreline_update_lhbm_hist_config(struct exynos_panel *ctx)
+{
+	struct shoreline_panel *spanel = to_spanel(ctx);
+	struct shoreline_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	const struct drm_display_mode *mode;
+	/* lhbm center below the center of AA: 563, radius: 101 */
+	const int d = 563, r = 101;
+
+	if (ctl->hist_roi_configured)
+		return;
+
+	if (!pmode) {
+		dev_err(ctx->dev, "no current mode set\n");
+		return;
+	}
+	mode = &pmode->mode;
+	if (!exynos_drm_connector_set_lhbm_hist(&ctx->exynos_connector,
+		mode->hdisplay, mode->vdisplay, d, r)) {
+		ctl->hist_roi_configured = true;
+		dev_dbg(ctx->dev, "configure lhbm hist: %d %d %d %d\n",
+			mode->hdisplay, mode->vdisplay, d, r);
+	}
+}
+
+static int shoreline_atomic_check(struct exynos_panel *ctx, struct drm_atomic_state *state)
+{
+	shoreline_update_lhbm_hist_config(ctx);
+	return 0;
+}
+
 static void shoreline_update_wrctrld(struct exynos_panel *ctx)
 {
 	u8 val = SHORELINE_WRCTRLD_BCTRL_BIT;
@@ -356,6 +439,7 @@ static int shoreline_enable(struct drm_panel *panel)
 	const struct exynos_panel_mode *pmode = ctx->current_mode;
 	const struct drm_display_mode *mode;
 	struct drm_dsc_picture_parameter_set pps_payload;
+	struct shoreline_panel *spanel = to_spanel(ctx);
 
 	if (!pmode) {
 		dev_err(ctx->dev, "no current mode set\n");
@@ -387,6 +471,8 @@ static int shoreline_enable(struct drm_panel *panel)
 	else
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON); /* display on */
 
+	spanel->lhbm_ctl.hist_roi_configured = false;
+
 	return 0;
 }
 
@@ -417,10 +503,23 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 	}
 
 	if (irc_update && IS_HBM_ON(mode)) {
-		/* Global para */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x01, 0x6A);
-		/* IRC Setting */
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x6A, IS_HBM_ON_IRC_OFF(mode) ? 0x01 : 0x21);
+		if (exynos_panel->panel_rev < PANEL_REV_EVT1) {
+			/* Global para */
+			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x01, 0x6A);
+			/* IRC Setting */
+			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x6A,
+							IS_HBM_ON_IRC_OFF(mode) ? 0x01 : 0x21);
+		} else {
+			const u8 irc_mode[2][5] = {
+				{0x6B, 0x19, 0xE1, 0xFF, 0x94}, /* FGZ Mode */
+				{0x6B, 0x00, 0x00, 0xFF, 0x90}, /* Flat gamma */
+			};
+
+			/* Global para */
+			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x0A, 0x6B);
+			/* IRC Setting */
+			EXYNOS_DCS_WRITE_TABLE(exynos_panel, irc_mode[IS_HBM_ON_IRC_OFF(mode)]);
+		}
 	}
 
 	EXYNOS_DCS_WRITE_TABLE(exynos_panel, test_key_off_f0);
@@ -444,10 +543,84 @@ static void shoreline_set_dimming_on(struct exynos_panel *exynos_panel,
 	shoreline_update_wrctrld(exynos_panel);
 }
 
+static void shoreline_set_local_hbm_brightness(struct exynos_panel *ctx, bool is_first_stage)
+{
+	struct shoreline_panel *spanel = to_spanel(ctx);
+	struct shoreline_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	const u8 *brt;
+	enum shoreline_lhbm_brt_overdrive_group group = LHBM_OVERDRIVE_GRP_MAX;
+	/* command uses one byte besiddes brightness */
+	static u8 cmd[LHBM_BRT_LEN + 1];
+	int i;
+
+	if (!is_local_hbm_post_enabling_supported(ctx))
+		return;
+
+	dev_info(ctx->dev, "set LHBM brightness at %s stage\n", is_first_stage ? "1st" : "2nd");
+	if (is_first_stage) {
+		u32 gray = exynos_drm_connector_get_lhbm_gray_level(&ctx->exynos_connector);
+		u32 dbv = exynos_panel_get_brightness(ctx);
+		u32 normal_dbv_max = ctx->desc->brt_capability->normal.level.max;
+		u32 normal_nit_max = ctx->desc->brt_capability->normal.nits.max;
+		u32 luma = 0;
+
+		if (gray < 15) {
+			group = LHBM_OVERDRIVE_GRP_0_NIT;
+		} else {
+			if (dbv <= normal_dbv_max)
+				luma = panel_cmn_calc_gamma_2_2_luminance(dbv, normal_dbv_max,
+				normal_nit_max);
+			else
+				luma = panel_cmn_calc_linear_luminance(dbv, 645, -1256);
+			luma = panel_cmn_calc_gamma_2_2_luminance(gray, 255, luma);
+
+			if (luma < 6)
+				group = LHBM_OVERDRIVE_GRP_6_NIT;
+			else if (luma < 50)
+				group = LHBM_OVERDRIVE_GRP_50_NIT;
+			else if (luma < 300)
+				group = LHBM_OVERDRIVE_GRP_300_NIT;
+			else
+				group = LHBM_OVERDRIVE_GRP_MAX;
+		}
+		dev_dbg(ctx->dev, "check LHBM overdrive condition | gray=%u dbv=%u luma=%u\n",
+			gray, dbv, luma);
+	}
+
+	if (group < LHBM_OVERDRIVE_GRP_MAX) {
+		brt = ctl->brt_overdrive[group];
+		ctl->overdrived = true;
+	} else {
+		brt = ctl->brt_normal;
+		ctl->overdrived = false;
+	}
+	cmd[0] = lhbm_brightness_reg;
+	for (i = 0; i < LHBM_BRT_LEN; i++)
+		cmd[i+1] = brt[i];
+	dev_dbg(ctx->dev, "set %s brightness: [%d] %*ph\n",
+		ctl->overdrived ? "overdrive" : "normal",
+		ctl->overdrived ? group : -1, LHBM_BRT_LEN, brt);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_on_f0);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, lhbm_brightness_index);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, cmd);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, test_key_off_f0);
+}
+
+static void shoreline_set_local_hbm_mode_post(struct exynos_panel *ctx)
+{
+	const struct shoreline_panel *spanel = to_spanel(ctx);
+
+	if (spanel->lhbm_ctl.overdrived)
+		shoreline_set_local_hbm_brightness(ctx, false);
+}
+
 static void shoreline_set_local_hbm_mode(struct exynos_panel *exynos_panel,
 				 bool local_hbm_en)
 {
 	shoreline_update_wrctrld(exynos_panel);
+
+	if (local_hbm_en)
+		shoreline_set_local_hbm_brightness(exynos_panel, true);
 }
 
 static void shoreline_mode_set(struct exynos_panel *ctx,
@@ -463,6 +636,102 @@ static bool shoreline_is_mode_seamless(const struct exynos_panel *ctx,
 	return drm_mode_equal_no_clocks(&ctx->current_mode->mode, &pmode->mode);
 }
 
+static void shoreline_calc_lhbm_od_brightness(u8 n_fine, u8 n_coarse,
+	u8 *o_fine, u8 *o_coarse,
+	u8 fine_offset_0, u8 fine_offset_1,
+	u8 coarse_offset_0, u8 coarse_offset_1)
+{
+	if (n_fine <= (0xFF - fine_offset_0)) {
+		*o_coarse = n_coarse + coarse_offset_0;
+		*o_fine = n_fine + fine_offset_0;
+	} else {
+		*o_coarse = n_coarse + coarse_offset_1;
+		*o_fine = n_fine - fine_offset_1;
+	}
+}
+
+static void shoreline_lhbm_brightness_init(struct exynos_panel *ctx)
+{
+	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
+	struct shoreline_panel *spanel = to_spanel(ctx);
+	struct shoreline_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	int ret;
+	u8 g_coarse, b_coarse;
+	u8 *p_norm = ctl->brt_normal;
+	u8 *p_over;
+	enum shoreline_lhbm_brt_overdrive_group grp;
+
+	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
+	EXYNOS_DCS_WRITE_TABLE(ctx, lhbm_brightness_index);
+	ret = mipi_dsi_dcs_read(dsi, lhbm_brightness_reg, p_norm, LHBM_BRT_LEN);
+	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
+	if (ret != LHBM_BRT_LEN) {
+		dev_err(ctx->dev, "failed to read lhbm para ret=%d\n", ret);
+		return;
+	}
+	dev_info(ctx->dev, "lhbm normal brightness: %*ph\n", LHBM_BRT_LEN, p_norm);
+
+	/* 0 nit */
+	grp = LHBM_OVERDRIVE_GRP_0_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x83, 0x5A, 0x00, 0x01);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x90, 0x60, 0x00, 0x10);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0xB0, 0x23, 0x00, 0x01);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	/* 0 - 6 nits */
+	grp = LHBM_OVERDRIVE_GRP_6_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x53, 0x8A, 0x00, 0x01);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x60, 0x90, 0x00, 0x10);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0x80, 0x53, 0x00, 0x01);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	/* 6 - 50 nits */
+	grp = LHBM_OVERDRIVE_GRP_50_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x36, 0x9E, 0x00, 0x01);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x49, 0xA4, 0x00, 0x10);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0x66, 0x67, 0x00, 0x01);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	/* 50 - 300 nits */
+	grp = LHBM_OVERDRIVE_GRP_300_NIT;
+	p_over = ctl->brt_overdrive[grp];
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_R_FINE], p_norm[LHBM_R_COARSE],
+		&p_over[LHBM_R_FINE], &p_over[LHBM_R_COARSE],
+		0x16, 0xBE, 0x00, 0x01);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_G_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_G_FINE], &g_coarse,
+		0x29, 0xC4, 0x00, 0x10);
+	shoreline_calc_lhbm_od_brightness(p_norm[LHBM_B_FINE], p_norm[LHBM_GB_COARSE],
+		&p_over[LHBM_B_FINE], &b_coarse,
+		0x46, 0x87, 0x00, 0x01);
+	p_over[LHBM_GB_COARSE] = (g_coarse & 0xF0) | (b_coarse & 0x0F);
+
+	print_hex_dump_debug("shoreline-od-brightness: ", DUMP_PREFIX_NONE,
+		16, 1,
+		ctl->brt_overdrive, sizeof(ctl->brt_overdrive), false);
+}
+
 static void shoreline_panel_init(struct exynos_panel *ctx)
 {
 	struct dentry *csroot = ctx->debugfs_cmdset_entry;
@@ -472,6 +741,8 @@ static void shoreline_panel_init(struct exynos_panel *ctx)
 	shoreline_lhbm_gamma_read(ctx);
 	shoreline_lhbm_gamma_write(ctx);
 
+	/* LHBM overdrive init */
+	shoreline_lhbm_brightness_init(ctx);
 	/* LHBM Location */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x09, 0x6D);
@@ -507,13 +778,14 @@ static int shoreline_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
+
 static const struct exynos_display_underrun_param underrun_param = {
 	.te_idle_us = 280,
 	.te_var = 1,
 };
 
 static const u32 shoreline_bl_range[] = {
-	95, 205, 315, 400, 2047
+	95, 205, 315, 400, 4095
 };
 
 #define GOOGLE_SHORELINE_DSC {\
@@ -619,6 +891,8 @@ static const struct drm_panel_funcs shoreline_drm_funcs = {
 	.get_modes = exynos_panel_get_modes,
 };
 
+static int shoreline_panel_config(struct exynos_panel *ctx);
+
 static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.set_brightness = exynos_panel_set_brightness,
 	.set_lp_mode = exynos_panel_set_lp_mode,
@@ -627,53 +901,126 @@ static const struct exynos_panel_funcs shoreline_exynos_funcs = {
 	.set_hbm_mode = shoreline_set_hbm_mode,
 	.set_dimming_on = shoreline_set_dimming_on,
 	.set_local_hbm_mode = shoreline_set_local_hbm_mode,
+	.set_local_hbm_mode_post = shoreline_set_local_hbm_mode_post,
 	.is_mode_seamless = shoreline_is_mode_seamless,
 	.mode_set = shoreline_mode_set,
+	.panel_config = shoreline_panel_config,
 	.panel_init = shoreline_panel_init,
 	.get_panel_rev = shoreline_get_panel_rev,
 	.get_te2_edges = exynos_panel_get_te2_edges,
 	.configure_te2_edges = exynos_panel_configure_te2_edges,
 	.update_te2 = shoreline_update_te2,
 	.read_id = shoreline_read_id,
+	.atomic_check = shoreline_atomic_check,
 };
 
-static const struct brightness_capability shoreline_brightness_capability = {
-	.normal = {
-		.nits = {
-			.min = 2,
-			.max = 800,
-		},
-		.level = {
-			.min = 209,
-			.max = 3175,
-		},
-		.percentage = {
-			.min = 0,
-			.max = 57,
+static const struct exynos_brightness_configuration shoreline_btr_configs[] = {
+	{
+		.panel_rev = PANEL_REV_EVT1 | PANEL_REV_EVT1_1 | PANEL_REV_LATEST,
+		.dft_brightness = 1431,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 1000,
+				},
+				.level = {
+					.min = 209,
+					.max = 3514,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 71,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 1000,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3515,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 71,
+					.max = 100,
+				},
+			},
 		},
 	},
-	.hbm = {
-		.nits = {
-			.min = 800,
-			.max = 1400,
+	{
+		.panel_rev = PANEL_REV_PROTO1_1,
+		.dft_brightness = 1454,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 209,
+					.max = 3175,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 57,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3176,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 57,
+					.max = 100,
+				},
+			},
 		},
-		.level = {
-			.min = 3176,
-			.max = 4095,
-		},
-		.percentage = {
-			.min = 57,
-			.max = 100,
+	},
+	{
+		.panel_rev = PANEL_REV_PROTO1,
+		.dft_brightness = 374,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 2,
+					.max = 2047,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 67,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1200,
+				},
+				.level = {
+					.min = 2048,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 67,
+					.max = 100,
+				},
+			},
 		},
 	},
 };
 
-static const struct exynos_panel_desc google_shoreline = {
+static struct exynos_panel_desc google_shoreline = {
 	.data_lane_cnt = 4,
-	.max_brightness = 4095,
-	.min_brightness = 209,
-	.dft_brightness = 1023,
-	.brt_capability = &shoreline_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
 	.hdr_formats = BIT(2) | BIT(3),
 	.max_luminance = 10000000,
@@ -690,6 +1037,8 @@ static const struct exynos_panel_desc google_shoreline = {
 	.num_binned_lp = ARRAY_SIZE(shoreline_binned_lp),
 	.panel_func = &shoreline_drm_funcs,
 	.exynos_panel_func = &shoreline_exynos_funcs,
+	.lhbm_effective_delay_frames = 1,
+	.lhbm_post_cmd_delay_frames = 1,
 	.reset_timing_ms = {1, 1, 20},
 	.reg_ctrl_enable = {
 		{PANEL_REG_ID_VDDI, 0},
@@ -702,6 +1051,16 @@ static const struct exynos_panel_desc google_shoreline = {
 		{PANEL_REG_ID_VDDI, 0},
 	},
 };
+
+static int shoreline_panel_config(struct exynos_panel *ctx)
+{
+	exynos_panel_model_init(ctx, PROJECT, 0);
+
+	return exynos_panel_init_brightness(&google_shoreline,
+						shoreline_btr_configs,
+						ARRAY_SIZE(shoreline_btr_configs),
+						ctx->panel_rev);
+}
 
 static const struct of_device_id exynos_panel_of_match[] = {
 	{ .compatible = "google,shoreline", .data = &google_shoreline },

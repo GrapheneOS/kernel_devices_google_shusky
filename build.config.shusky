@@ -29,6 +29,9 @@ google-dts-base/zuma-a0-foplp.dtb
 google-dts-base/zuma-a0-ipop.dtb
 google-dts-base/zuma-b0-foplp.dtb
 google-dts-base/zuma-b0-ipop.dtb
+google-dts-base/zuma-dpm-eng.dtbo
+google-dts-base/zuma-dpm-user.dtbo
+google-dts-base/zuma-dpm-userdebug.dtbo
 google/zuma-ripcurrent.dtbo
 google/zuma-husky-proto1.dtbo
 google/zuma-husky-proto1_1.dtbo
@@ -64,8 +67,8 @@ private/google-modules/bms
 private/google-modules/display
 private/devices/google/shusky/display
 private/google-modules/edgetpu/rio/drivers/edgetpu
-private/google-modules/gpu/mali_kbase
 private/google-modules/gpu/mali_pixel
+private/google-modules/gpu/mali_kbase
 private/google-modules/gxp/zuma
 private/google-modules/lwis
 private/google-modules/nfc

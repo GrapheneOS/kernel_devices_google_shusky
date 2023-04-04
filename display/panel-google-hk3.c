@@ -21,7 +21,8 @@
 /**
  * enum hk3_panel_feature - features supported by this panel
  * @FEAT_HBM: high brightness mode
- * @FEAT_IRC_OFF: IRC compensation off state
+ * @FEAT_IRC_OFF: IR compensation off state
+ * @FEAT_IRC_Z_MODE: IR compensation on state and use Flat Z mode
  * @FEAT_EARLY_EXIT: early exit from a long frame
  * @FEAT_OP_NS: normal speed (not high speed)
  * @FEAT_FRAME_AUTO: automatic (not manual) frame control
@@ -33,6 +34,7 @@
 enum hk3_panel_feature {
 	FEAT_HBM = 0,
 	FEAT_IRC_OFF,
+	FEAT_IRC_Z_MODE,
 	FEAT_EARLY_EXIT,
 	FEAT_OP_NS,
 	FEAT_FRAME_AUTO,
@@ -74,6 +76,20 @@ enum hk3_lhbm_brt_overdrive_group {
 	LHBM_OVERDRIVE_GRP_MAX
 };
 
+/**
+ * enum hk3_material - different materials in HW
+ * @MATERIAL_E6: EVT1 material E6
+ * @MATERIAL_E7_DOE: EVT1 material E7
+ * @MATERIAL_E7: EVT1.1 maetrial E7
+ * @MATERIAL_LPC5: EVT1.1 material LPC5
+ */
+enum hk3_material {
+	MATERIAL_E6 = 0,
+	MATERIAL_E7_DOE,
+	MATERIAL_E7,
+	MATERIAL_LPC5
+};
+
 struct hk3_lhbm_ctl {
 	/** @brt_normal: normal LHBM brightness parameters */
 	u8 brt_normal[LHBM_BRT_LEN];
@@ -86,12 +102,11 @@ struct hk3_lhbm_ctl {
 };
 
 /**
- * struct hk3_panel - panel specific runtime info
+ * struct hk3_panel - panel specific info
  *
- * This struct maintains hk3 panel specific runtime info, any fixed details about panel should
- * most likely go into struct exynos_panel_desc. The variables with the prefix hw_ keep track of the
- * features that were actually committed to hardware, and should be modified after sending cmds to panel,
- * i.e. updating hw state.
+ * This struct maintains hk3 panel specific info. The variables with the prefix hw_ keep
+ * track of the features that were actually committed to hardware, and should be modified
+ * after sending cmds to panel, i.e. updating hw state.
  */
 struct hk3_panel {
 	/** @base: base panel struct */
@@ -121,7 +136,10 @@ struct hk3_panel {
 	bool force_za_off;
 	/** @lhbm_ctl: lhbm brightness control */
 	struct hk3_lhbm_ctl lhbm_ctl;
-
+	/** @material: the material version used in panel */
+	enum hk3_material material;
+	/** @rrs_in_progress: indicate whether RRS (Runtime Resolution Switch) is in progress */
+	bool rrs_in_progress;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -268,6 +286,8 @@ static const struct drm_dsc_config fhd_pps_config = {
 #define HK3_TE_USEC_60HZ_HS 8500
 #define HK3_TE_USEC_60HZ_NS 346
 
+#define PROJECT "HK3"
+
 static const u8 unlock_cmd_f0[] = { 0xF0, 0x5A, 0x5A };
 static const u8 lock_cmd_f0[]   = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
@@ -344,7 +364,7 @@ static const struct exynos_binned_lp hk3_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, hk3_lp_off_cmds),
 	BINNED_LP_MODE_TIMING("low", 80, hk3_lp_low_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET),
-	BINNED_LP_MODE_TIMING("high", 2047, hk3_lp_high_cmds,
+	BINNED_LP_MODE_TIMING("high", 3307, hk3_lp_high_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET)
 };
 
@@ -376,6 +396,11 @@ static void hk3_update_te2_internal(struct exynos_panel *ctx, bool lock)
 
 	if (!ctx)
 		return;
+
+	if (spanel->rrs_in_progress) {
+		dev_dbg(ctx->dev, "%s: RRS in progress, skip\n", __func__);
+		return;
+	}
 
 	if (test_bit(FEAT_OP_NS, spanel->feat)) {
 		rising = HK3_TE2_RISING_EDGE_OFFSET;
@@ -440,7 +465,6 @@ static inline bool is_auto_mode_allowed(struct exynos_panel *ctx)
 	return ctx->panel_idle_enabled;
 }
 
-#define HK3_DEFAULT_MIN_VREFRESH 10
 static u32 hk3_get_min_idle_vrefresh(struct exynos_panel *ctx,
 				     const struct exynos_panel_mode *pmode)
 {
@@ -450,9 +474,7 @@ static u32 hk3_get_min_idle_vrefresh(struct exynos_panel *ctx,
 	if ((min_idle_vrefresh < 0) || !is_auto_mode_allowed(ctx))
 		return 0;
 
-	if (!min_idle_vrefresh)
-		min_idle_vrefresh = HK3_DEFAULT_MIN_VREFRESH;
-	else if (min_idle_vrefresh == 1)
+	if (min_idle_vrefresh <= 1)
 		min_idle_vrefresh = 1;
 	else if (min_idle_vrefresh <= 10)
 		min_idle_vrefresh = 10;
@@ -505,7 +527,9 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 		test_bit(FEAT_OP_NS, spanel->feat) ? "ns" : "hs",
 		test_bit(FEAT_EARLY_EXIT, spanel->feat) ? "on" : "off",
 		test_bit(FEAT_HBM, spanel->feat) ? "on" : "off",
-		test_bit(FEAT_IRC_OFF, spanel->feat) ? "off" : "on",
+		ctx->panel_rev >= PANEL_REV_EVT1 ?
+			(test_bit(FEAT_IRC_Z_MODE, spanel->feat) ? "flat_z" : "flat") :
+			(test_bit(FEAT_IRC_OFF, spanel->feat) ? "off" : "on"),
 		test_bit(FEAT_FRAME_AUTO, spanel->feat) ? "auto" : "manual",
 		vrefresh,
 		idle_vrefresh);
@@ -545,11 +569,32 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 	if (test_bit(FEAT_OP_NS, changed_feat))
 		hk3_update_te2_internal(ctx, false);
 
-	/* HBM IRC setting */
-	if (test_bit(FEAT_IRC_OFF, changed_feat)) {
-		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x01, 0x9B, 0x92);
-		val = test_bit(FEAT_IRC_OFF, spanel->feat) ? 0x07 : 0x27;
-		EXYNOS_DCS_BUF_ADD(ctx, 0x92, val);
+	/*
+	 * HBM IRC setting
+	 *
+	 * Description: after EVT1, IRC will be always on. "Flat mode" is used to
+	 * replace IRC on for normal mode and HDR video, and "Flat Z mode" is used
+	 * to replace IRC off for sunlight environment.
+	 */
+	if (ctx->panel_rev >= PANEL_REV_EVT1) {
+		if (test_bit(FEAT_IRC_Z_MODE, changed_feat)) {
+			EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0x00, 0x92);
+			if (test_bit(FEAT_IRC_Z_MODE, spanel->feat)) {
+				EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0xBE, 0x98);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0xF3, 0x68);
+				EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x97, 0x87, 0x87, 0xFB, 0xFD, 0xF1);
+			} else {
+				EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0x00, 0x00);
+				EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0xF3, 0x68);
+				EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x71, 0x81, 0x59, 0x90, 0xA2, 0x80);
+			}
+		}
+	} else {
+		if (test_bit(FEAT_IRC_OFF, changed_feat)) {
+			EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x01, 0x9B, 0x92);
+			val = test_bit(FEAT_IRC_OFF, spanel->feat) ? 0x07 : 0x27;
+			EXYNOS_DCS_BUF_ADD(ctx, 0x92, val);
+		}
 	}
 
 	/*
@@ -858,8 +903,12 @@ static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 		return false;
 
 	/* self refresh is not supported in lp mode since that always makes use of early exit */
-	if (pmode->exynos_mode.is_lp_mode)
+	if (pmode->exynos_mode.is_lp_mode) {
+		/* set 1Hz while self refresh is active, otherwise clear it */
+		ctx->panel_idle_vrefresh = enable ? 1 : 0;
+		backlight_state_changed(ctx->bl);
 		return false;
+	}
 
 	idle_vrefresh = hk3_get_min_idle_vrefresh(ctx, pmode);
 
@@ -1107,7 +1156,14 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 		bool enable_acl = (br >= dbv_th && IS_HBM_ON(ctx->hbm_mode));
 
 		if (spanel->hw_acl_enabled != enable_acl) {
-			/* ACL setting - 0x01: 5%, 0x02: 7.5%, 0x00: off */
+			/*
+			 * ACL setting:
+			 *
+			 * P1.0 - 5% (0x01)
+			 * P1.1 - 7.5% (0x02)
+			 * EVT1 and later - 12% (0x02)
+			 * Set 0x00 to disable it
+			 */
 			u8 val = 0;
 
 			if (enable_acl)
@@ -1116,7 +1172,9 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 			spanel->hw_acl_enabled = enable_acl;
 			dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
 
-			hk3_update_za(ctx);
+			/* Keep ZA off after EVT1 */
+			if (ctx->panel_rev < PANEL_REV_EVT1)
+				hk3_update_za(ctx);
 		}
 	}
 
@@ -1212,6 +1270,17 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 };
 static DEFINE_EXYNOS_CMD_SET(hk3_init);
 
+static const struct exynos_dsi_cmd hk3_ns_gamma_fix_cmds[] = {
+	EXYNOS_DSI_CMD0(unlock_cmd_f0),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x02, 0x3F, 0xCB),
+	EXYNOS_DSI_CMD_SEQ(0xCB, 0x0A),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x02, 0x45, 0xCB),
+	EXYNOS_DSI_CMD_SEQ(0xCB, 0x0A),
+	EXYNOS_DSI_CMD0(freq_update),
+	EXYNOS_DSI_CMD0(lock_cmd_f0),
+};
+static DEFINE_EXYNOS_CMD_SET(hk3_ns_gamma_fix);
+
 static void hk3_lhbm_luminance_opr_setting(struct exynos_panel *ctx)
 {
 	struct hk3_panel *spanel = to_spanel(ctx);
@@ -1258,7 +1327,9 @@ static int hk3_enable(struct drm_panel *panel)
 	mode = &pmode->mode;
 	is_fhd = mode->hdisplay == 1008;
 
-	dev_info(ctx->dev, "%s\n", __func__);
+	dev_info(ctx->dev, "%s (%s)\n", __func__, is_fhd ? "fhd" : "wqhd");
+
+	DPU_ATRACE_BEGIN(__func__);
 
 	if (needs_reset)
 		exynos_panel_reset(ctx);
@@ -1272,6 +1343,8 @@ static int hk3_enable(struct drm_panel *panel)
 	if (needs_reset) {
 		EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 120, MIPI_DCS_EXIT_SLEEP_MODE);
 		exynos_panel_send_cmd_set(ctx, &hk3_init_cmd_set);
+		if (spanel->material == MATERIAL_E7_DOE)
+			exynos_panel_send_cmd_set(ctx, &hk3_ns_gamma_fix_cmd_set);
 		if (ctx->panel_rev == PANEL_REV_PROTO1)
 			hk3_lhbm_luminance_opr_setting(ctx);
 	}
@@ -1290,6 +1363,9 @@ static int hk3_enable(struct drm_panel *panel)
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	spanel->lhbm_ctl.hist_roi_configured = false;
+
+	DPU_ATRACE_END(__func__);
+
 	return 0;
 }
 
@@ -1300,8 +1376,10 @@ static int hk3_disable(struct drm_panel *panel)
 	int ret;
 
 	/* skip disable sequence if going through modeset */
-	if (ctx->panel_state == PANEL_STATE_MODESET)
+	if (ctx->panel_state == PANEL_STATE_MODESET) {
+		spanel->rrs_in_progress = true;
 		return 0;
+	}
 
 	ret = exynos_panel_disable(panel);
 	if (ret)
@@ -1374,8 +1452,16 @@ static void hk3_update_idle_state(struct exynos_panel *ctx)
 
 static void hk3_commit_done(struct exynos_panel *ctx)
 {
+	struct hk3_panel *spanel = to_spanel(ctx);
+
 	if (!ctx->current_mode)
 		return;
+
+	if (spanel->rrs_in_progress) {
+		/* we should finish RRS in this commit */
+		spanel->rrs_in_progress = false;
+		return;
+	}
 
 	hk3_update_idle_state(ctx);
 
@@ -1399,17 +1485,20 @@ static void hk3_set_hbm_mode(struct exynos_panel *ctx,
 	if (IS_HBM_ON(mode)) {
 		set_bit(FEAT_HBM, spanel->feat);
 		/* enforce IRC on for factory builds */
-#ifndef DPU_FACTORY_BUILD
+#ifndef PANEL_FACTORY_BUILD
 		if (mode == HBM_ON_IRC_ON)
-			clear_bit(FEAT_IRC_OFF, spanel->feat);
+			clear_bit(ctx->panel_rev >= PANEL_REV_EVT1 ?
+				  FEAT_IRC_Z_MODE : FEAT_IRC_OFF, spanel->feat);
 		else
-			set_bit(FEAT_IRC_OFF, spanel->feat);
+			set_bit(ctx->panel_rev >= PANEL_REV_EVT1 ?
+				FEAT_IRC_Z_MODE : FEAT_IRC_OFF, spanel->feat);
 #endif
 		hk3_update_panel_feat(ctx, NULL, false);
 		hk3_write_display_mode(ctx, &pmode->mode);
 	} else {
 		clear_bit(FEAT_HBM, spanel->feat);
-		clear_bit(FEAT_IRC_OFF, spanel->feat);
+		clear_bit(ctx->panel_rev >= PANEL_REV_EVT1 ?
+			  FEAT_IRC_Z_MODE : FEAT_IRC_OFF, spanel->feat);
 		hk3_write_display_mode(ctx, &pmode->mode);
 		hk3_update_panel_feat(ctx, NULL, false);
 	}
@@ -1558,6 +1647,33 @@ static int hk3_read_id(struct exynos_panel *ctx)
 	return exynos_panel_read_ddic_id(ctx);
 }
 
+/* Note the format is 0x<DAh><DBh><DCh> which is reverse of bootloader (0x<DCh><DBh><DAh>) */
+static void hk3_get_panel_material(struct exynos_panel *ctx, u32 id)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	switch (id) {
+	case 0x000A4000:
+		spanel->material = MATERIAL_E6;
+		break;
+	case 0x000A4020:
+		spanel->material = MATERIAL_E7_DOE;
+		break;
+	case 0x000A4420:
+		spanel->material = MATERIAL_E7;
+		break;
+	case 0x000A4520:
+		spanel->material = MATERIAL_LPC5;
+		break;
+	default:
+		dev_warn(ctx->dev, "unknown material from panel (%#x), default to E7\n", id);
+		spanel->material = MATERIAL_E7;
+		break;
+	}
+
+	dev_info(ctx->dev, "%s: %d\n", __func__, spanel->material);
+}
+
 static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 {
 	/* extract command 0xDB */
@@ -1565,6 +1681,8 @@ static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 	u8 rev = ((build_code & 0xE0) >> 3) | ((build_code & 0x0C) >> 2);
 
 	exynos_panel_get_panel_rev(ctx, rev);
+
+	hk3_get_panel_material(ctx, id);
 }
 
 static unsigned int hk3_get_te_usec(struct exynos_panel *ctx,
@@ -1588,7 +1706,7 @@ static const struct exynos_display_underrun_param underrun_param = {
 };
 
 static const u32 hk3_bl_range[] = {
-	94, 180, 270, 360, 2047
+	94, 180, 270, 360, 3307
 };
 
 #define HK3_WQHD_DSC {\
@@ -1754,7 +1872,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
 			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
 		},
-		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
+		.idle_mode = IDLE_MODE_ON_SELF_REFRESH,
 	},
 	{
 		.mode = {
@@ -1786,6 +1904,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		},
 		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
+#ifndef PANEL_FACTORY_BUILD
 	{
 		.mode = {
 			.name = "1008x2244x60",
@@ -1813,7 +1932,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 			.rising_edge = HK3_TE2_RISING_EDGE_OFFSET,
 			.falling_edge = HK3_TE2_FALLING_EDGE_OFFSET,
 		},
-		.idle_mode = IDLE_MODE_UNSUPPORTED, //TODO
+		.idle_mode = IDLE_MODE_ON_SELF_REFRESH,
 	},
 	{
 		.mode = {
@@ -1845,6 +1964,7 @@ static const struct exynos_panel_mode hk3_modes[] = {
 		},
 		.idle_mode = IDLE_MODE_ON_INACTIVITY,
 	},
+#endif
 };
 
 static const struct exynos_panel_mode hk3_lp_modes[] = {
@@ -1874,6 +1994,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.is_lp_mode = true,
 		},
 	},
+#ifndef PANEL_FACTORY_BUILD
 	{
 		.mode = {
 			.name = "1008x2244x30",
@@ -1900,6 +2021,7 @@ static const struct exynos_panel_mode hk3_lp_modes[] = {
 			.is_lp_mode = true,
 		},
 	},
+#endif
 };
 
 static void hk3_calc_lhbm_od_brightness(u8 n_fine, u8 n_coarse,
@@ -2033,6 +2155,13 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
 
+static int hk3_panel_config(struct exynos_panel *ctx)
+{
+	exynos_panel_model_init(ctx, PROJECT, 0);
+
+	return 0;
+}
+
 static const struct drm_panel_funcs hk3_drm_funcs = {
 	.disable = hk3_disable,
 	.unprepare = exynos_panel_unprepare,
@@ -2054,6 +2183,7 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.is_mode_seamless = hk3_is_mode_seamless,
 	.mode_set = hk3_mode_set,
 	.panel_init = hk3_panel_init,
+	.panel_config = hk3_panel_config,
 	.get_panel_rev = hk3_get_panel_rev,
 	.get_te2_edges = exynos_panel_get_te2_edges,
 	.configure_te2_edges = exynos_panel_configure_te2_edges,
@@ -2070,28 +2200,28 @@ const struct brightness_capability hk3_brightness_capability = {
 	.normal = {
 		.nits = {
 			.min = 2,
-			.max = 800,
+			.max = 1000,
 		},
 		.level = {
 			.min = 196,
-			.max = 2989,
+			.max = 3307,
 		},
 		.percentage = {
 			.min = 0,
-			.max = 50,
+			.max = 63,
 		},
 	},
 	.hbm = {
 		.nits = {
-			.min = 800,
+			.min = 1000,
 			.max = 1600,
 		},
 		.level = {
-			.min = 2990,
+			.min = 3308,
 			.max = 4095,
 		},
 		.percentage = {
-			.min = 50,
+			.min = 63,
 			.max = 100,
 		},
 	},
@@ -2100,7 +2230,7 @@ const struct brightness_capability hk3_brightness_capability = {
 const struct exynos_panel_desc google_hk3 = {
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
-	.dft_brightness = 1023,
+	.dft_brightness = 1653,
 	.brt_capability = &hk3_brightness_capability,
 	.dbv_extra_frame = true,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
@@ -2119,6 +2249,12 @@ const struct exynos_panel_desc google_hk3 = {
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
 	.is_panel_idle_supported = true,
 	.no_lhbm_rr_constraints = true,
+	/*
+	 * After waiting for TE, wait for extra time to make sure the frame start
+	 * happens after both DPU and panel PPS are set and before the next VSYNC.
+	 * This reserves about 6ms for finishing both PPS and frame start.
+	 */
+	.delay_dsc_reg_init_us = 6000,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,

@@ -22,6 +22,39 @@
 #define WIDTH_MM 64
 #define HEIGHT_MM 143
 
+#define PROJECT "SB3"
+
+enum bigsurf_lhbm_brt {
+	LHBM_R = 0,
+	LHBM_G,
+	LHBM_B,
+	LHBM_BRT_MAX
+};
+
+#define LHBM_BRT_LEN (LHBM_BRT_MAX * 2)
+#define LHBM_BRT_CMD_LEN (LHBM_BRT_LEN + 1)
+
+enum bigsurf_lhbm_brt_overdrive_group {
+	LHBM_OVERDRIVE_GRP_0_NIT = 0,
+	LHBM_OVERDRIVE_GRP_15_NIT,
+	LHBM_OVERDRIVE_GRP_200_NIT,
+	LHBM_OVERDRIVE_GRP_MAX
+};
+
+struct bigsurf_lhbm_ctl {
+	/** @brt_normal: normal LHBM brightness parameters */
+	u8 brt_normal[LHBM_BRT_LEN];
+	/** @brt_overdrive: overdrive LHBM brightness parameters */
+	u8 brt_overdrive[LHBM_OVERDRIVE_GRP_MAX][LHBM_BRT_LEN];
+	/** @overdrived: whether or not LHBM is overdrived */
+	bool overdrived;
+	/** @hist_roi_configured: whether LHBM histogram configuration is done */
+	bool hist_roi_configured;
+};
+
+static const u8 bigsurf_cmd2_page2[] = {0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02};
+static const u8 bigsurf_lhbm_brightness_reg = 0xD0;
+
 /**
  * struct bigsurf_panel - panel specific runtime info
  *
@@ -31,6 +64,7 @@
 struct bigsurf_panel {
 	/** @base: base panel struct */
 	struct exynos_panel base;
+	struct bigsurf_lhbm_ctl lhbm_ctl;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct bigsurf_panel, base)
@@ -68,8 +102,8 @@ static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, bigsurf_lp_off_cmds),
 	/* rising = 0, falling = 32 */
-	BINNED_LP_MODE_TIMING("low", 648, bigsurf_lp_low_cmds, 0, 32),
-	BINNED_LP_MODE_TIMING("high", 3789, bigsurf_lp_high_cmds, 0, 32),
+	BINNED_LP_MODE_TIMING("low", 332, bigsurf_lp_low_cmds, 0, 32),
+	BINNED_LP_MODE_TIMING("high", 3574, bigsurf_lp_high_cmds, 0, 32),
 };
 
 static const struct exynos_dsi_cmd bigsurf_off_cmds[] = {
@@ -256,12 +290,17 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 				const enum exynos_hbm_mode hbm_mode,
 				const int vrefresh)
 {
+	const u16 level = exynos_panel_get_brightness(ctx);
+
 	if (!IS_HBM_ON(hbm_mode)) {
 		dev_info(ctx->dev, "hbm is off, skip update irc\n");
 		return;
 	}
 
 	if (IS_HBM_ON_IRC_OFF(hbm_mode)) {
+		if (ctx->panel_rev >= PANEL_REV_EVT1 &&
+		    level == ctx->desc->brt_capability->hbm.level.max)
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x0F, 0xFF);
 		EXYNOS_DCS_BUF_ADD(ctx, 0x5F, 0x01);
 		if (vrefresh == 120) {
 			if (ctx->hbm.local_hbm.enabled) {
@@ -287,6 +326,12 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 		} else {
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
 			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x00, 0x00);
+		}
+		if (ctx->panel_rev >= PANEL_REV_EVT1) {
+			const u8 val1 = level >> 8;
+			const u8 val2 = level & 0xff;
+
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, val1, val2);
 		}
 	}
 	/* Empty command is for flush */
@@ -362,6 +407,7 @@ static int bigsurf_enable(struct drm_panel *panel)
 {
 	struct exynos_panel *ctx = container_of(panel, struct exynos_panel, panel);
 	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	struct bigsurf_panel *spanel = to_spanel(ctx);
 
 	if (!pmode) {
 		dev_err(ctx->dev, "no current mode set\n");
@@ -387,7 +433,85 @@ static int bigsurf_enable(struct drm_panel *panel)
 		exynos_panel_set_lp_mode(ctx, pmode);
 	}
 
+	spanel->lhbm_ctl.hist_roi_configured = false;
+
 	return 0;
+}
+
+static void bigsurf_update_lhbm_hist_config(struct exynos_panel *ctx)
+{
+	struct bigsurf_panel *spanel = to_spanel(ctx);
+	struct bigsurf_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	const struct drm_display_mode *mode;
+	/* lhbm center below the center of AA: 563, radius: 101 */
+	const int d = 563, r = 101;
+
+	if (ctl->hist_roi_configured)
+		return;
+
+	if (!pmode) {
+		dev_err(ctx->dev, "no current mode set\n");
+		return;
+	}
+	mode = &pmode->mode;
+	if (!exynos_drm_connector_set_lhbm_hist(&ctx->exynos_connector,
+		mode->hdisplay, mode->vdisplay, d, r)) {
+		ctl->hist_roi_configured = true;
+		dev_dbg(ctx->dev, "configure lhbm hist: %d %d %d %d\n",
+			mode->hdisplay, mode->vdisplay, d, r);
+	}
+}
+
+static int bigsurf_atomic_check(struct exynos_panel *ctx, struct drm_atomic_state *state)
+{
+	bigsurf_update_lhbm_hist_config(ctx);
+	return 0;
+}
+
+static void bigsurf_set_local_hbm_background_brightness(struct exynos_panel *ctx, u16 br)
+{
+	u16 level;
+	u8 val1, val2;
+
+	if (IS_HBM_ON_IRC_OFF(ctx->hbm_mode) && ctx->panel_rev >= PANEL_REV_EVT1 &&
+	    br == ctx->desc->brt_capability->hbm.level.max)
+		br = 0x0FFF;
+
+	level = br * 4;
+	val1 = level >> 8;
+	val2 = level & 0xff;
+
+	/* set LHBM background brightness */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x4C);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xDF, val1, val2, val1, val2, val1, val2);
+}
+
+static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
+{
+	u16 brightness;
+
+	if (ctx->current_mode->exynos_mode.is_lp_mode) {
+		const struct exynos_panel_funcs *funcs;
+
+		funcs = ctx->desc->exynos_panel_func;
+		if (funcs && funcs->set_binned_lp)
+			funcs->set_binned_lp(ctx, br);
+		return 0;
+	}
+
+	if (!br) {
+		// turn off panel and set brightness directly.
+		return exynos_dcs_set_brightness(ctx, 0);
+	}
+
+	if (ctx->hbm.local_hbm.enabled)
+		bigsurf_set_local_hbm_background_brightness(ctx, br);
+
+	brightness = (br & 0xff) << 8 | br >> 8;
+
+	return exynos_dcs_set_brightness(ctx, brightness);
 }
 
 static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
@@ -406,6 +530,51 @@ static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
 		 IS_HBM_ON_IRC_OFF(ctx->hbm_mode));
 }
 
+static void bigsurf_set_local_hbm_brightness(struct exynos_panel *ctx, bool is_first_stage)
+{
+	struct bigsurf_panel *spanel = to_spanel(ctx);
+	struct bigsurf_lhbm_ctl *ctl = &spanel->lhbm_ctl;
+	const u8 *brt;
+	enum bigsurf_lhbm_brt_overdrive_group group = LHBM_OVERDRIVE_GRP_MAX;
+	static u8 cmd[LHBM_BRT_CMD_LEN];
+	int i;
+
+	dev_info(ctx->dev, "set LHBM brightness at %s stage\n", is_first_stage ? "1st" : "2nd");
+	if (is_first_stage) {
+		u32 gray = exynos_drm_connector_get_lhbm_gray_level(&ctx->exynos_connector);
+		int dbv = exynos_panel_get_brightness(ctx);
+
+		dev_dbg(ctx->dev, "check LHBM overdrive condition | gray=%d dbv=%d\n",
+			gray, dbv);
+		if (gray < 15)
+			group = LHBM_OVERDRIVE_GRP_0_NIT;
+		else if (gray < 48 || dbv < 467)
+			group = LHBM_OVERDRIVE_GRP_15_NIT;
+		else if (dbv < 2287)
+			group = LHBM_OVERDRIVE_GRP_200_NIT;
+		else
+			group = LHBM_OVERDRIVE_GRP_MAX;
+		brt = group < LHBM_OVERDRIVE_GRP_MAX ?
+			ctl->brt_overdrive[group] : ctl->brt_normal;
+	}
+
+	if (group < LHBM_OVERDRIVE_GRP_MAX) {
+		brt = ctl->brt_overdrive[group];
+		ctl->overdrived = true;
+	} else {
+		brt = ctl->brt_normal;
+		ctl->overdrived = false;
+	}
+	cmd[0] = bigsurf_lhbm_brightness_reg;
+	for (i = 0; i < LHBM_BRT_LEN; i++)
+		cmd[i+1] = brt[i];
+	dev_dbg(ctx->dev, "set %s brightness: [%d] %*ph\n",
+		ctl->overdrived ? "overdrive" : "normal",
+		ctl->overdrived ? group : -1, LHBM_BRT_LEN, brt);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, bigsurf_cmd2_page2);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, cmd);
+}
+
 static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 				       bool local_hbm_en)
 {
@@ -413,22 +582,25 @@ static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 	int vrefresh = drm_mode_vrefresh(&pmode->mode);
 
 	if (local_hbm_en) {
-		u16 level = exynos_panel_get_brightness(ctx) * 4;
-		u8 val1 = level >> 8;
-		u8 val2 = level & 0xff;
+		u16 level = exynos_panel_get_brightness(ctx);
 
 		if (IS_HBM_ON(ctx->hbm_mode))
 			bigsurf_update_irc(ctx, ctx->hbm_mode, vrefresh);
-
-		/* set LHBM background brightness */
-		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
-		EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x4C);
-		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xDF, val1, val2, val1, val2, val1, val2);
+		bigsurf_set_local_hbm_background_brightness(ctx, level);
+		bigsurf_set_local_hbm_brightness(ctx, true);
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x87, 0x05);
 	} else {
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x87, 0x00);
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
 	}
+}
+
+static void bigsurf_set_local_hbm_mode_post(struct exynos_panel *ctx)
+{
+	const struct bigsurf_panel *spanel = to_spanel(ctx);
+
+	if (spanel->lhbm_ctl.overdrived)
+		bigsurf_set_local_hbm_brightness(ctx, false);
 }
 
 static void bigsurf_mode_set(struct exynos_panel *ctx,
@@ -606,12 +778,66 @@ static const struct exynos_panel_mode bigsurf_lp_mode = {
 	}
 };
 
+static void _update_lhbm_overdrive_brightness(struct exynos_panel *ctx,
+	enum bigsurf_lhbm_brt_overdrive_group grp,
+	enum bigsurf_lhbm_brt ch, u8 offset)
+{
+	struct bigsurf_panel *spanel = to_spanel(ctx);
+	u8 *p_norm = spanel->lhbm_ctl.brt_normal;
+	u8 *p_over = spanel->lhbm_ctl.brt_overdrive[grp];
+	u16 val;
+	int p = ch * 2;
+
+	val = (p_norm[p] << 8) | p_norm[p + 1];
+	val += offset;
+	p_over[p] = (val & 0xFF00) >> 8;
+	p_over[p + 1] = val & 0x00FF;
+}
+
+static void bigsurf_lhbm_brightness_init(struct exynos_panel *ctx)
+{
+	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
+	struct bigsurf_panel *spanel = to_spanel(ctx);
+	int ret;
+	enum bigsurf_lhbm_brt_overdrive_group grp;
+	u8 *p_norm = spanel->lhbm_ctl.brt_normal;
+
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, bigsurf_cmd2_page2);
+	ret = mipi_dsi_dcs_read(dsi, bigsurf_lhbm_brightness_reg, p_norm, LHBM_BRT_LEN);
+	if (ret != LHBM_BRT_LEN) {
+		dev_err(ctx->dev, "failed to read lhbm brightness ret=%d\n", ret);
+		return;
+	}
+	dev_dbg(ctx->dev, "lhbm normal brightness: %*ph\n", LHBM_BRT_LEN, p_norm);
+
+	/* 0 nit */
+	grp = LHBM_OVERDRIVE_GRP_0_NIT;
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_R, 0xB5);
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_G, 0x85);
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_B, 0xBA);
+	/* 0-15 nit */
+	grp = LHBM_OVERDRIVE_GRP_15_NIT;
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_R, 0x6E);
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_G, 0x5A);
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_B, 0x78);
+	/* 15-200 nit */
+	grp = LHBM_OVERDRIVE_GRP_200_NIT;
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_R, 0x46);
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_G, 0x32);
+	_update_lhbm_overdrive_brightness(ctx, grp, LHBM_B, 0x50);
+
+	for (grp = 0; grp < LHBM_OVERDRIVE_GRP_MAX; grp++)
+		dev_dbg(ctx->dev, "lhbm overdrive brightness[%d]: %*ph\n",
+			grp, LHBM_BRT_LEN, spanel->lhbm_ctl.brt_overdrive[grp]);
+}
+
 static void bigsurf_panel_init(struct exynos_panel *ctx)
 {
 	struct dentry *csroot = ctx->debugfs_cmdset_entry;
 
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &bigsurf_init_cmd_set, "init");
 	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
+	bigsurf_lhbm_brightness_init(ctx);
 }
 
 static int bigsurf_panel_probe(struct mipi_dsi_device *dsi)
@@ -633,61 +859,136 @@ static const struct drm_panel_funcs bigsurf_drm_funcs = {
 	.get_modes = exynos_panel_get_modes,
 };
 
+static int bigsurf_panel_config(struct exynos_panel *ctx);
+
 static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
-	.set_brightness = exynos_panel_set_brightness,
+	.set_brightness = bigsurf_set_brightness,
 	.set_lp_mode = exynos_panel_set_lp_mode,
 	.set_nolp_mode = bigsurf_set_nolp_mode,
 	.set_binned_lp = exynos_panel_set_binned_lp,
 	.set_hbm_mode = bigsurf_set_hbm_mode,
 	.set_local_hbm_mode = bigsurf_set_local_hbm_mode,
+	.set_local_hbm_mode_post = bigsurf_set_local_hbm_mode_post,
 	.set_dimming_on = bigsurf_set_dimming_on,
 	.is_mode_seamless = bigsurf_is_mode_seamless,
 	.mode_set = bigsurf_mode_set,
 	.panel_init = bigsurf_panel_init,
+	.panel_config = bigsurf_panel_config,
 	.get_panel_rev = bigsurf_get_panel_rev,
 	.get_te2_edges = exynos_panel_get_te2_edges,
 	.configure_te2_edges = exynos_panel_configure_te2_edges,
 	.update_te2 = bigsurf_update_te2,
 	.read_id = bigsurf_read_id,
+	.atomic_check = bigsurf_atomic_check,
 };
 
-const struct brightness_capability bigsurf_brightness_capability = {
-	.normal = {
-		.nits = {
-			.min = 2,
-			.max = 800,
-		},
-		.level = {
-			.min = 268,
-			.max = 3672,
-		},
-		.percentage = {
-			.min = 0,
-			.max = 57,
+static const struct exynos_brightness_configuration bigsurf_btr_configs[] = {
+	{
+		.panel_rev = PANEL_REV_EVT1 | PANEL_REV_EVT1_1 | PANEL_REV_LATEST,
+		.dft_brightness = 1966,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 1000,
+				},
+				.level = {
+					.min = 1,
+					.max = 3574,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 71,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 1000,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3575,
+					.max = 3827,
+				},
+				.percentage = {
+					.min = 71,
+					.max = 100,
+				},
+			},
 		},
 	},
-	.hbm = {
-		.nits = {
-			.min = 800,
-			.max = 1400,
+	{
+		.panel_rev = PANEL_REV_PROTO1_1,
+		.dft_brightness = 2242,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 268,
+					.max = 3672,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 57,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1400,
+				},
+				.level = {
+					.min = 3673,
+					.max = 4095,
+				},
+				.percentage = {
+					.min = 57,
+					.max = 100,
+				},
+			},
 		},
-		.level = {
-			.min = 3673,
-			.max = 4094,
-		},
-		.percentage = {
-			.min = 57,
-			.max = 100,
+	},
+	{
+		.panel_rev = PANEL_REV_PROTO1,
+		.dft_brightness = 2395,
+		.brt_capability = {
+			.normal = {
+				.nits = {
+					.min = 2,
+					.max = 800,
+				},
+				.level = {
+					.min = 290,
+					.max = 3789,
+				},
+				.percentage = {
+					.min = 0,
+					.max = 67,
+				},
+			},
+			.hbm = {
+				.nits = {
+					.min = 800,
+					.max = 1200,
+				},
+				.level = {
+					.min = 3790,
+					.max = 4094,
+				},
+				.percentage = {
+					.min = 67,
+					.max = 100,
+				},
+			},
 		},
 	},
 };
 
-const struct exynos_panel_desc google_bigsurf = {
+struct exynos_panel_desc google_bigsurf = {
 	.data_lane_cnt = 4,
-	.max_brightness = 4094,
-	.min_brightness = 268,
-	.dft_brightness = 1023,
-	.brt_capability = &bigsurf_brightness_capability,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
 	.hdr_formats = BIT(2) | BIT(3),
 	.max_luminance = 10000000,
@@ -702,6 +1003,8 @@ const struct exynos_panel_desc google_bigsurf = {
 	.num_binned_lp = ARRAY_SIZE(bigsurf_binned_lp),
 	.panel_func = &bigsurf_drm_funcs,
 	.exynos_panel_func = &bigsurf_exynos_funcs,
+	.lhbm_effective_delay_frames = 2,
+	.lhbm_post_cmd_delay_frames = 3,
 	.reset_timing_ms = {1, 1, 20},
 	.reg_ctrl_enable = {
 		{PANEL_REG_ID_VDDI, 0},
@@ -714,6 +1017,25 @@ const struct exynos_panel_desc google_bigsurf = {
 		{PANEL_REG_ID_VDDI, 0},
 	},
 };
+
+static int bigsurf_panel_config(struct exynos_panel *ctx)
+{
+	int ret;
+
+	exynos_panel_model_init(ctx, PROJECT, 0);
+
+	ret = exynos_panel_init_brightness(&google_bigsurf,
+						bigsurf_btr_configs,
+						ARRAY_SIZE(bigsurf_btr_configs),
+						ctx->panel_rev);
+
+	if (ctx->panel_rev == PANEL_REV_EVT1) {
+		google_bigsurf.min_brightness = 268;
+		google_bigsurf.max_brightness = 4095;
+	}
+
+	return ret;
+}
 
 static const struct of_device_id exynos_panel_of_match[] = {
 	{ .compatible = "google,bigsurf", .data = &google_bigsurf },
