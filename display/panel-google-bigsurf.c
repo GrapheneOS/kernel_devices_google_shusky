@@ -428,10 +428,11 @@ static int bigsurf_enable(struct drm_panel *panel)
 			EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCC, 0x10);
 			usleep_range(9000, 9100);
 		}
-		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 	} else {
 		exynos_panel_set_lp_mode(ctx, pmode);
 	}
+
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
 	spanel->lhbm_ctl.hist_roi_configured = false;
 
