@@ -128,7 +128,8 @@ static const struct exynos_dsi_cmd shoreline_lp_high_cmds[] = {
 
 static const struct exynos_binned_lp shoreline_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, shoreline_lp_off_cmds),
-	BINNED_LP_MODE_TIMING("low", 434, shoreline_lp_low_cmds,
+	/* low threshold 40 nits */
+	BINNED_LP_MODE_TIMING("low", 819, shoreline_lp_low_cmds,
 			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),
 	BINNED_LP_MODE_TIMING("high", 4095, shoreline_lp_high_cmds,
 			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),

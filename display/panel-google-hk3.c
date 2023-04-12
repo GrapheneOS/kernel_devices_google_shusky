@@ -362,7 +362,8 @@ static const struct exynos_dsi_cmd hk3_lp_high_cmds[] = {
 
 static const struct exynos_binned_lp hk3_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, hk3_lp_off_cmds),
-	BINNED_LP_MODE_TIMING("low", 409, hk3_lp_low_cmds,
+	/* low threshold 40 nits */
+	BINNED_LP_MODE_TIMING("low", 766, hk3_lp_low_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET),
 	BINNED_LP_MODE_TIMING("high", 3307, hk3_lp_high_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET)

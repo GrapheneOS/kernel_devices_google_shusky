@@ -102,7 +102,8 @@ static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, bigsurf_lp_off_cmds),
 	/* rising = 0, falling = 32 */
-	BINNED_LP_MODE_TIMING("low", 332, bigsurf_lp_low_cmds, 0, 32),
+	/* low threshold 40 nits */
+	BINNED_LP_MODE_TIMING("low", 932, bigsurf_lp_low_cmds, 0, 32),
 	BINNED_LP_MODE_TIMING("high", 3574, bigsurf_lp_high_cmds, 0, 32),
 };
 
