@@ -9,6 +9,7 @@
 	pinctrl-0 = <&usb_pd_irq &gpp12_2 &gpp12_3>;
 	sbu-mux-en-gpio = <&gpp12 2 GPIO_ACTIVE_HIGH>;
 	sbu-mux-sel-gpio = <&gpp12 3 GPIO_ACTIVE_HIGH>;
+	pullup-supply = <&m_ldo7_reg>;
 	connector {
 		sink-pdos = <PDO_FIXED(5000, 3000,
 				       PDO_FIXED_DATA_SWAP |
