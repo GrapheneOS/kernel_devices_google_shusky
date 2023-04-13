@@ -362,7 +362,7 @@ static const struct exynos_dsi_cmd hk3_lp_high_cmds[] = {
 
 static const struct exynos_binned_lp hk3_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, hk3_lp_off_cmds),
-	BINNED_LP_MODE_TIMING("low", 80, hk3_lp_low_cmds,
+	BINNED_LP_MODE_TIMING("low", 409, hk3_lp_low_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET),
 	BINNED_LP_MODE_TIMING("high", 3307, hk3_lp_high_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET)
@@ -580,13 +580,22 @@ static void hk3_update_panel_feat(struct exynos_panel *ctx,
 		if (test_bit(FEAT_IRC_Z_MODE, changed_feat)) {
 			EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0x00, 0x92);
 			if (test_bit(FEAT_IRC_Z_MODE, spanel->feat)) {
-				EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0xBE, 0x98);
+				if (spanel->material == MATERIAL_E6)
+					EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0xBE, 0x98);
+				else
+					EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0xF1, 0xC1);
 				EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0xF3, 0x68);
-				EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x97, 0x87, 0x87, 0xFB, 0xFD, 0xF1);
+				if (ctx->panel_rev >= PANEL_REV_DVT1)
+					EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x82, 0x70, 0x23, 0x91, 0x88, 0x3C);
+				else
+					EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x97, 0x87, 0x87, 0xFB, 0xFD, 0xF1);
 			} else {
 				EXYNOS_DCS_BUF_ADD(ctx, 0x92, 0x00, 0x00);
 				EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x02, 0xF3, 0x68);
-				EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x71, 0x81, 0x59, 0x90, 0xA2, 0x80);
+				if (ctx->panel_rev >= PANEL_REV_DVT1)
+					EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x77, 0x81, 0x23, 0x8C, 0x99, 0x3C);
+				else
+					EXYNOS_DCS_BUF_ADD(ctx, 0x68, 0x71, 0x81, 0x59, 0x90, 0xA2, 0x80);
 			}
 		}
 	} else {
