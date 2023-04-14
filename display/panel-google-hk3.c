@@ -1352,8 +1352,6 @@ static int hk3_enable(struct drm_panel *panel)
 	if (needs_reset) {
 		EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 120, MIPI_DCS_EXIT_SLEEP_MODE);
 		exynos_panel_send_cmd_set(ctx, &hk3_init_cmd_set);
-		if (spanel->material == MATERIAL_E7_DOE)
-			exynos_panel_send_cmd_set(ctx, &hk3_ns_gamma_fix_cmd_set);
 		if (ctx->panel_rev == PANEL_REV_PROTO1)
 			hk3_lhbm_luminance_opr_setting(ctx);
 	}
@@ -1365,6 +1363,9 @@ static int hk3_enable(struct drm_panel *panel)
 	hk3_update_panel_feat(ctx, pmode, true);
 	hk3_write_display_mode(ctx, mode); /* dimming and HBM */
 	hk3_change_frequency(ctx, pmode);
+
+	if (needs_reset && spanel->material == MATERIAL_E7_DOE)
+		exynos_panel_send_cmd_set(ctx, &hk3_ns_gamma_fix_cmd_set);
 
 	if (pmode->exynos_mode.is_lp_mode)
 		exynos_panel_set_lp_mode(ctx, pmode);
