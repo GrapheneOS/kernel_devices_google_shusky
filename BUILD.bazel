@@ -25,13 +25,10 @@ load(
 # aosp-staging/
 _GKI_KERNEL_DIR = "aosp-staging"
 
-_GKI_BUILD_CONFIG_FRAGMENT = "//private/devices/google/shusky:build.config.shusky.gki.fragment"
-
 device_build_configs(
     name = "build.config.shusky",
     base_build_config = ":build.config.shusky",
     device_name = "shusky",
-    gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
     gki_kernel_dir = _GKI_KERNEL_DIR,
     staging_kernel = True,
 )
