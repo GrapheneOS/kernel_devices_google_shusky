@@ -26,7 +26,8 @@
 				google,dc_limit-demand = <560000>;
 				google,dc_limit-vbatt = <4350000>;
 				google,dc_limit-vbatt_min = <3400000>;
-				google,dc_limit-vbatt_max = <4700000>;
+				google,dc_limit-vbatt_max = <4470000>;
+				google,dc_limit-vbatt_high = <4325000>;
 
 				google,tcpm-power-supply = <&max77759tcpc>;	// in=0
 				google,wlc_dc-power-supply = "wireless";	// in=1
