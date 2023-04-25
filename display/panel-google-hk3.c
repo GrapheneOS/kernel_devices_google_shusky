@@ -903,6 +903,29 @@ static void hk3_panel_idle_notification(struct exynos_panel *ctx,
 	}
 }
 
+static void hk3_wait_one_vblank(struct exynos_panel *ctx)
+{
+	struct drm_crtc *crtc = NULL;
+
+	if (ctx->exynos_connector.base.state)
+		crtc = ctx->exynos_connector.base.state->crtc;
+
+	DPU_ATRACE_BEGIN(__func__);
+	if (crtc) {
+		int ret = drm_crtc_vblank_get(crtc);
+
+		if (!ret) {
+			drm_crtc_wait_one_vblank(crtc);
+			drm_crtc_vblank_put(crtc);
+		} else {
+			usleep_range(8350, 8500);
+		}
+	} else {
+		usleep_range(8350, 8500);
+	}
+	DPU_ATRACE_END(__func__);
+}
+
 static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 {
 	const struct exynos_panel_mode *pmode = ctx->current_mode;
@@ -952,11 +975,6 @@ static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 
 		hk3_panel_idle_notification(ctx, 0, vrefresh, 120);
 	} else if (ctx->panel_need_handle_idle_exit) {
-		struct drm_crtc *crtc = NULL;
-
-		if (ctx->exynos_connector.base.state)
-			crtc = ctx->exynos_connector.base.state->crtc;
-
 		/*
 		 * after exit idle mode with fixed TE at non-120hz, TE may still keep at 120hz.
 		 * If any layer that already be assigned to DPU that can't be handled at 120hz,
@@ -964,20 +982,7 @@ static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 		 * avoid underrun issue.
 		 */
 		dev_dbg(ctx->dev, "wait one vblank after exit idle\n");
-		DPU_ATRACE_BEGIN("wait_one_vblank");
-		if (crtc) {
-			int ret = drm_crtc_vblank_get(crtc);
-
-			if (!ret) {
-				drm_crtc_wait_one_vblank(crtc);
-				drm_crtc_vblank_put(crtc);
-			} else {
-				usleep_range(8350, 8500);
-			}
-		} else {
-			usleep_range(8350, 8500);
-		}
-		DPU_ATRACE_END("wait_one_vblank");
+		hk3_wait_one_vblank(ctx);
 	}
 
 	DPU_ATRACE_END(__func__);
@@ -1655,6 +1660,8 @@ static int hk3_set_op_hz(struct exynos_panel *ctx, unsigned int hz)
 		return -EINVAL;
 	}
 
+	DPU_ATRACE_BEGIN(__func__);
+
 	ctx->op_hz = hz;
 	if (hz == 60)
 		set_bit(FEAT_OP_NS, spanel->feat);
@@ -1665,6 +1672,20 @@ static int hk3_set_op_hz(struct exynos_panel *ctx, unsigned int hz)
 		hk3_update_panel_feat(ctx, NULL, false);
 	dev_info(ctx->dev, "%s op_hz at %d\n",
 		is_panel_active(ctx) ? "set" : "cache", hz);
+
+	if (hz == 120) {
+		/*
+		 * We may transfer the frame for the first TE after switching from
+		 * NS to HS mode. The DDIC read speed will change from 60Hz to 120Hz,
+		 * but the DPU write speed will remain the same. In this case,
+		 * underruns would happen. Waiting for an extra vblank here so that
+		 * the frame can be postponed to the next TE to avoid the noises.
+		 */
+		dev_dbg(ctx->dev, "wait one vblank after NS to HS\n");
+		hk3_wait_one_vblank(ctx);
+	}
+
+	DPU_ATRACE_END(__func__);
 
 	return 0;
 }
