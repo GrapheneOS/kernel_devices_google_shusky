@@ -146,6 +146,7 @@ kernel_module_group(
         "//private/google-modules/touch/fts/ftm5",
         "//private/google-modules/touch/goodix",
         "//private/google-modules/touch/sec",
+        "//private/google-modules/trusty",
         # TODO: need to conditionally include this based on if the project is
         # sync'd
         "//private/google-modules/uwb:uwb.qm35",
@@ -179,6 +180,7 @@ kernel_build(
         "//private/google-modules/touch/common:touch.common.kconfig",
         "//private/google-modules/touch/fts/ftm5:ftm5.kconfig",
         "//private/google-modules/touch/sec:sec.kconfig",
+        "//private/google-modules/trusty:trusty.kconfig",
         "//private/google-modules/wlan/wlan_ptracker:wlan_ptracker.kconfig",
     ],
     outs = [
@@ -341,11 +343,6 @@ lto_dependant_kernel_module(
         "drivers/thermal/google/s2mpg15_spmic_thermal.ko",
         "drivers/thermal/samsung/gpu_cooling.ko",
         "drivers/thermal/samsung/gs_thermal.ko",
-        "drivers/trusty/trusty-core.ko",
-        "drivers/trusty/trusty-ipc.ko",
-        "drivers/trusty/trusty-log.ko",
-        "drivers/trusty/trusty-test.ko",
-        "drivers/trusty/trusty-virtio.ko",
         "drivers/tty/serial/exynos_tty.ko",
         "drivers/ufs/ufs-exynos-gs.ko",
         "drivers/usb/dwc3/dwc3-exynos-usb.ko",
@@ -373,6 +370,7 @@ lto_dependant_kernel_module(
     ],
     deps = [
         "//private/google-modules/bms/misc:bms-misc",
+        "//private/google-modules/trusty",
     ],
 )
 
