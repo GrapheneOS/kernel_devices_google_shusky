@@ -331,6 +331,7 @@ lto_dependant_kernel_module(
         "drivers/soc/google/gsa/gsa_gsc.ko",
         "drivers/soc/google/hardlockup-debug.ko",
         "drivers/soc/google/hardlockup-watchdog.ko",
+        "drivers/soc/google/perf_trace_counters.ko",
         "drivers/soc/google/pixel_stat/mm/pixel_stat_mm.ko",
         "drivers/soc/google/pixel_stat/pixel_stat_sysfs.ko",
         "drivers/soc/google/pkvm-s2mpu/pkvm-s2mpu-v9/pkvm-s2mpu-v9.ko",
