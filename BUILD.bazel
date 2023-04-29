@@ -141,6 +141,7 @@ kernel_module_group(
         "//private/google-modules/gpu/mali_kbase",
         "//private/google-modules/gpu/mali_pixel",
         "//private/google-modules/gxp/zuma:gxp",
+        "//private/google-modules/hdcp/samsung:hdcp.samsung",
         "//private/google-modules/lwis",
         "//private/google-modules/nfc",
         "//private/google-modules/power/reset",
