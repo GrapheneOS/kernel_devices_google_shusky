@@ -10,7 +10,7 @@
 #include <linux/of_platform.h>
 #include <video/mipi_display.h>
 
-#include "samsung/panel/panel-samsung-drv.h"
+#include "panel/panel-samsung-drv.h"
 
 static const struct drm_dsc_config pps_config = {
 	.line_buf_depth = 9,

@@ -14,7 +14,7 @@
 #include <linux/of_platform.h>
 #include <video/mipi_display.h>
 
-#include "samsung/panel/panel-samsung-drv.h"
+#include "panel/panel-samsung-drv.h"
 
 #define BIGSURF_DDIC_ID_LEN 8
 #define BIGSURF_DIMMING_FRAME 32

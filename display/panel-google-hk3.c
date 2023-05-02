@@ -16,7 +16,7 @@
 #include <video/mipi_display.h>
 
 #include "include/trace/dpu_trace.h"
-#include "samsung/panel/panel-samsung-drv.h"
+#include "panel/panel-samsung-drv.h"
 
 /**
  * enum hk3_panel_feature - features supported by this panel
