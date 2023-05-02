@@ -332,8 +332,8 @@ static void shoreline_update_te2(struct exynos_panel *ctx)
 
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x26, 0xB9); /* global para */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB9, (rising >> 8) & 0xF, rising & 0xFF,
-			     (falling >> 8) & 0xF, falling & 0xFF); /* TE2 Width */
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB9, (rising >> 8) & 0xFF, rising & 0xFF,
+			     (falling >> 8) & 0xFF, falling & 0xFF); /* TE2 Width */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
