@@ -9,6 +9,7 @@ kernel_module(
         "**/*.h",
         "Kbuild",
     ]) + [
+        "//private/google-modules/display/common/include:headers",
         "//private/google-modules/display/samsung:headers",
         "//private/google-modules/display/samsung/include:headers",
         "//private/google-modules/soc/gs:gs_soc_headers",
