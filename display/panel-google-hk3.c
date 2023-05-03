@@ -295,75 +295,29 @@ static const u8 lock_cmd_f0[]   = { 0xF0, 0xA5, 0xA5 };
 static const u8 freq_update[] = { 0xF7, 0x0F };
 static const u8 lhbm_brightness_index[] = { 0xB0, 0x03, 0x21, 0x95 };
 static const u8 lhbm_brightness_reg = 0x95;
-
-static const struct exynos_dsi_cmd hk3_lp_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
-	EXYNOS_DSI_CMD0(unlock_cmd_f0),
-	/* Fixed TE: sync on */
-	EXYNOS_DSI_CMD_SEQ(0xB9, 0x51),
-	/* Manual mode: 30Hz */
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x21),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x01, 0x60),
-	EXYNOS_DSI_CMD_SEQ(0x60, 0x00),
-	EXYNOS_DSI_CMD0(freq_update),
-	EXYNOS_DSI_CMD0(lock_cmd_f0),
-};
-static DEFINE_EXYNOS_CMD_SET(hk3_lp);
-
-static const struct exynos_dsi_cmd hk3_post_lp_cmds[] = {
-	EXYNOS_DSI_CMD0(unlock_cmd_f0),
-	/* Auto frame insertion: 1Hz */
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x18, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x04, 0x00, 0x74),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0xB8, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x00, 0x08),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0xC8, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x03),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0xA7),
-	/* Enable early exit */
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0xE8, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x00),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x10, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x22),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x82, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x22, 0x22, 0x22, 0x22),
-	EXYNOS_DSI_CMD0(freq_update),
-	EXYNOS_DSI_CMD0(lock_cmd_f0),
-};
-static DEFINE_EXYNOS_CMD_SET(hk3_post_lp);
-
-static const struct exynos_dsi_cmd hk3_lp_off_cmds[] = {
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_OFF),
-};
+static const u8 aod_on[] = { MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24 };
+static const u8 aod_off[] = { MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x20 };
+static const u8 min_dbv[] = { MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x04 };
 
 static const struct exynos_dsi_cmd hk3_lp_low_cmds[] = {
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
-	/* AOD High Mode, 50nit */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x52, 0x94),
 	/* AOD Low Mode, 10nit */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x52, 0x94),
 	EXYNOS_DSI_CMD_SEQ(0x94, 0x01, 0x07, 0x6A, 0x02),
-	/* temporary solution to avoid black screen */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x01),
-	EXYNOS_DSI_CMD(lock_cmd_f0, 34),
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
+	EXYNOS_DSI_CMD0(lock_cmd_f0),
+	EXYNOS_DSI_CMD0(min_dbv),
 };
 
 static const struct exynos_dsi_cmd hk3_lp_high_cmds[] = {
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
 	/* AOD High Mode, 50nit */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24),
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x52, 0x94),
-	/* AOD High Mode, 50nit */
-	EXYNOS_DSI_CMD_SEQ(0x94, 0x00, 0x07, 0x6A, 0x02),
-	/* temporary solution to avoid black screen */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x01),
-	EXYNOS_DSI_CMD(lock_cmd_f0, 34),
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_ON),
+	EXYNOS_DSI_CMD_SEQ(0x94, 0x00),
+	EXYNOS_DSI_CMD0(lock_cmd_f0),
+	EXYNOS_DSI_CMD0(min_dbv),
 };
 
 static const struct exynos_binned_lp hk3_binned_lp[] = {
-	BINNED_LP_MODE("off", 0, hk3_lp_off_cmds),
 	/* low threshold 40 nits */
 	BINNED_LP_MODE_TIMING("low", 766, hk3_lp_low_cmds,
 			      HK3_TE2_RISING_EDGE_OFFSET, HK3_TE2_FALLING_EDGE_OFFSET),
@@ -1211,12 +1165,60 @@ static int hk3_set_brightness(struct exynos_panel *ctx, u16 br)
 	return ret;
 }
 
-/*
- * We may have 1/10/30Hz min_vrefresh before entering LP mode if auto frame
- * insertion is enabled. Select 30Hz to keep the feature and also have better
- * performance.
- */
-#define HK3_BEFORE_LP_MIN_VREFRESH 30
+static unsigned int hk3_get_te_usec(struct exynos_panel *ctx,
+				    const struct exynos_panel_mode *pmode)
+{
+	const int vrefresh = drm_mode_vrefresh(&pmode->mode);
+
+	if (vrefresh != 60) {
+		return pmode->exynos_mode.te_usec;
+	} else {
+		struct hk3_panel *spanel = to_spanel(ctx);
+
+		return (test_bit(FEAT_OP_NS, spanel->feat) ? HK3_TE_USEC_60HZ_NS :
+							     HK3_TE_USEC_60HZ_HS);
+	}
+}
+
+static void hk3_wait_for_vsync_done(struct exynos_panel *ctx,
+				    const struct exynos_panel_mode *pmode)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	DPU_ATRACE_BEGIN(__func__);
+	exynos_panel_wait_for_vsync_done(ctx, hk3_get_te_usec(ctx, pmode),
+			EXYNOS_VREFRESH_TO_PERIOD_USEC(spanel->hw_vrefresh));
+	DPU_ATRACE_END(__func__);
+}
+
+static void hk3_disable_idle(struct exynos_panel *ctx, bool is_aod)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	dev_dbg(ctx->dev, "%s\n", __func__);
+
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	/* manual mode */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x21);
+	/* Changeable TE is a must to ensure command sync */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB9, 0x04);
+	if (is_aod) {
+		/* 30 Hz */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x01, 0x60);
+		EXYNOS_DCS_BUF_ADD(ctx, 0x60, 0x00);
+	} else {
+		/* only set 60 or 120 Hz */
+		if (test_bit(FEAT_OP_NS, spanel->feat))
+			EXYNOS_DCS_BUF_ADD(ctx, 0x60, 0x18);
+		else
+			EXYNOS_DCS_BUF_ADD(ctx, 0x60, spanel->hw_vrefresh == 60 ? 0x01 : 0x00);
+	}
+	EXYNOS_DCS_BUF_ADD_SET(ctx, freq_update);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+
+	spanel->hw_idle_vrefresh = 0;
+}
+
 static void hk3_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_mode *pmode)
 {
 	struct hk3_panel *spanel = to_spanel(ctx);
@@ -1224,52 +1226,69 @@ static void hk3_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_
 	dev_dbg(ctx->dev, "%s\n", __func__);
 
 	DPU_ATRACE_BEGIN(__func__);
-	/*
-	 * We will go to a lower refresh rate, e.g. 1Hz before entering LP mode if
-	 * auto frame insertion is enabled. It will cause bad performance (sluggish)
-	 * during the transition. Changing min_vrefresh to a higher value can have
-	 * better experience.
-	 */
-	if (test_bit(FEAT_FRAME_AUTO, spanel->feat))
-		hk3_update_refresh_mode(ctx, ctx->current_mode, HK3_BEFORE_LP_MIN_VREFRESH);
-	exynos_panel_set_lp_mode(ctx, pmode);
+
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_OFF);
+	hk3_wait_for_vsync_done(ctx, pmode);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, aod_on);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	/* AOD Low Mode, 10nit */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x52, 0x94);
+	EXYNOS_DCS_BUF_ADD(ctx, 0x94, 0x01, 0x07, 0x6A, 0x02);
+	/* Fixed TE: sync on */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB9, 0x51);
+	/* Auto frame insertion: 1Hz */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x18, 0xBD);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x04, 0x00, 0x74);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0xB8, 0xBD);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00, 0x08);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0xC8, 0xBD);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x03);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0xA7);
+	/* Enable early exit */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0xE8, 0xBD);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x00);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x10, 0xBD);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x22);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x82, 0xBD);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xBD, 0x22, 0x22, 0x22, 0x22);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, freq_update);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
+
+	spanel->hw_vrefresh = 30;
+
 	DPU_ATRACE_END(__func__);
-}
 
-static void hk3_set_post_lp_mode(struct exynos_panel *ctx)
-{
-	dev_dbg(ctx->dev, "%s\n", __func__);
-
-	/*
-	 * Enable panel idle after entering LP mode to avoid bad performance due to
-	 * 1Hz during the transition.
-	 */
-	exynos_panel_send_cmd_set(ctx, &hk3_post_lp_cmd_set);
+	dev_info(ctx->dev, "enter %dhz LP mode\n", drm_mode_vrefresh(&pmode->mode));
 }
 
 static void hk3_set_nolp_mode(struct exynos_panel *ctx,
 			      const struct exynos_panel_mode *pmode)
 {
-	u32 vrefresh = drm_mode_vrefresh(&pmode->mode);
-	u32 delay_us = mult_frac(1000, 1020, vrefresh);
+	dev_dbg(ctx->dev, "%s\n", __func__);
 
-	/* clear the brightness level (temporary solution) */
-	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x00);
+	DPU_ATRACE_BEGIN(__func__);
 
+	/* disabling idle is a must before exiting AOD */
+	hk3_disable_idle(ctx, true);
+	hk3_wait_for_vsync_done(ctx, pmode);
 	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_OFF);
-	/* AOD low mode setting off */
+
 	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	/* disabling AOD low Mode is a must before aod-off */
 	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x52, 0x94);
 	EXYNOS_DCS_BUF_ADD(ctx, 0x94, 0x00);
-	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, lock_cmd_f0);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, aod_off);
 
+	hk3_wait_for_vsync_done(ctx, pmode);
 	hk3_update_panel_feat(ctx, pmode, true);
 	/* backlight control and dimming */
 	hk3_write_display_mode(ctx, &pmode->mode);
 	hk3_change_frequency(ctx, pmode);
-
-	exynos_panel_msleep(delay_us / 1000);
 	EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
+
+	DPU_ATRACE_END(__func__);
 
 	dev_info(ctx->dev, "exit LP mode\n");
 }
@@ -1277,7 +1296,14 @@ static void hk3_set_nolp_mode(struct exynos_panel *ctx,
 static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 	/* Enable TE*/
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_ON),
+
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
+	/* AOD Transition Set */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_DVT1), 0xB0, 0x00, 0x03, 0xBB),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_DVT1), 0xBB, 0x41),
+	/* AOD SAP settings */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x04, 0xF6),
+	EXYNOS_DSI_CMD_SEQ(0xF6, 0x5A),
 
 	/* TSP SYNC Enable (Auto Set) */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x3C, 0xB9),
@@ -1389,7 +1415,7 @@ static int hk3_enable(struct drm_panel *panel)
 		exynos_panel_send_cmd_set(ctx, &hk3_ns_gamma_fix_cmd_set);
 
 	if (pmode->exynos_mode.is_lp_mode)
-		exynos_panel_set_lp_mode(ctx, pmode);
+		hk3_set_lp_mode(ctx, pmode);
 	else if (needs_reset || (ctx->panel_state == PANEL_STATE_BLANK))
 		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_SET_DISPLAY_ON);
 
@@ -1731,21 +1757,6 @@ static void hk3_get_panel_rev(struct exynos_panel *ctx, u32 id)
 	exynos_panel_get_panel_rev(ctx, rev);
 
 	hk3_get_panel_material(ctx, id);
-}
-
-static unsigned int hk3_get_te_usec(struct exynos_panel *ctx,
-				    const struct exynos_panel_mode *pmode)
-{
-	const int vrefresh = drm_mode_vrefresh(&pmode->mode);
-
-	if (vrefresh != 60) {
-		return pmode->exynos_mode.te_usec;
-	} else {
-		struct hk3_panel *spanel = to_spanel(ctx);
-
-		return (test_bit(FEAT_OP_NS, spanel->feat) ? HK3_TE_USEC_60HZ_NS :
-							     HK3_TE_USEC_60HZ_HS);
-	}
 }
 
 static const struct exynos_display_underrun_param underrun_param = {
@@ -2190,6 +2201,17 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 	ctx->panel_idle_enabled = false;
 #endif
 	hk3_lhbm_brightness_init(ctx);
+
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	if (ctx->panel_rev < PANEL_REV_DVT1) {
+		/* AOD Transition Set */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x03, 0xBB);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xBB, 0x41);
+	}
+	/* AOD SAP settings */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x04, 0xF6);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF6, 0x5A);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
 }
 
 static int hk3_panel_probe(struct mipi_dsi_device *dsi)
@@ -2228,7 +2250,6 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.set_lp_mode = hk3_set_lp_mode,
 	.set_nolp_mode = hk3_set_nolp_mode,
 	.set_binned_lp = exynos_panel_set_binned_lp,
-	.set_post_lp_mode = hk3_set_post_lp_mode,
 	.set_hbm_mode = hk3_set_hbm_mode,
 	.set_dimming_on = hk3_set_dimming_on,
 	.set_local_hbm_mode = hk3_set_local_hbm_mode,
@@ -2298,7 +2319,6 @@ const struct exynos_panel_desc google_hk3 = {
 	.num_modes = ARRAY_SIZE(hk3_modes),
 	.lp_mode = hk3_lp_modes,
 	.lp_mode_count = ARRAY_SIZE(hk3_lp_modes),
-	.lp_cmd_set = &hk3_lp_cmd_set,
 	.binned_lp = hk3_binned_lp,
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
 	.is_panel_idle_supported = true,
