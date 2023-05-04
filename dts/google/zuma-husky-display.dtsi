@@ -26,5 +26,4 @@
 
 &drmdecon2 {
 	status = "okay";
-	connector = <0x10>;	// DRM-DP
 };
