@@ -46,6 +46,7 @@
 				cpu1_clkdivstep = <0x1>;
 				cpu0_clkdivstep = <0x1>;
 				aur_clkdivstep = <0x1>;
+				irq_enable_delay = <50>;
 				odpm_ratio = <3>;
 				gpios = <&gpa9 5 0>,		/* VDROOP1 */
 					<&gpa9 6 0>,		/* VDROOP2 */
