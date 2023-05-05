@@ -4,7 +4,7 @@ DEVICE_DIR=${KERNEL_DIR}
 SOC_DIR=private/google-modules/soc/gs
 # Compile these modules with the GKI kernel
 KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp-staging"}
-DEVICE_REL_DIR=$(rel_path2 ${DEVICE_DIR} ${KERNEL_DIR})
+DEVICE_REL_DIR=$(realpath ${DEVICE_DIR} --relative-to ${KERNEL_DIR})
 
 # These just need to be relative to the ROOT_DIR
 GKI_FRAGMENT_DEFCONFIG=${DEVICE_DIR}/shusky_gki.fragment
