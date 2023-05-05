@@ -9,30 +9,31 @@
 #include <dt-bindings/clock/zuma.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/samsung.h>
+#include <dt-bindings/lwis/platform/zuma/tof.h>
 
 &slg51002_ldo1 {
-	regulator-min-microvolt = <2850000>;
-	regulator-max-microvolt = <2850000>;
+	regulator-min-microvolt = <2250000>;
+	regulator-max-microvolt = <2250000>;
 };
 
 &slg51002_ldo2 {
-	regulator-min-microvolt = <2850000>;
-	regulator-max-microvolt = <2850000>;
+	regulator-min-microvolt = <2950000>;
+	regulator-max-microvolt = <2950000>;
 };
 
 &slg51002_ldo3 {
-	regulator-min-microvolt = <2900000>;
-	regulator-max-microvolt = <2900000>;
+	regulator-min-microvolt = <2250000>;
+	regulator-max-microvolt = <2250000>;
 };
 
 &slg51002_ldo4 {
-	regulator-min-microvolt = <2900000>;
-	regulator-max-microvolt = <2900000>;
+	regulator-min-microvolt = <2950000>;
+	regulator-max-microvolt = <2950000>;
 };
 
 &slg51002_ldo5 {
-	regulator-min-microvolt = <3000000>;
-	regulator-max-microvolt = <3000000>;
+	regulator-min-microvolt = <2900000>;
+	regulator-max-microvolt = <2900000>;
 };
 
 &slg51002_ldo6 {
@@ -41,18 +42,23 @@
 };
 
 &slg51002_ldo7 {
-	regulator-min-microvolt = <1100000>;
-	regulator-max-microvolt = <1100000>;
+	regulator-min-microvolt = <1060000>;
+	regulator-max-microvolt = <1060000>;
 };
 
 &slg51002_ldo8 {
-	regulator-min-microvolt = <1100000>;
-	regulator-max-microvolt = <1100000>;
+	regulator-min-microvolt = <970000>;
+	regulator-max-microvolt = <970000>;
 };
 
 &s_ldo12_reg {
-	regulator-min-microvolt = <1800000>;
-	regulator-max-microvolt = <1800000>;
+	regulator-min-microvolt = <1850000>;
+	regulator-max-microvolt = <1850000>;
+};
+
+&s_ldo26_reg {
+	regulator-min-microvolt = <3300000>;
+	regulator-max-microvolt = <3300000>;
 };
 
 &pinctrl_11 {
@@ -93,6 +99,17 @@
 		samsung,pin-pud = <EXYNOS_PIN_PULL_UP>;
 	};
 
+	hsi2c6_bus: hsi2c6-bus {
+		samsung,pin-pud = <EXYNOS_PIN_PULL_UP>;
+	};
+
+	hsi2c6_bus_in: hsi2c6-bus-in {
+		samsung,pins = "gpp12-0", "gpp12-1";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X1>;
+	};
+
 	hsi2c4_bus_in: hsi2c4-bus-in {
 		samsung,pins = "gpp8-0", "gpp8-1";
 		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
@@ -119,16 +136,42 @@
 	};
 
 	sensor_mclk1_out: sensor-mclk1-out {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X4>;
 	};
 	sensor_mclk1_fn: sensor-mclk1-fn {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X4>;
+	};
+	sensor_mclk2_out: sensor-mclk2-out {
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
+	};
+	sensor_mclk2_fn: sensor-mclk2-fn {
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
+	};
+	sensor_mclk3_out: sensor-mclk3-out {
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
+	};
+	sensor_mclk3_fn: sensor-mclk3-fn {
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
 	};
 	sensor_mclk4_out: sensor-mclk4-out {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
 	};
 	sensor_mclk4_fn: sensor-mclk4-fn {
-		samsung,pin-drv = <ZUMA_PIN_DRV_X2>;
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
+	};
+	sensor_mclk5_out: sensor-mclk5-out {
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
+	};
+	sensor_mclk5_fn: sensor-mclk5-fn {
+		samsung,pin-drv = <ZUMA_PIN_DRV_X3>;
+	};
+};
+
+&pinctrl_2 {
+	ldaf_irq: ldaf-irq {
+		samsung,pins = "gpa5-4"; /* XEINT_4 */
+		samsung,pin-function = <EXYNOS_PIN_FUNC_EINT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
 	};
 };
 
@@ -137,7 +180,7 @@
 	#size-cells = <0>;
 	gpios = <&gpp2 0 GPIO_ACTIVE_HIGH &gpp2 1 GPIO_ACTIVE_HIGH>;
 	status = "okay";
-	clock-frequency = <1000000>;
+	clock-frequency = <950000>;
 	samsung,reset-before-trans;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
@@ -179,7 +222,7 @@
 	#size-cells = <0>;
 	gpios = <&gpp8 0 GPIO_ACTIVE_HIGH &gpp8 1 GPIO_ACTIVE_HIGH>;
 	status = "okay";
-	clock-frequency = <1000000>;
+	clock-frequency = <950000>;
 	samsung,reset-before-trans;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
@@ -188,19 +231,32 @@
 	pinctrl-2 = <&hsi2c4_bus_in>;
 };
 
+&hsi2c_6 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	gpios = <&gpp12 0 GPIO_ACTIVE_HIGH &gpp12 1 GPIO_ACTIVE_HIGH>;
+	status = "okay";
+	clock-frequency = <950000>;
+	samsung,reset-before-trans;
+
+	pinctrl-names = "default","on_i2c","off_i2c";
+	pinctrl-0 = <&hsi2c6_bus_in>;
+	pinctrl-1 = <&hsi2c6_bus>;
+	pinctrl-2 = <&hsi2c6_bus_in>;
+};
+
 &hsi2c_14 {
 	#address-cells = <1>;
 	#size-cells = <0>;
 	gpios = <&gpp16 0 GPIO_ACTIVE_HIGH &gpp16 1 GPIO_ACTIVE_HIGH>;
 	status = "okay";
-	clock-frequency = <400000>;
+	clock-frequency = <390000>;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
 	pinctrl-0 = <&hsi2c14_bus &flash_en>;
 	pinctrl-1 = <&hsi2c14_bus>;
 	pinctrl-2 = <&hsi2c14_bus>;
 };
-
 / {
 	fragment@lwiscamera {
 		target-path = "/";
@@ -481,7 +537,10 @@
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
 				ldo3-supply = <&slg51002_ldo3>;
+				ldo5-supply = <&slg51002_ldo5>;
 				ldo7-supply = <&slg51002_ldo7>;
+				gpio2-supply = <&slg51002_gpio2>;
+				gpio4-supply = <&slg51002_gpio4>;
 
 				clocks =
 					<&clock CIS_CLK2>,
@@ -503,9 +562,13 @@
 					"s2mpg15_ldo12",
 					"ldo7",
 					"ldo3",
+					"ldo5",
+					"gpio4",
 					"mclk_on",
 					"reset";
 				power-up-seq-types =
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator",
 					"regulator",
@@ -515,6 +578,8 @@
 					<300
 					 0
 					 0
+					 500
+					 500
 					 1000
 					 10000>;
 
@@ -522,6 +587,8 @@
 				power-down-seqs =
 					"reset",
 					"mclk_off",
+					"gpio4",
+					"ldo5",
 					"ldo7",
 					"s2mpg15_ldo12",
 					"ldo3";
@@ -530,13 +597,22 @@
 					"pinctrl",
 					"regulator",
 					"regulator",
+					"regulator",
+					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<0
 					 0
 					 1000
 					 0
+					 0
+					 0
 					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
 			};
 
 			/* REAR CAMERA BOITATA */
@@ -709,6 +785,321 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+			};
+
+			/* REAR CAMERA BOITATA Nautilus */
+			sensor6: sensor@6 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "sensor-boitata-nautilus";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0x3D>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <16>;
+				/* CAMS_LVBUCK_EN for ldo8 */
+				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
+
+				/* GPIOs */
+				/* RCAM_RST_L GPP2[2] */
+				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
+
+				/* Power supplies */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
+				ldo8-supply = <&slg51002_ldo8>;
+				ldo4-supply = <&slg51002_ldo4>;
+				gpio2-supply = <&slg51002_gpio2>;
+
+				clocks =
+					<&clock CIS_CLK3>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK3>;
+				clock-names =
+					"CIS_CLK3",
+					"GATE_DFTMUX_CMU_CIS_CLK3";
+				clock-rates =
+					<26000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk4_fn>;
+				pinctrl-1 = <&sensor_mclk4_out>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"ldo1",
+					"enable",
+					"gpio2",
+					"ldo8",
+					"s2mpg15_ldo26",
+					"s2mpg15_ldo12",
+					"ldo4",
+					"reset",
+					"mclk_on";
+				power-up-seq-types =
+					"regulator",
+					"gpio",
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator",
+					"gpio",
+					"pinctrl";
+				power-up-seq-delays-us =
+					<10
+					 10
+					 10
+					 0
+					 0
+					 0
+					 2000
+					 1000
+					 9000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"mclk_off",
+					"reset",
+					"ldo4",
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26",
+					"ldo8",
+					"enable",
+					"gpio2",
+					"ldo1";
+				power-down-seq-types =
+					"pinctrl",
+					"gpio",
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator",
+					"gpio",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<1000
+					 1000
+					 0
+					 0
+					 0
+					 0
+					 0
+					 0
+					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
+			};
+
+			/* FRONT CAMERA DOKKAEBI Nautilus */
+			sensor7: sensor@7 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "sensor-dokkaebi-nautilus";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_2>;
+				i2c-addr = <0x10>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <16>;
+
+				/* GPIOs */
+				reset-gpios = <&gpp4 2 GPIO_ACTIVE_HIGH>;
+				/* Include front AF power sequence in front cam */
+				shared-enable-gpios = <&s2mpg15_gpio 4 GPIO_ACTIVE_HIGH>;
+
+				/* Power supplies */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				gpio3-supply = <&slg51002_gpio3>;
+
+				clocks =
+					<&clock CIS_CLK1>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK1>;
+				clock-names =
+					"CIS_CLK1",
+					"GATE_DFTMUX_CMU_CIS_CLK1";
+				clock-rates =
+					<24000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk2_fn>;
+				pinctrl-1 = <&sensor_mclk2_out>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo26",
+					"s2mpg15_ldo12",
+					"gpio3",
+					"shared-enable",
+					"mclk_on",
+					"reset";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"regulator",
+					"gpio",
+					"pinctrl",
+					"gpio";
+				power-up-seq-delays-us =
+					<0
+					 0
+					 500
+					 500
+					 1000
+					 8000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"reset",
+					"shared-enable",
+					"mclk_off",
+					"gpio3",
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26";
+				power-down-seq-types =
+					"gpio",
+					"gpio",
+					"pinctrl",
+					"regulator",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0
+					 1000
+					 0
+					 0
+					 1000>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <1>;
+			};
+
+
+			/* REAR ULTRA WIDE CAMERA OKSOKO Nautilus */
+			sensor8: sensor@8 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "sensor-oksoko-nautilus";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_6>;
+				i2c-addr = <0x1A>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				reset-gpios = <&gpp2 3 GPIO_ACTIVE_HIGH>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo2-supply = <&slg51002_ldo2>;
+				ldo4-supply = <&slg51002_ldo4>;
+				ldo6-supply = <&slg51002_ldo6>;
+				gpio2-supply = <&slg51002_gpio2>;
+
+				clocks =
+					<&clock CIS_CLK4>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK4>;
+				clock-names =
+					"CIS_CLK4",
+					"GATE_DFTMUX_CMU_CIS_CLK4";
+				clock-rates =
+					<24000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk5_fn>;
+				pinctrl-1 = <&sensor_mclk5_out>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"ldo6",
+					"ldo2",
+					"ldo4",
+					"gpio2",
+					"mclk_on",
+					"reset";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator",
+					"pinctrl",
+					"gpio";
+				power-up-seq-delays-us =
+					<0
+					 0
+					 0
+					 0
+					 1000
+					 1000
+					 10000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"reset",
+					"mclk_off",
+					"gpio2",
+					"ldo4",
+					"ldo2",
+					"ldo6",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"gpio",
+					"pinctrl",
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<1000
+					 1000
+					 0
+					 0
+					 0
+					 0
+					 1000>;
+
+				/* resume sequence */
+				resume-seqs = "reset";
+				resume-seq-types = "gpio";
+				resume-seq-delays-us = <7600>;
+
+				/* suspend sequence */
+				suspend-seqs = "reset";
+				suspend-seq-types = "gpio";
+				suspend-seq-delays-us = <0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
 			};
 
 			/* EEPROM GARGOYLE for NAGUAL*/
@@ -1007,6 +1398,88 @@
 					 0>;
 			};
 
+			/* EEPROM DJINN for BOITATA Nautilus */
+			eeprom7: eeprom@7 {
+				compatible = "google,lwis-i2c-device";
+				/* Device node name */
+				node-name = "eeprom-djinn-nautilus";
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0x24>;
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <32>;
+				/* Power supplies */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo5-supply = <&slg51002_ldo5>;
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo26",
+					"s2mpg15_ldo12",
+					"ldo5";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<0
+					 1000
+					 1000>;
+				/* Power down sequence */
+				power-down-seqs =
+					"ldo5",
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26";
+				power-down-seq-types =
+					"regulator",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<1000
+					 0
+					 1000>;
+
+				i2c-lock-group-id = <0>;
+			};
+
+			/* EEPROM SMAUG for OKSOKO Nautilus */
+			eeprom8: eeprom@8 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "eeprom-smaug-oksoko-nautilus";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_6>;
+				i2c-addr = <0x50>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12";
+				power-up-seq-types =
+					"regulator";
+				power-up-seq-delays-us =
+					<1000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator";
+				power-down-seq-delays-us =
+					<1000>;
+
+				i2c-lock-group-id = <2>;
+			};
+
 			/* Actuator SLENDERMAN for NAGUAL*/
 			actuator0: actuator@0 {
 				compatible = "google,lwis-i2c-device";
@@ -1284,6 +1757,164 @@
 				transaction-thread-priority = <99>;
 			};
 
+			/* Actuator CORNERFOLK for BOITATA Nautilus */
+			actuator6: actuator@6 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-nautilus";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0xC>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo4-supply = <&slg51002_ldo4>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo26",
+					"s2mpg15_ldo12",
+					"ldo4";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<0
+					 0
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"ldo4",
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26";
+				power-down-seq-types =
+					"regulator",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0
+					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
+			};
+
+			/* Actuator CORNERFOLK for DOKKAEBI on Nautilus */
+			actuator7: actuator@7 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-dokkaebi";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_2>;
+				i2c-addr = <0xC>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				shared-enable-gpios = <&s2mpg15_gpio 4 GPIO_ACTIVE_HIGH>;
+				/* Make front AF can be powered up alone */
+				gpio3-supply = <&slg51002_gpio3>;
+
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"gpio3",
+					"shared-enable";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"gpio";
+				power-up-seq-delays-us =
+					<1000
+					 500
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"shared-enable",
+					"gpio3",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"gpio",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0
+					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <1>;
+			};
+
+
+			/* Actuator CORNERFOLK for OKSOKO Nautilus */
+			actuator8: actuator@8 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-oksoko-nautilus";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_6>;
+				i2c-addr = <0xF>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo4-supply = <&slg51002_ldo4>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"ldo4";
+				power-up-seq-types =
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<0
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"ldo4",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
+			};
+
 			/* Ois GARGOYLE for NAGUAL*/
 			ois0: ois@0 {
 				compatible = "google,lwis-i2c-device";
@@ -1388,7 +2019,7 @@
 				transaction-thread-priority = <99>;
 			};
 
-			/* Ois HUMBABA for P23 tele */
+			/* OIS HUMBABA for KRAKEN */
 			ois2: ois@2 {
 				compatible = "google,lwis-i2c-device";
 
@@ -1414,8 +2045,8 @@
 				/* Power up sequence */
 				power-up-seqs =
 					"s2mpg15_ldo12",
-					"gpio1",
 					"ldo5",
+					"gpio1",
 					"reset";
 				power-up-seq-types =
 					"regulator",
@@ -1431,8 +2062,8 @@
 				/* Power down sequence */
 				power-down-seqs =
 					"reset",
-					"ldo5",
 					"gpio1",
+					"ldo5",
 					"s2mpg15_ldo12";
 				power-down-seq-types =
 					"gpio",
@@ -1447,6 +2078,8 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
 			};
 
 			/* Ois DJINN for BOITATA*/
@@ -1499,6 +2132,67 @@
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
+			};
+
+			/* OIS DJINN for BOITATA Nautilus */
+			ois4: ois@4 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "ois-djinn-nautilus";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_1>;
+				i2c-addr = <0x24>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <32>;
+
+				/* Power supplies */
+				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo5-supply = <&slg51002_ldo5>;
+				gpio4-supply = <&slg51002_gpio4>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo26",
+					"s2mpg15_ldo12",
+					"ldo5",
+					"gpio4";
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					< 0
+					 1000
+					 1000
+					 1000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"gpio4",
+					"ldo5",
+					"s2mpg15_ldo12",
+					"s2mpg15_ldo26";
+				power-down-seq-types =
+					"regulator",
+					"regulator",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<5000
+					 4000
+					 0
+					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <0>;
 			};
 
 			flash0: flash@0 {
