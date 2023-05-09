@@ -17,6 +17,7 @@
 #include <video/mipi_display.h>
 
 #include "include/trace/dpu_trace.h"
+#include "include/trace/panel_trace.h"
 #include "panel/panel-samsung-drv.h"
 
 /**
@@ -1556,6 +1557,7 @@ static int hk3_enable(struct drm_panel *panel)
 	if (needs_reset)
 		exynos_panel_reset(ctx);
 
+	PANEL_SEQ_LABEL_BEGIN("init");
 	/* DSC related configuration */
 	drm_dsc_pps_payload_pack(&pps_payload,
 				 is_fhd ? &fhd_pps_config : &wqhd_pps_config);
@@ -1569,6 +1571,7 @@ static int hk3_enable(struct drm_panel *panel)
 
 		spanel->is_pixel_off = false;
 	}
+	PANEL_SEQ_LABEL_END("init");
 
 	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
 	EXYNOS_DCS_BUF_ADD(ctx, 0xC3, is_fhd ? 0x0D : 0x0C);
