@@ -1533,6 +1533,23 @@ static void hk3_lhbm_luminance_opr_setting(struct exynos_panel *ctx)
 	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
 }
 
+static void hk3_negative_field_setting(struct exynos_panel *ctx)
+{
+	/* all settings will take effect in AOD mode automatically */
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	/* Vint -3V */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x21, 0xF4);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF4, 0x1E);
+	/* Vaint -4V */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x69, 0xF4);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF4, 0x78);
+	/* VGL -8V */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x17, 0xF4);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF4, 0x1E);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, freq_update);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+}
+
 static int hk3_enable(struct drm_panel *panel)
 {
 	struct exynos_panel *ctx = container_of(panel, struct exynos_panel, panel);
@@ -1568,6 +1585,8 @@ static int hk3_enable(struct drm_panel *panel)
 		exynos_panel_send_cmd_set(ctx, &hk3_init_cmd_set);
 		if (ctx->panel_rev == PANEL_REV_PROTO1)
 			hk3_lhbm_luminance_opr_setting(ctx);
+		if (ctx->panel_rev >= PANEL_REV_DVT1)
+			hk3_negative_field_setting(ctx);
 
 		spanel->is_pixel_off = false;
 	}
@@ -2402,6 +2421,9 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 		EXYNOS_DCS_BUF_ADD(ctx, 0xBB, 0x41);
 		EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
 	}
+
+	if (ctx->panel_rev >= PANEL_REV_DVT1)
+		hk3_negative_field_setting(ctx);
 
 	spanel->tz = thermal_zone_get_zone_by_name("disp_therm");
 	if (IS_ERR_OR_NULL(spanel->tz))
