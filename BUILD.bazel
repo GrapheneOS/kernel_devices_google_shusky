@@ -495,15 +495,17 @@ kernel_images(
     # Keep the following in sync with build.config.shusky:
     modules_list = ":vendor_kernel_boot_modules.shusky-cat",
     system_dlkm_modules_list = ":system_dlkm_modules_list",
+    system_dlkm_props = "//private/google-modules/soc/gs:system_dlkm.props.zuma",
     vendor_dlkm_etc_files = ["//private/devices/google/shusky:insmod_cfgs"],
     vendor_dlkm_modules_blocklist = "//private/google-modules/soc/gs:vendor_dlkm.blocklist.zuma",
     # No MODULES_BLOCKLIST
     vendor_dlkm_modules_list = "//private/google-modules/soc/gs:vendor_dlkm_modules.zuma",
     vendor_dlkm_props = "//private/google-modules/soc/gs:vendor_dlkm.props.zuma",
     deps = [
-        # Keep the following in sync with vendor_dlkm.props.zuma:
+        # Keep the following in sync with (vendor|system)_dlkm.props.zuma:
         # selinux_fc
         "//prebuilts/boot-artifacts/selinux:file_contexts",
+        "//prebuilts/boot-artifacts/selinux:system_file_contexts",
     ],
 )
 
