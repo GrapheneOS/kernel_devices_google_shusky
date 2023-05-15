@@ -227,11 +227,8 @@ struct shoreline_panel {
 	/** @base: base panel struct */
 	struct exynos_panel base;
 
-	/** @local_hbm_gamma: lhbm gamma data */
-	struct local_hbm_gamma {
-		u8 hs_cmd[LHBM_GAMMA_CMD_SIZE];
-		u8 ns_cmd[LHBM_GAMMA_CMD_SIZE];
-	} local_hbm_gamma;
+	/** @lhbm_gamma: lhbm gamma data */
+	u8 lhbm_gamma[LHBM_GAMMA_CMD_SIZE];
 	/** @lhbm_ctl: lhbm brightness control */
 	struct shoreline_lhbm_ctl lhbm_ctl;
 };
@@ -243,27 +240,17 @@ static void shoreline_lhbm_gamma_read(struct exynos_panel *ctx)
 	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
 	struct shoreline_panel *spanel = to_spanel(ctx);
 	int ret;
-	u8 *hs_cmd = spanel->local_hbm_gamma.hs_cmd;
-	u8 *ns_cmd = spanel->local_hbm_gamma.ns_cmd;
+	u8 *lhbm_gamma = spanel->lhbm_gamma;
 
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x22, 0xD8); /* global para */
-	ret = mipi_dsi_dcs_read(dsi, 0xD8, hs_cmd + 1, LHBM_GAMMA_CMD_SIZE - 1);
+	ret = mipi_dsi_dcs_read(dsi, 0xD8, lhbm_gamma + 1, LHBM_GAMMA_CMD_SIZE - 1);
 	if (ret == (LHBM_GAMMA_CMD_SIZE - 1)) {
 		/* fill in gamma write command 0x66 in offset 0 */
-		hs_cmd[0] = 0x66;
-		dev_info(ctx->dev, "hs_gamma: %*phN\n", LHBM_GAMMA_CMD_SIZE - 1, hs_cmd + 1);
+		lhbm_gamma[0] = 0x66;
+		dev_info(ctx->dev, "lhbm gamma: %*phN\n", LHBM_GAMMA_CMD_SIZE - 1, lhbm_gamma + 1);
 	} else {
-		dev_err(ctx->dev, "fail to read LHBM gamma for HS\n");
-	}
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x1D, 0xD8); /* global para */
-	ret = mipi_dsi_dcs_read(dsi, 0xD8, ns_cmd + 1, LHBM_GAMMA_CMD_SIZE - 1);
-	if (ret == (LHBM_GAMMA_CMD_SIZE - 1)) {
-		/* fill in gamma write command 0x66 in offset 0 */
-		ns_cmd[0] = 0x66;
-		dev_info(ctx->dev, "ns_gamma: %*phN\n", LHBM_GAMMA_CMD_SIZE - 1, ns_cmd + 1);
-	} else {
-		dev_err(ctx->dev, "fail to read LHBM gamma for NS\n");
+		dev_err(ctx->dev, "fail to read LHBM gamma\n");
 	}
 
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
@@ -272,24 +259,17 @@ static void shoreline_lhbm_gamma_read(struct exynos_panel *ctx)
 static void shoreline_lhbm_gamma_write(struct exynos_panel *ctx)
 {
 	struct shoreline_panel *spanel = to_spanel(ctx);
-	const u8 *hs_cmd = spanel->local_hbm_gamma.hs_cmd;
-	const u8 *ns_cmd = spanel->local_hbm_gamma.ns_cmd;
+	u8 *lhbm_gamma = spanel->lhbm_gamma;
 
-	if (!hs_cmd[0] && !ns_cmd[0]) {
+	if (!lhbm_gamma[0]) {
 		dev_err(ctx->dev, "%s: no lhbm gamma!\n", __func__);
 		return;
 	}
 
 	dev_dbg(ctx->dev, "%s\n", __func__);
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
-	if (hs_cmd[0]) {
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x03, 0xD7, 0x66); /* global para */
-		exynos_dcs_write(ctx, hs_cmd, LHBM_GAMMA_CMD_SIZE); /* write gamma */
-	}
-	if (ns_cmd[0]) {
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x03, 0xE6, 0x66); /* global para */
-		exynos_dcs_write(ctx, ns_cmd, LHBM_GAMMA_CMD_SIZE); /* write gamma */
-	}
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x03, 0xD7, 0x66); /* global para */
+	exynos_dcs_write(ctx, lhbm_gamma, LHBM_GAMMA_CMD_SIZE); /* write gamma */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 }
 
