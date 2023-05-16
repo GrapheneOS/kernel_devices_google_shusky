@@ -21,6 +21,13 @@ load(
     "lto_dependant_kernel_module",
 )
 
+_GKI_AARCH64_MAKE_GOALS = [
+    "Image",
+    "Image.lz4",
+    "Image.gz",
+    "modules",
+]
+
 # TODO: make this configurable to allow switching between aosp/ and
 # aosp-staging/
 _GKI_KERNEL_DIR = "aosp-staging"
@@ -69,6 +76,7 @@ kernel_build(
     module_implicit_outs = COMMON_GKI_MODULES_LIST,
     strip_modules = True,
     trim_nonlisted_kmi = True,
+    make_goals = _GKI_AARCH64_MAKE_GOALS,
 )
 
 kernel_modules_install(
