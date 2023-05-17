@@ -3,7 +3,7 @@
 DEVICE_DIR=${KERNEL_DIR}
 SOC_DIR=private/google-modules/soc/gs
 # Compile these modules with the GKI kernel
-KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp-staging"}
+KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp"}
 DEVICE_REL_DIR=$(realpath ${DEVICE_DIR} --relative-to ${KERNEL_DIR})
 
 # These just need to be relative to the ROOT_DIR
