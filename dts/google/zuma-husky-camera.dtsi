@@ -1153,6 +1153,7 @@
 					 0>;
 
 				i2c-lock-group-id = <0>;
+				transaction-process-limit = <1>;
 			};
 		};
 	};
