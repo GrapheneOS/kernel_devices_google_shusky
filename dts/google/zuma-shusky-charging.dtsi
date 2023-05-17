@@ -29,6 +29,7 @@
 
 				google,tcpm-power-supply = <&max77759tcpc>;	// in=0
 				google,wlc_dc-power-supply = "wireless";	// in=1
+				google,dc_limit-cc_min_wlc = <2750000>;
 				google,pps-awake;
 			};
 
