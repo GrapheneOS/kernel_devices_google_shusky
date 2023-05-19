@@ -25,13 +25,10 @@ load(
 # aosp-staging/
 _GKI_KERNEL_DIR = "aosp-staging"
 
-_GKI_BUILD_CONFIG_FRAGMENT = "//private/devices/google/shusky:build.config.shusky.gki.fragment"
-
 device_build_configs(
     name = "build.config.shusky",
     base_build_config = ":build.config.shusky",
     device_name = "shusky",
-    gki_build_config_fragment = _GKI_BUILD_CONFIG_FRAGMENT,
     gki_kernel_dir = _GKI_KERNEL_DIR,
     staging_kernel = True,
 )
@@ -111,6 +108,7 @@ _SHUSKY_DTBOS = [
     "google/zuma-shiba-evt1.dtbo",
     "google/zuma-shiba-evt1_b0.dtbo",
     "google/zuma-shiba-evt1_1.dtbo",
+    "google/zuma-shiba-evt1_1-wingboard.dtbo",
     "google/zuma-shiba-dvt1.dtbo",
     "google/zuma-shiba-pvt1.dtbo",
     "google/zuma-shiba-mp.dtbo",
@@ -134,12 +132,13 @@ kernel_module_group(
         "//private/google-modules/bluetooth/broadcom:bluetooth.broadcom",
         "//private/google-modules/bms",
         "//private/google-modules/bms/misc:bms-misc",
-        "//private/google-modules/display:display.samsung",
+        "//private/google-modules/display/samsung:display.samsung",
         "//private/google-modules/edgetpu/rio/drivers/edgetpu:edgetpu.rio",
         "//private/google-modules/gps/broadcom/bcm47765",
         "//private/google-modules/gpu/mali_kbase",
         "//private/google-modules/gpu/mali_pixel",
         "//private/google-modules/gxp/zuma:gxp",
+        "//private/google-modules/hdcp/samsung:hdcp.samsung",
         "//private/google-modules/lwis",
         "//private/google-modules/nfc",
         "//private/google-modules/power/reset",
@@ -147,11 +146,13 @@ kernel_module_group(
         "//private/google-modules/touch/fts/ftm5",
         "//private/google-modules/touch/goodix",
         "//private/google-modules/touch/sec",
+        "//private/google-modules/trusty",
         # TODO: need to conditionally include this based on if the project is
         # sync'd
         "//private/google-modules/uwb:uwb.qm35",
         "//private/google-modules/video/gchips:video.gchips",
         "//private/google-modules/wlan/bcm4398:bcmdhd4398",
+        "//private/google-modules/wlan/wlan_ptracker",
     ],
 )
 
@@ -179,6 +180,8 @@ kernel_build(
         "//private/google-modules/touch/common:touch.common.kconfig",
         "//private/google-modules/touch/fts/ftm5:ftm5.kconfig",
         "//private/google-modules/touch/sec:sec.kconfig",
+        "//private/google-modules/trusty:trusty.kconfig",
+        "//private/google-modules/wlan/wlan_ptracker:wlan_ptracker.kconfig",
     ],
     outs = [
         "google-dts-base/zuma-{}.dtb".format(soc_rev)
@@ -297,6 +300,7 @@ lto_dependant_kernel_module(
         "drivers/soc/google/debug/itmon.ko",
         "drivers/soc/google/debug/pixel-boot-metrics.ko",
         "drivers/soc/google/debug/pixel-debug-test.ko",
+        "drivers/soc/google/debug/pixel-suspend-diag.ko",
         "drivers/soc/google/debug/sjtag-driver.ko",
         "drivers/soc/google/ect_parser.ko",
         "drivers/soc/google/eh/eh.ko",
@@ -319,7 +323,7 @@ lto_dependant_kernel_module(
         "drivers/soc/google/hardlockup-watchdog.ko",
         "drivers/soc/google/pixel_stat/mm/pixel_stat_mm.ko",
         "drivers/soc/google/pixel_stat/pixel_stat_sysfs.ko",
-        "drivers/soc/google/pkvm-s2mpu/pkvm-s2mpu.ko",
+        "drivers/soc/google/pkvm-s2mpu/pkvm-s2mpu-v9/pkvm-s2mpu-v9.ko",
         "drivers/soc/google/pt/slc_acpm.ko",
         "drivers/soc/google/pt/slc_dummy.ko",
         "drivers/soc/google/pt/slc_pmon.ko",
@@ -339,12 +343,6 @@ lto_dependant_kernel_module(
         "drivers/thermal/google/s2mpg15_spmic_thermal.ko",
         "drivers/thermal/samsung/gpu_cooling.ko",
         "drivers/thermal/samsung/gs_thermal.ko",
-        "drivers/trusty/trusty-core.ko",
-        "drivers/trusty/trusty-ipc.ko",
-        "drivers/trusty/trusty-irq.ko",
-        "drivers/trusty/trusty-log.ko",
-        "drivers/trusty/trusty-test.ko",
-        "drivers/trusty/trusty-virtio.ko",
         "drivers/tty/serial/exynos_tty.ko",
         "drivers/ufs/ufs-exynos-gs.ko",
         "drivers/usb/dwc3/dwc3-exynos-usb.ko",
@@ -372,6 +370,7 @@ lto_dependant_kernel_module(
     ],
     deps = [
         "//private/google-modules/bms/misc:bms-misc",
+        "//private/google-modules/trusty",
     ],
 )
 
@@ -421,6 +420,7 @@ _GKI_MODULES = [
     "drivers/net/can/dev/can-dev.ko",
     "drivers/net/can/slcan.ko",
     "drivers/net/can/vcan.ko",
+    "drivers/net/mii.ko",
     "drivers/net/ppp/bsd_comp.ko",
     "drivers/net/ppp/ppp_deflate.ko",
     "drivers/net/ppp/ppp_generic.ko",
@@ -428,6 +428,16 @@ _GKI_MODULES = [
     "drivers/net/ppp/pppox.ko",
     "drivers/net/ppp/pptp.ko",
     "drivers/net/slip/slhc.ko",
+    "drivers/net/usb/aqc111.ko",
+    "drivers/net/usb/asix.ko",
+    "drivers/net/usb/ax88179_178a.ko",
+    "drivers/net/usb/cdc_eem.ko",
+    "drivers/net/usb/cdc_ether.ko",
+    "drivers/net/usb/cdc_ncm.ko",
+    "drivers/net/usb/r8152.ko",
+    "drivers/net/usb/r8153_ecm.ko",
+    "drivers/net/usb/rtl8150.ko",
+    "drivers/net/usb/usbnet.ko",
     "drivers/usb/class/cdc-acm.ko",
     "drivers/usb/serial/ftdi_sio.ko",
     "drivers/usb/serial/usbserial.ko",
@@ -485,15 +495,17 @@ kernel_images(
     # Keep the following in sync with build.config.shusky:
     modules_list = ":vendor_kernel_boot_modules.shusky-cat",
     system_dlkm_modules_list = ":system_dlkm_modules_list",
+    system_dlkm_props = "//private/google-modules/soc/gs:system_dlkm.props.zuma",
     vendor_dlkm_etc_files = ["//private/devices/google/shusky:insmod_cfgs"],
     vendor_dlkm_modules_blocklist = "//private/google-modules/soc/gs:vendor_dlkm.blocklist.zuma",
     # No MODULES_BLOCKLIST
     vendor_dlkm_modules_list = "//private/google-modules/soc/gs:vendor_dlkm_modules.zuma",
     vendor_dlkm_props = "//private/google-modules/soc/gs:vendor_dlkm.props.zuma",
     deps = [
-        # Keep the following in sync with vendor_dlkm.props.zuma:
+        # Keep the following in sync with (vendor|system)_dlkm.props.zuma:
         # selinux_fc
         "//prebuilts/boot-artifacts/selinux:file_contexts",
+        "//prebuilts/boot-artifacts/selinux:system_file_contexts",
     ],
 )
 

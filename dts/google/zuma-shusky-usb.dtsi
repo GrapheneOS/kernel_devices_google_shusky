@@ -18,6 +18,21 @@
 	extcon = <&max77759tcpc>;
 };
 
+&pinctrl_12 {
+	eusb_power_off: eusb_power_off {
+		samsung,pins = "gpp21-3";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_DOWN>;
+		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_DOWN>;
+	};
+
+	eusb_power_on: eusb_power_on {
+		samsung,pins = "gpp21-3";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_OUTPUT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_UP>;
+	};
+};
+
 &eusb_repeater_tune {
 	status = "okay";
 	repeater_tune_cnt = <8>;
@@ -69,9 +84,13 @@
        #size-cells = <0>;
        status = "okay";
        eusb-repeater@3E {
-               compatible = "samsung,eusb-repeater";
-               reg = <0x3E>;
-               status = "okay";
-               repeater_tune_param = <&eusb_repeater_tune>;
+		compatible = "samsung,eusb-repeater";
+		reg = <0x3E>;
+		status = "okay";
+		pinctrl-names = "power_off", "power_on";
+		pinctrl-0 = <&eusb_power_off>;
+		pinctrl-1 = <&eusb_power_on>;
+		eusb,gpio_eusb_resetb = <&gpp21 3 GPIO_ACTIVE_LOW>;
+		repeater_tune_param = <&eusb_repeater_tune>;
        };
 };

@@ -61,3 +61,11 @@
 &drmdecon1 {
 	status = "okay";
 };
+
+&drmdp {
+	status = "okay";
+};
+
+&drmdecon2 {
+	status = "okay";
+};

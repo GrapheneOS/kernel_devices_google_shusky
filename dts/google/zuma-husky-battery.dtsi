@@ -25,8 +25,8 @@
 
 	maxim,filtercfg-temp = <100>;
 	maxim,filtercfg-temp-hysteresis = <30>;
-	maxim,filtercfg-default = /bits/ 16 <0x0616>;
-	maxim,filtercfg-adjust = /bits/ 16 <0x0615>;
+	maxim,filtercfg-default = /bits/ 16 <0x0613>;
+	maxim,filtercfg-adjust = /bits/ 16 <0x0616>;
 
 	maxim,fg-data {
 		#include "zuma-husky-battery-data.dtsi"

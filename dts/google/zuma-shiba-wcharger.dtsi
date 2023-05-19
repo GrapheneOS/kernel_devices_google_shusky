@@ -16,7 +16,7 @@
 		fod_hpp_3 = [DB 7F AF 7D 96 7F 91 7D 8D 7F 8C 7C 00 00 01 48];
 		google,q_value = <41>;
 
-		google,alignment_scalar_low_current = <430>;
+		google,alignment_scalar_low_current = <350>;
 		google,alignment_scalar_high_current = <83>;
 		google,alignment_offset_low_current = <128000>;
 		google,alignment_offset_high_current = <144000>;

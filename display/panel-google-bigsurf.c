@@ -14,7 +14,7 @@
 #include <linux/of_platform.h>
 #include <video/mipi_display.h>
 
-#include "samsung/panel/panel-samsung-drv.h"
+#include "panel/panel-samsung-drv.h"
 
 #define BIGSURF_DDIC_ID_LEN 8
 #define BIGSURF_DIMMING_FRAME 32
@@ -102,7 +102,8 @@ static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
 	BINNED_LP_MODE("off", 0, bigsurf_lp_off_cmds),
 	/* rising = 0, falling = 32 */
-	BINNED_LP_MODE_TIMING("low", 332, bigsurf_lp_low_cmds, 0, 32),
+	/* low threshold 40 nits */
+	BINNED_LP_MODE_TIMING("low", 932, bigsurf_lp_low_cmds, 0, 32),
 	BINNED_LP_MODE_TIMING("high", 3574, bigsurf_lp_high_cmds, 0, 32),
 };
 
@@ -245,11 +246,25 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_GAMMA_CURVE, 0x00),
 	EXYNOS_DSI_CMD_SEQ(0x81, 0x01, 0x19),
 	EXYNOS_DSI_CMD_SEQ(0x88, 0x01, 0x02, 0x1C, 0x06, 0xE2, 0x00, 0x00, 0x00, 0x00),
-	// 8bpc PPS
+	/* 8bpc PPS */
 	EXYNOS_DSI_CMD_SEQ(0x03, 0x01),
 	EXYNOS_DSI_CMD_SEQ(0x90, 0x03, 0x03),
 	EXYNOS_DSI_CMD_SEQ(0x91, 0x89, 0x28, 0x00, 0x1E, 0xD2, 0x00, 0x02, 0x25, 0x02,
 				0xC5, 0x00, 0x07, 0x03, 0x97, 0x03, 0x64, 0x10, 0xF0),
+	/* disable the repeat-SEQ1 option */
+	EXYNOS_DSI_CMD_SEQ(0xFF, 0xAA, 0x55, 0xA5, 0x81),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0D),
+	EXYNOS_DSI_CMD_SEQ(0xFB, 0x84),
+	/* VRGH = 7.4V */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xF0, 0x55, 0xAA, 0x52,
+				0x08, 0x01),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB7, 0x22, 0x22, 0x22,
+				0x22, 0x22, 0x22, 0x22),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x07),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB7, 0x22, 0x22, 0x22,
+				0x22, 0x22, 0x22, 0x22),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x11),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB7, 0x22, 0x22),
 
 	EXYNOS_DSI_CMD_SEQ_DELAY(120, MIPI_DCS_EXIT_SLEEP_MODE)
 };
@@ -426,7 +441,7 @@ static int bigsurf_enable(struct drm_panel *panel)
 			/* Gamma update setting */
 			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x02);
 			EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xCC, 0x10);
-			usleep_range(9000, 9100);
+			exynos_panel_msleep(9);
 		}
 	} else {
 		exynos_panel_set_lp_mode(ctx, pmode);

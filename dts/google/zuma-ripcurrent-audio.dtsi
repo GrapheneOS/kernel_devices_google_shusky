@@ -17,6 +17,40 @@
 	aoc-board-rev = <0x10000>;
 };
 
+/* DP audio */
+&aoc_dp_nohost_drv {
+	status = "disabled";
+};
+
+/* DP audio */
+&dai_fe_dp_dma_nohost_rx {
+	status = "disabled";
+};
+
+/* DP audio */
+&dai_be_dp_rx {
+	status = "disabled";
+	codec {
+		sound-dai = <&drmdp_adma_pb>;
+	};
+};
+
+/* DP audio */
+&dpado_mem {
+	status = "disabled";
+};
+
+/* DP audio */
+&drmdp_adma {
+	status = "disabled";
+	memory-region = <&dpado_mem>;
+};
+
+/* DP audio */
+&drmdp_adma_pb {
+	status = "disabled";
+};
+
 &dai_be_tdm0_rx {
 	codec {
 		sound-dai = <&cs35l41_1 0>,
