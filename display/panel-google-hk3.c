@@ -1317,6 +1317,10 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 				 0x40, 0x00, 0x40, 0x00, 0x4D, 0x31, 0x40, 0x00,
 				 0x40, 0x00, 0x40, 0x00),
 
+	/* enable OPEC (auto still IMG detect off) */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB0, 0x00, 0x1D, 0x63),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x63, 0x02, 0x18),
+
 	EXYNOS_DSI_CMD0(freq_update),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
 	/* CASET: 1343 */
