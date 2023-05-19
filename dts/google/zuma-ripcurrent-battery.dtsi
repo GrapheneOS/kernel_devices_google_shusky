@@ -208,4 +208,57 @@
 		#thermal-sensor-cells = <1>;
 	};
 
+	/* max77779 nodes */
+	max77779_fg:max77779fg@0x36 {
+		status = "disabled";
+		compatible = "maxim,max77779fg";
+		reg = <0x36>;
+
+		maxim,gauge-type = <2>;
+		maxim,rsense-default = <500>;
+		maxim,batt-id-range-pct = <0>;
+
+		interrupt-parent = <&max77779_pmic_irq>;
+		interrupts = <1 IRQ_TYPE_LEVEL_LOW>;
+
+		maxim,psy-type-unknown;
+	};
+
+	max77779_chg:max77779chrg@0x69 {
+		status = "disabled";
+		compatible = "maxim,max77779chrg";
+		reg = <0x69>;
+
+		interrupt-parent = <&max77779_pmic_irq>;
+		interrupts = <2 IRQ_TYPE_LEVEL_LOW>;
+	};
+
+	max77779_sp:max77779@60 {
+		status = "disabled";
+		compatible = "adi,max77779_sp";
+		reg = <0x60>;
+	};
+
+	max77779_pmic: max77779_pmic@66 {
+		compatible = "max77779_pmic";
+		reg = <0x66>;
+		status = "disabled";
+
+		max77779_pmic_irq: max77779_pmic_irq {
+			compatible = "max77779-pmic-irq";
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&if_pmic_irq>;
+
+			interrupt-parent = <&gpa8>;
+			max777x9,irq-gpio = <&gpa8 0 GPIO_ACTIVE_LOW>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
+		max77779_pinctrl: max77779_pinctrl {
+			compatible = "max77779-pinctrl";
+		};
+	};
 };
