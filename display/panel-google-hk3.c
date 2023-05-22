@@ -141,8 +141,6 @@ struct hk3_panel {
 	struct hk3_lhbm_ctl lhbm_ctl;
 	/** @material: the material version used in panel */
 	enum hk3_material material;
-	/** @rrs_in_progress: indicate whether RRS (Runtime Resolution Switch) is in progress */
-	bool rrs_in_progress;
 	/** @tz: thermal zone device for reading temperature */
 	struct thermal_zone_device *tz;
 	/** @hw_temp: the temperature applied into panel */
@@ -406,7 +404,7 @@ static void hk3_update_te2_internal(struct exynos_panel *ctx, bool lock)
 	if (!ctx)
 		return;
 
-	if (spanel->rrs_in_progress) {
+	if (ctx->rrs_in_progress) {
 		dev_dbg(ctx->dev, "%s: RRS in progress, skip\n", __func__);
 		return;
 	}
@@ -842,6 +840,10 @@ static void hk3_update_refresh_mode(struct exynos_panel *ctx,
 {
 	struct hk3_panel *spanel = to_spanel(ctx);
 	u32 vrefresh = drm_mode_vrefresh(&pmode->mode);
+
+	/* skip idle update if going through RRS */
+	if (ctx->rrs_in_progress)
+		return;
 
 	dev_dbg(ctx->dev, "%s: mode: %s set idle_vrefresh: %u\n", __func__,
 		pmode->mode.name, idle_vrefresh);
@@ -1496,7 +1498,8 @@ static int hk3_disable(struct drm_panel *panel)
 
 	/* skip disable sequence if going through modeset */
 	if (ctx->panel_state == PANEL_STATE_MODESET) {
-		spanel->rrs_in_progress = true;
+		/* for the case of resolution change only */
+		ctx->rrs_in_progress = true;
 		return 0;
 	}
 
@@ -1577,11 +1580,9 @@ static void hk3_commit_done(struct exynos_panel *ctx)
 	if (!ctx->current_mode)
 		return;
 
-	if (spanel->rrs_in_progress) {
-		/* we should finish RRS in this commit */
-		spanel->rrs_in_progress = false;
+	/* skip idle update if going through RRS */
+	if (ctx->rrs_in_progress)
 		return;
-	}
 
 	hk3_update_idle_state(ctx);
 
