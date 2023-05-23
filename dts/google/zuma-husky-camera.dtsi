@@ -783,8 +783,8 @@
 				/* Power up sequence */
 				power-up-seqs =
 					"s2mpg15_ldo12",
-					"gpio1",
 					"ldo5",
+					"gpio1",
 					"reset";
 				power-up-seq-types =
 					"regulator",
@@ -800,8 +800,8 @@
 				/* Power down sequence */
 				power-down-seqs =
 					"reset",
-					"ldo5",
 					"gpio1",
+					"ldo5",
 					"s2mpg15_ldo12";
 				power-down-seq-types =
 					"gpio",
