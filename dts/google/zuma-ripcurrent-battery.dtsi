@@ -261,4 +261,20 @@
 			compatible = "max77779-pinctrl";
 		};
 	};
+
+	max77779_i2cm:max77779i2cm@64 {
+		reg = <0x64>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		compatible = "max77779_i2cm";
+		status = "disabled";
+
+		interrupt-parent = <&max77779_pmic_irq>;
+		interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
+
+		max77779,timeout = <0xff>;
+		max77779,completion_timeout_ms = <0x200>;
+		max77779,speed = <0x00>;
+	};
 };
