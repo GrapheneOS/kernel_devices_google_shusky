@@ -85,10 +85,6 @@
 	subsys-name = "BATT";
 };
 
-&m_ext5_rail {
-	shunt-res-uohms = <10000>;
-};
-
 &s_ext4_rail {
 	schematic-name = "VSYS_PWR_DISPLAY";
 	shunt-res-uohms = <10000>;
