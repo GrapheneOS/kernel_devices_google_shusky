@@ -656,6 +656,7 @@
 				transaction-thread-priority = <99>;
 
 				i2c-lock-group-id = <3>;
+				transaction-process-limit = <20>;
 			};
 
 			/* EEPROM DJINN for BOITATA*/
