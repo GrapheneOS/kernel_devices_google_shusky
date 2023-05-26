@@ -1317,6 +1317,10 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 				 0x40, 0x00, 0x40, 0x00, 0x4D, 0x31, 0x40, 0x00,
 				 0x40, 0x00, 0x40, 0x00),
 
+	/* enable OPEC (auto still IMG detect off) */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB0, 0x00, 0x1D, 0x63),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x63, 0x02, 0x18),
+
 	EXYNOS_DSI_CMD0(freq_update),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
 	/* CASET: 1343 */
@@ -2326,9 +2330,9 @@ const struct exynos_panel_desc google_hk3 = {
 	/*
 	 * After waiting for TE, wait for extra time to make sure the frame start
 	 * happens after both DPU and panel PPS are set and before the next VSYNC.
-	 * This reserves about 6ms for finishing both PPS and frame start.
+	 * This should cover the timing of HS 60/120Hz and NS 60Hz.
 	 */
-	.delay_dsc_reg_init_us = 6000,
+	.delay_dsc_reg_init_us = 10000,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,

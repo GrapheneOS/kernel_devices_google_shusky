@@ -1153,6 +1153,9 @@
 					 0>;
 
 				i2c-lock-group-id = <0>;
+				transaction-process-limit = <1>;
+				/* HIGH = 0, MEDIUM = 1, LOW = 2 */
+				i2c-device-priority = <2>;
 			};
 		};
 	};

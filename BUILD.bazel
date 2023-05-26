@@ -21,6 +21,13 @@ load(
     "lto_dependant_kernel_module",
 )
 
+_GKI_AARCH64_MAKE_GOALS = [
+    "Image",
+    "Image.lz4",
+    "Image.gz",
+    "modules",
+]
+
 # TODO: make this configurable to allow switching between aosp/ and
 # aosp-staging/
 _GKI_KERNEL_DIR = "aosp-staging"
@@ -69,6 +76,7 @@ kernel_build(
     module_implicit_outs = COMMON_GKI_MODULES_LIST,
     strip_modules = True,
     trim_nonlisted_kmi = True,
+    make_goals = _GKI_AARCH64_MAKE_GOALS,
 )
 
 kernel_modules_install(
@@ -205,6 +213,8 @@ kernel_build(
         "drivers/scsi/sg.ko",
         "drivers/spi/spidev.ko",
         "drivers/watchdog/softdog.ko",
+        "net/mac80211/mac80211.ko",
+        "net/wireless/cfg80211.ko",
     ],
     strip_modules = True,
 )
@@ -321,6 +331,7 @@ lto_dependant_kernel_module(
         "drivers/soc/google/gsa/gsa_gsc.ko",
         "drivers/soc/google/hardlockup-debug.ko",
         "drivers/soc/google/hardlockup-watchdog.ko",
+        "drivers/soc/google/perf_trace_counters.ko",
         "drivers/soc/google/pixel_stat/mm/pixel_stat_mm.ko",
         "drivers/soc/google/pixel_stat/pixel_stat_sysfs.ko",
         "drivers/soc/google/pkvm-s2mpu/pkvm-s2mpu-v9/pkvm-s2mpu-v9.ko",
@@ -464,13 +475,11 @@ _GKI_MODULES = [
     "net/ieee802154/ieee802154_socket.ko",
     "net/l2tp/l2tp_core.ko",
     "net/l2tp/l2tp_ppp.ko",
-    "net/mac80211/mac80211.ko",
     "net/mac802154/mac802154.ko",
     "net/nfc/nfc.ko",
     "net/rfkill/rfkill.ko",
     "net/tipc/diag.ko",
     "net/tipc/tipc.ko",
-    "net/wireless/cfg80211.ko",
 ]
 
 write_file(
