@@ -36,8 +36,6 @@
 	goog,offload-caps-data-types = /bits/ 16 <0x1F>;
 	goog,offload-caps-scan-types = /bits/ 16 <0xC0>;
 	goog,offload-caps-context-channel-types = /bits/ 16 <0x0100>;
-	goog,offload-caps-cancel-reporting;
-	goog,offload-caps-rotation-reporting;
 	goog,offload-caps-coord-filter;
 	goog,touch_offload_id = /bits/ 8 <'h' 'k' '3' '0'>;
 	goog,tbn-enabled;
