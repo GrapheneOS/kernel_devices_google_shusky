@@ -99,17 +99,24 @@ gki_artifacts(
 filegroup(
     name = "gki_aarch64_boot_lz4",
     srcs = select({
-        "//private/google-modules/soc/gs:gki_aosp": ["//aosp:kernel_aarch64_gki_artifacts"],
+        "//private/google-modules/soc/gs:gki_aosp": ["//aosp:kernel_aarch64_gki_artifacts_download_or_build"],
         "//private/google-modules/soc/gs:gki_aosp_staging": [":shusky_gki_artifacts"],
     }),
-    output_group = "boot_lz4",
 )
 
 genrule(
     name = "gki_aarch64_boot",
     srcs = [":gki_aarch64_boot_lz4"],
     outs = ["boot.img"],
-    cmd = "mv $< $@",
+    cmd = """
+        for f in $(locations :gki_aarch64_boot_lz4); do
+            if [[ "$${f##*/}" == "boot-lz4.img" ]]; then
+                $(location //build/kernel:hermetic-tools/mv) $$f $(location boot.img)
+                break
+            fi
+        done
+    """,
+    tools = ["//build/kernel:hermetic-tools/mv"],
 )
 
 _SOC_REVS = [
