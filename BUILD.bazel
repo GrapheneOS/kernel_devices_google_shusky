@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
+load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//aosp:modules.bzl", "COMMON_GKI_MODULES_LIST")
 load("//build/bazel_common_rules/dist:dist.bzl", "copy_to_dist_dir")
@@ -18,6 +19,7 @@ load("//build/kernel/kleaf/impl:gki_artifacts.bzl", "gki_artifacts")
 load(
     "//private/google-modules/soc/gs:device_build_configs.bzl",
     "device_build_configs",
+    "extracted_system_dlkm",
     "lto_dependant_kernel_module",
 )
 
@@ -104,6 +106,7 @@ filegroup(
     }),
 )
 
+# TODO(b/285605996): Use hermetic_genrule
 genrule(
     name = "gki_aarch64_boot",
     srcs = [":gki_aarch64_boot_lz4"],
@@ -441,6 +444,7 @@ kernel_unstripped_modules_archive(
     kernel_modules = [":shusky_ext_modules"],
 )
 
+# TODO(b/285605996): Use hermetic_genrule
 genrule(
     name = "vendor_kernel_boot_modules.shusky-cat",
     srcs = [
@@ -451,7 +455,6 @@ genrule(
     outs = [
         "vendor_kernel_boot_modules.concat",
     ],
-    # TODO(b/259274243): switch to using the hermetic-tools cat binary
     cmd = """
         cat $(location vendor_kernel_boot_modules.shusky) \\
             $(location //private/google-modules/soc/gs:vendor_kernel_boot_modules.zuma) \\
@@ -544,19 +547,29 @@ _zuma_shusky_dist_targets = [
     #":zuma_shusky_ufdt_overlay",
     ":zuma_shusky_unstripped_modules_archive",
     ":insmod_cfgs",
+    ":zuma_shusky_extracted_system_dlkm",
 ] + select({
     "//private/google-modules/soc/gs:gki_aosp": [
         "//aosp:android/abi_gki_aarch64_pixel",
         "//aosp:kernel_aarch64_download_or_build",
         "//aosp:kernel_aarch64_headers_download_or_build",
-    ] + ["//aosp:kernel_aarch64/{}".format(m) for m in _GKI_MODULES],
+    ],
     "//private/google-modules/soc/gs:gki_aosp_staging": [
         "shusky_gki",
         "shusky_gki_headers",
         "//aosp-staging:android/abi_gki_aarch64_pixel",
         "//build/kernel:gki_certification_tools",
-    ] + [":shusky_gki/{}".format(m) for m in _GKI_MODULES],
+    ],
 })
+
+extracted_system_dlkm(
+    name = "zuma_shusky_extracted_system_dlkm",
+    gki_modules = [paths.basename(m) for m in _GKI_MODULES],
+    images = select({
+        "//private/google-modules/soc/gs:gki_aosp": "//aosp:kernel_aarch64_images_download_or_build",
+        "//private/google-modules/soc/gs:gki_aosp_staging": ":shusky_gki_images",
+    }),
+)
 
 copy_to_dist_dir(
     name = "zuma_shusky_dist",
