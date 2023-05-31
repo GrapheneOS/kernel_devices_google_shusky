@@ -534,6 +534,7 @@ _zuma_shusky_dist_targets = [
     "//private/google-modules/soc/gs:gki_aosp": [
         "//aosp:android/abi_gki_aarch64_pixel",
         "//aosp:kernel_aarch64_download_or_build",
+        "//aosp:kernel_aarch64_headers_download_or_build",
     ] + ["//aosp:kernel_aarch64/{}".format(m) for m in _GKI_MODULES],
     "//private/google-modules/soc/gs:gki_aosp_staging": [
         "shusky_gki",
