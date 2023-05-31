@@ -271,6 +271,8 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 };
 static DEFINE_EXYNOS_CMD_SET(bigsurf_init);
 
+static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
+				       bool local_hbm_en);
 static void bigsurf_update_te2(struct exynos_panel *ctx)
 {
 	struct exynos_panel_te2_timing timing;
@@ -361,6 +363,15 @@ static void bigsurf_change_frequency(struct exynos_panel *ctx,
 
 	if (!ctx || (vrefresh != 60 && vrefresh != 120))
 		return;
+
+	if (vrefresh != 120 &&
+		ctx->hbm.local_hbm.effective_state != LOCAL_HBM_DISABLED) {
+		dev_err(ctx->dev,
+			"%s: switch to %uhz will fail when LHBM is on, disable LHBM\n",
+			__func__, vrefresh);
+		bigsurf_set_local_hbm_mode(ctx, false);
+		ctx->hbm.local_hbm.effective_state = LOCAL_HBM_DISABLED;
+	}
 
 	if (!IS_HBM_ON(ctx->hbm_mode)) {
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, (vrefresh == 120) ? 0x00 : 0x30);
