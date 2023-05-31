@@ -2388,7 +2388,7 @@ const struct brightness_capability hk3_brightness_capability = {
 const struct exynos_panel_desc google_hk3 = {
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
-	.dft_brightness = 1653,
+	.dft_brightness = 1353, /* 140 nits */
 	.brt_capability = &hk3_brightness_capability,
 	.dbv_extra_frame = true,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
