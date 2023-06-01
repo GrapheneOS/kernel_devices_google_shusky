@@ -1480,6 +1480,41 @@
 				i2c-lock-group-id = <2>;
 			};
 
+			/* EEPROM SMAUG for Front TAOTIE (Nautilus) */
+			eeprom9: eeprom@9 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "eeprom-smaug-taotie-front";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0x50>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12";
+				power-up-seq-types =
+					"regulator";
+				power-up-seq-delays-us =
+					<1000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator";
+				power-down-seq-delays-us =
+					<1000>;
+			};
+
 			/* Actuator SLENDERMAN for NAGUAL*/
 			actuator0: actuator@0 {
 				compatible = "google,lwis-i2c-device";
@@ -1913,6 +1948,52 @@
 				transaction-thread-priority = <99>;
 
 				i2c-lock-group-id = <2>;
+			};
+
+			/* Actuator CORNERFOLK for TAOTIE front (Nautilus) */
+			actuator9: actuator@9 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-taotie-front";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0xC>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				gpio1-supply = <&slg51002_gpio1>;
+
+
+				/* Power up sequence */
+				power-up-seqs =
+					"s2mpg15_ldo12",
+					"gpio1";
+				power-up-seq-types =
+					"regulator",
+					"regulator";
+				power-up-seq-delays-us =
+					<1000
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"gpio1",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
 			};
 
 			/* Ois GARGOYLE for NAGUAL*/
