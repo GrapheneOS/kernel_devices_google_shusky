@@ -341,6 +341,7 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 				EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x75);
 			}
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x01);
 		} else {
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
 			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x00, 0x00);
