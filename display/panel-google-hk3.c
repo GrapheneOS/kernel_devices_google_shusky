@@ -2412,9 +2412,9 @@ const struct exynos_panel_desc google_hk3 = {
 	/*
 	 * After waiting for TE, wait for extra time to make sure the frame start
 	 * happens after both DPU and panel PPS are set and before the next VSYNC.
-	 * This reserves about 6ms for finishing both PPS and frame start.
+	 * This should cover the timing of HS 60/120Hz and NS 60Hz.
 	 */
-	.delay_dsc_reg_init_us = 6000,
+	.delay_dsc_reg_init_us = 10000,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,
