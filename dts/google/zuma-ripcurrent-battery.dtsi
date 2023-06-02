@@ -233,18 +233,18 @@
 		interrupts = <2 IRQ_TYPE_LEVEL_LOW>;
 	};
 
-	max77779_sp:max77779@60 {
+	max77779_sp:max77779sp@60 {
 		status = "disabled";
 		compatible = "adi,max77779_sp";
 		reg = <0x60>;
 	};
 
-	max77779_pmic: max77779_pmic@66 {
+	max77779_pmic:max77779pmic@66 {
 		compatible = "max77779_pmic";
 		reg = <0x66>;
 		status = "disabled";
 
-		max77779_pmic_irq: max77779_pmic_irq {
+		max77779_pmic_irq:max77779pmicirq {
 			compatible = "max77779-pmic-irq";
 
 			pinctrl-names = "default";
@@ -257,8 +257,24 @@
 			#interrupt-cells = <2>;
 		};
 
-		max77779_pinctrl: max77779_pinctrl {
+		max77779_pinctrl:max77779pinctrl {
 			compatible = "max77779-pinctrl";
 		};
+	};
+
+	max77779_i2cm:max77779i2cm@64 {
+		reg = <0x64>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		compatible = "max77779_i2cm";
+		status = "disabled";
+
+		interrupt-parent = <&max77779_pmic_irq>;
+		interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
+
+		max77779,timeout = <0xff>;
+		max77779,completion_timeout_ms = <0x200>;
+		max77779,speed = <0x00>;
 	};
 };
