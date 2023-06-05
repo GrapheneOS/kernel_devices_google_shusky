@@ -237,6 +237,10 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	/* CMD, Disable */
 	EXYNOS_DSI_CMD_SEQ(0xFF, 0xAA, 0x55, 0xA5, 0x00),
 
+	/* config 60hz TE setting */
+	EXYNOS_DSI_CMD_SEQ(0x2F, 0x30),
+	EXYNOS_DSI_CMD_SEQ(0x6D, 0x00, 0x00),
+
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_SCANLINE, 0x00, 0x00),
 	/* b/241726710, long write 0x35 as a WA */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_ON, 0x00, 0x20),
@@ -256,8 +260,6 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xFF, 0xAA, 0x55, 0xA5, 0x81),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0D),
 	EXYNOS_DSI_CMD_SEQ(0xFB, 0x84),
-	/* config 60hz TE setting */
-	EXYNOS_DSI_CMD_SEQ(0x6D, 0x00, 0x00),
 	/* VRGH = 7.4V */
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xF0, 0x55, 0xAA, 0x52,
 				0x08, 0x01),
@@ -381,9 +383,14 @@ static void bigsurf_change_frequency(struct exynos_panel *ctx,
 	}
 
 	if (!IS_HBM_ON(ctx->hbm_mode)) {
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, (vrefresh == 120) ? 0x00 : 0x30);
-		if (vrefresh == 60)
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x6D, 0x00, 0x00);
+		if (vrefresh == 120) {
+			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
+		} else {
+			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
+			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0xB0);
+			EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xBA, 0x41);
+		}
 	} else {
 		bigsurf_update_irc(ctx, ctx->hbm_mode, vrefresh);
 	}
