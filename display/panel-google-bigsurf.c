@@ -503,7 +503,42 @@ static void bigsurf_update_lhbm_hist_config(struct exynos_panel *ctx)
 
 static int bigsurf_atomic_check(struct exynos_panel *ctx, struct drm_atomic_state *state)
 {
+	struct drm_connector *conn = &ctx->exynos_connector.base;
+	struct drm_connector_state *new_conn_state =
+					drm_atomic_get_new_connector_state(state, conn);
+	struct drm_crtc_state *old_crtc_state, *new_crtc_state;
+
 	bigsurf_update_lhbm_hist_config(ctx);
+
+	if (!ctx->current_mode || drm_mode_vrefresh(&ctx->current_mode->mode) == 120 ||
+	    !new_conn_state || !new_conn_state->crtc)
+		return 0;
+
+	new_crtc_state = drm_atomic_get_new_crtc_state(state, new_conn_state->crtc);
+	old_crtc_state = drm_atomic_get_old_crtc_state(state, new_conn_state->crtc);
+	if (!old_crtc_state || !new_crtc_state || !new_crtc_state->active)
+		return 0;
+
+	if (!drm_atomic_crtc_effectively_active(old_crtc_state)) {
+		struct drm_display_mode *mode = &new_crtc_state->adjusted_mode;
+
+		mode->clock = mode->htotal * mode->vtotal * 120 / 1000;
+		if (mode->clock != new_crtc_state->mode.clock) {
+			new_crtc_state->mode_changed = true;
+			ctx->exynos_connector.needs_commit = true;
+			dev_dbg(ctx->dev, "raise mode (%s) clock to 120hz on resume\n",
+				mode->name);
+		}
+	} else if (old_crtc_state->active_changed &&
+		   (old_crtc_state->adjusted_mode.clock != old_crtc_state->mode.clock)) {
+		/* clock hacked in last commit due to resume, undo that */
+		new_crtc_state->mode_changed = true;
+		new_crtc_state->adjusted_mode.clock = new_crtc_state->mode.clock;
+		ctx->exynos_connector.needs_commit = false;
+		dev_dbg(ctx->dev, "restore mode (%s) clock after resume\n",
+			new_crtc_state->mode.name);
+	}
+
 	return 0;
 }
 
