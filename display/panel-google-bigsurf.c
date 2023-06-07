@@ -14,6 +14,7 @@
 #include <linux/of_platform.h>
 #include <video/mipi_display.h>
 
+#include "include/trace/dpu_trace.h"
 #include "panel/panel-samsung-drv.h"
 
 #define BIGSURF_DDIC_ID_LEN 8
@@ -33,6 +34,7 @@ enum bigsurf_lhbm_brt {
 
 #define LHBM_BRT_LEN (LHBM_BRT_MAX * 2)
 #define LHBM_BRT_CMD_LEN (LHBM_BRT_LEN + 1)
+#define LHBM_COMPENSATION_THRESHOLD 1380
 
 enum bigsurf_lhbm_brt_overdrive_group {
 	LHBM_OVERDRIVE_GRP_0_NIT = 0,
@@ -66,6 +68,7 @@ struct bigsurf_panel {
 	struct exynos_panel base;
 	struct bigsurf_lhbm_ctl lhbm_ctl;
 	ktime_t idle_exit_dimming_delay_ts;
+	u16 panel_brightness;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct bigsurf_panel, base)
@@ -270,6 +273,35 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 				0x22, 0x22, 0x22, 0x22),
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x11),
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB7, 0x22, 0x22),
+	/* Burn-in Compensation */
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xF0, 0x55, 0xAA, 0x52,
+				0x08, 0x00),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x11),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB2, 0x01, 0x01, 0x43,
+				0x01, 0x03, 0x00, 0x00),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB4, 0x00, 0x92, 0x00,
+				0x92, 0x01, 0xA9, 0x01, 0xA9, 0x01, 0xE6, 0x01,
+				0xE6, 0x02, 0xF2, 0x02, 0xF2, 0x03, 0xCC, 0x03,
+				0xCC, 0x05, 0x39, 0x05, 0x39, 0x06, 0xA6, 0x06,
+				0xA6, 0x08, 0x2B, 0x08, 0x2B, 0x08, 0x2B, 0x08,
+				0x2B, 0x08, 0xD5, 0x08, 0xD5, 0x08, 0xD5, 0x08,
+				0xD5, 0x08, 0xD5),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x07),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xBA, 0x00, 0x75, 0x00,
+				0x10, 0x00, 0x10, 0x10),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xC0, 0x54),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x03),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xC0, 0x30, 0x75, 0x02),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xF0, 0x55, 0xAA, 0x52,
+				0x08, 0x08),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xC2, 0x33, 0x01, 0x78,
+				0x03, 0x82, 0x00),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x10),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xC2, 0x04, 0x00, 0x00),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xD0, 0x44, 0x00, 0x00,
+				0x44, 0x00, 0x00, 0x44, 0x00, 0x00, 0x04, 0x00,
+				0x46, 0x00, 0x00, 0x44, 0x00, 0x00, 0x41, 0x00,
+				0x00),
 
 	EXYNOS_DSI_CMD_SEQ_DELAY(120, MIPI_DCS_EXIT_SLEEP_MODE)
 };
@@ -277,6 +309,18 @@ static DEFINE_EXYNOS_CMD_SET(bigsurf_init);
 
 static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 				       bool local_hbm_en);
+
+static void bigsurf_wait_for_vsync_done(struct exynos_panel *ctx) {
+	const struct exynos_panel_mode *pmode = ctx->current_mode;
+	int vrefresh = drm_mode_vrefresh(&pmode->mode);
+
+	DPU_ATRACE_BEGIN(__func__);
+	exynos_panel_wait_for_vsync_done(
+		ctx, pmode->exynos_mode.te_usec,
+		EXYNOS_VREFRESH_TO_PERIOD_USEC(vrefresh));
+	DPU_ATRACE_END(__func__);
+}
+
 static void bigsurf_update_te2(struct exynos_panel *ctx)
 {
 	struct exynos_panel_te2_timing timing;
@@ -573,7 +617,10 @@ static void bigsurf_set_local_hbm_background_brightness(struct exynos_panel *ctx
 static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 {
 	struct bigsurf_panel *spanel = to_spanel(ctx);
+	u16 old_brightness = spanel->panel_brightness;
 	u16 brightness;
+	int ret;
+	bool low_to_high;
 
 	if (ctx->current_mode->exynos_mode.is_lp_mode) {
 		const struct exynos_panel_funcs *funcs;
@@ -586,22 +633,38 @@ static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 
 	if (!br) {
 		// turn off panel and set brightness directly.
-		return exynos_dcs_set_brightness(ctx, 0);
+		ret = exynos_dcs_set_brightness(ctx, 0);
+	} else {
+		if (ctx->hbm.local_hbm.enabled)
+			bigsurf_set_local_hbm_background_brightness(ctx, br);
+
+		brightness = (br & 0xff) << 8 | br >> 8;
+
+		if (spanel->idle_exit_dimming_delay_ts &&
+			(ktime_sub(spanel->idle_exit_dimming_delay_ts, ktime_get()) <= 0)) {
+			EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
+						ctx->dimming_on ? 0x28 : 0x20);
+			spanel->idle_exit_dimming_delay_ts = 0;
+		}
+
+		ret = exynos_dcs_set_brightness(ctx, brightness);
 	}
 
-	if (ctx->hbm.local_hbm.enabled)
-		bigsurf_set_local_hbm_background_brightness(ctx, br);
-
-	brightness = (br & 0xff) << 8 | br >> 8;
-
-	if (spanel->idle_exit_dimming_delay_ts &&
-		(ktime_sub(spanel->idle_exit_dimming_delay_ts, ktime_get()) <= 0)) {
-		EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
-					ctx->dimming_on ? 0x28 : 0x20);
-		spanel->idle_exit_dimming_delay_ts = 0;
+	/* Check for passing brightness threshold */
+	if ((old_brightness < LHBM_COMPENSATION_THRESHOLD) ^ (br < LHBM_COMPENSATION_THRESHOLD)) {
+		low_to_high = old_brightness < LHBM_COMPENSATION_THRESHOLD;
+		bigsurf_wait_for_vsync_done(ctx);
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x08);
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0xD0, 0x44, 0x00, 0x00, 0x44, 0x00,
+						0x00, 0x44, 0x00, 0x00, 0x04,
+						0x00, low_to_high ? 0x46: 0x4A,
+						0x00, 0x00, 0x44, 0x00, 0x00,
+						low_to_high ? 0x41 : 0x40, 0x00,
+						0x00);
 	}
 
-	return exynos_dcs_set_brightness(ctx, brightness);
+	spanel->panel_brightness = br;
+	return ret;
 }
 
 static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
@@ -923,11 +986,13 @@ static void bigsurf_lhbm_brightness_init(struct exynos_panel *ctx)
 
 static void bigsurf_panel_init(struct exynos_panel *ctx)
 {
+	struct bigsurf_panel *spanel = to_spanel(ctx);
 	struct dentry *csroot = ctx->debugfs_cmdset_entry;
 
 	exynos_panel_debugfs_create_cmdset(ctx, csroot, &bigsurf_init_cmd_set, "init");
 	bigsurf_dimming_frame_setting(ctx, BIGSURF_DIMMING_FRAME);
 	bigsurf_lhbm_brightness_init(ctx);
+	spanel->panel_brightness = exynos_panel_get_brightness(ctx);
 }
 
 static int bigsurf_panel_probe(struct mipi_dsi_device *dsi)
