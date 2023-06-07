@@ -1378,6 +1378,12 @@ static const struct exynos_dsi_cmd hk3_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB0, 0x00, 0x1D, 0x63),
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x63, 0x02, 0x18),
 
+	/* PMIC Fast Discharge off */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x18, 0xB1),
+	EXYNOS_DSI_CMD_SEQ(0xB1, 0x55, 0x01),
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x13, 0xB1),
+	EXYNOS_DSI_CMD_SEQ(0xB1, 0x80),
+
 	EXYNOS_DSI_CMD0(freq_update),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
 	/* CASET: 1343 */
