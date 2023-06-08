@@ -256,6 +256,8 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xFF, 0xAA, 0x55, 0xA5, 0x81),
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x0D),
 	EXYNOS_DSI_CMD_SEQ(0xFB, 0x84),
+	/* config 60hz TE setting */
+	EXYNOS_DSI_CMD_SEQ(0x6D, 0x00, 0x00),
 	/* VRGH = 7.4V */
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xF0, 0x55, 0xAA, 0x52,
 				0x08, 0x01),
@@ -271,6 +273,8 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 };
 static DEFINE_EXYNOS_CMD_SET(bigsurf_init);
 
+static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
+				       bool local_hbm_en);
 static void bigsurf_update_te2(struct exynos_panel *ctx)
 {
 	struct exynos_panel_te2_timing timing;
@@ -328,7 +332,9 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x02);
 		} else {
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
-			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x01, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0xB0);
+			EXYNOS_DCS_BUF_ADD(ctx, 0xBA, 0x44);
 		}
 	} else {
 		EXYNOS_DCS_BUF_ADD(ctx, 0x5F, 0x00);
@@ -339,9 +345,12 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 				EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x75);
 			}
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x01);
 		} else {
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
-			EXYNOS_DCS_BUF_ADD(ctx, 0x6D, 0x00, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0xB0);
+			EXYNOS_DCS_BUF_ADD(ctx, 0xBA, 0x41);
 		}
 		if (ctx->panel_rev >= PANEL_REV_EVT1) {
 			const u8 val1 = level >> 8;
@@ -361,6 +370,15 @@ static void bigsurf_change_frequency(struct exynos_panel *ctx,
 
 	if (!ctx || (vrefresh != 60 && vrefresh != 120))
 		return;
+
+	if (vrefresh != 120 &&
+		ctx->hbm.local_hbm.effective_state != LOCAL_HBM_DISABLED) {
+		dev_err(ctx->dev,
+			"%s: switch to %uhz will fail when LHBM is on, disable LHBM\n",
+			__func__, vrefresh);
+		bigsurf_set_local_hbm_mode(ctx, false);
+		ctx->hbm.local_hbm.effective_state = LOCAL_HBM_DISABLED;
+	}
 
 	if (!IS_HBM_ON(ctx->hbm_mode)) {
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, (vrefresh == 120) ? 0x00 : 0x30);

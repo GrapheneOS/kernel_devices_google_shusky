@@ -4,7 +4,6 @@ DEVICE_DIR=${KERNEL_DIR}
 SOC_DIR=private/google-modules/soc/gs
 # Compile these modules with the GKI kernel
 KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp"}
-DEVICE_REL_DIR=$(realpath ${DEVICE_DIR} --relative-to ${KERNEL_DIR})
 
 # These just need to be relative to the ROOT_DIR
 GKI_FRAGMENT_DEFCONFIG=${DEVICE_DIR}/shusky_gki.fragment
@@ -15,76 +14,5 @@ modules
 dtbs
 "
 
-DTS_EXT_DIR="private/devices/google/shusky/dts"
 DTC_INCLUDE=${ROOT_DIR}/${SOC_DIR}/include/dtc
-BUILD_DTBO_IMG=1
 MKDTIMG_FLAGS="--page_size=4096 --id=/:board_id --rev=/:board_rev"
-# These paths need to be relative to KERNEL_DIR.
-MKDTIMG_DTBOS="
-${DEVICE_REL_DIR}/dts/google/*.dtbo
-"
-
-FILES="
-google-dts-base/zuma-a0-foplp.dtb
-google-dts-base/zuma-a0-ipop.dtb
-google-dts-base/zuma-b0-foplp.dtb
-google-dts-base/zuma-b0-ipop.dtb
-google-dts-base/zuma-dpm-eng.dtbo
-google-dts-base/zuma-dpm-user.dtbo
-google-dts-base/zuma-dpm-userdebug.dtbo
-google/zuma-ripcurrent.dtbo
-google/zuma-husky-proto1.dtbo
-google/zuma-husky-proto1_1.dtbo
-google/zuma-shiba-proto1.dtbo
-google/zuma-shiba-proto1_1.dtbo
-"
-
-# Concatenate vendor_kernel_boot_modules.zuma (platform common) and vendor_kernel_boot_modules.shusky (device specified) into one file
-POST_KERNEL_BUILD_CMDS="concat_vendor_kernel_boot_modules"
-function concat_vendor_kernel_boot_modules() {
-  cat ${SOC_DIR}/vendor_kernel_boot_modules.zuma \
-    private/devices/google/shusky/vendor_kernel_boot_modules.shusky > \
-    ${OUT_DIR}/vendor_kernel_boot_modules.concat
-  MODULES_LIST=${OUT_DIR}/vendor_kernel_boot_modules.concat
-}
-
-VENDOR_RAMDISK_CMDS="modify_vendor_ramdisk"
-function modify_vendor_ramdisk() {
-  ln -f init.recovery.ripcurrent.rc init.recovery.husky.rc
-  ln -f init.recovery.ripcurrent.rc init.recovery.shiba.rc
-}
-
-EXT_MODULES+="
-private/google-modules/bms/misc
-private/google-modules/soc/gs
-private/google-modules/amplifiers/audiometrics
-private/google-modules/aoc
-private/google-modules/aoc/alsa
-private/google-modules/aoc/usb
-private/google-modules/amplifiers/cs35l41
-private/google-modules/amplifiers/cs40l26
-private/google-modules/bms
-private/google-modules/hdcp/samsung
-private/google-modules/display
-private/devices/google/shusky/display
-private/google-modules/edgetpu/rio/drivers/edgetpu
-private/google-modules/gpu/mali_pixel
-private/google-modules/gpu/mali_kbase
-private/google-modules/gxp/zuma
-private/google-modules/lwis
-private/google-modules/nfc
-private/google-modules/touch/common
-private/google-modules/touch/fts/ftm5
-private/google-modules/touch/goodix
-private/google-modules/touch/sec
-private/google-modules/video/gchips
-private/google-modules/power/reset
-private/google-modules/wlan/bcm4398
-private/google-modules/bluetooth/broadcom
-private/google-modules/gps/broadcom/bcm47765
-"
-
-UWB_MODULE="private/google-modules/uwb"
-if [ -d "${ROOT_DIR}/${UWB_MODULE}" ]; then
-EXT_MODULES+=${UWB_MODULE}
-fi

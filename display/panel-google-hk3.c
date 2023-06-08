@@ -1464,6 +1464,9 @@ static int hk3_enable(struct drm_panel *panel)
 
 	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
 	EXYNOS_DCS_BUF_ADD(ctx, 0xC3, is_fhd ? 0x0D : 0x0C);
+	/* 8/10bit config for QHD/FHD */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x01, 0xF2);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xF2, is_fhd ? 0x81 : 0x01);
 	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
 
 	hk3_update_panel_feat(ctx, pmode, true);
@@ -2388,7 +2391,7 @@ const struct brightness_capability hk3_brightness_capability = {
 const struct exynos_panel_desc google_hk3 = {
 	.data_lane_cnt = 4,
 	.max_brightness = 4095,
-	.dft_brightness = 1653,
+	.dft_brightness = 1353, /* 140 nits */
 	.brt_capability = &hk3_brightness_capability,
 	.dbv_extra_frame = true,
 	/* supported HDR format bitmask : 1(DOLBY_VISION), 2(HDR10), 3(HLG) */
@@ -2409,9 +2412,9 @@ const struct exynos_panel_desc google_hk3 = {
 	/*
 	 * After waiting for TE, wait for extra time to make sure the frame start
 	 * happens after both DPU and panel PPS are set and before the next VSYNC.
-	 * This reserves about 6ms for finishing both PPS and frame start.
+	 * This should cover the timing of HS 60/120Hz and NS 60Hz.
 	 */
-	.delay_dsc_reg_init_us = 6000,
+	.delay_dsc_reg_init_us = 10000,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,
