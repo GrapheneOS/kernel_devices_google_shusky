@@ -158,27 +158,6 @@
 		pca9468,google_cpm = <&google_cpm>;
 	};
 
-	stwc68_dc: st_wc68@65 {
-		compatible = "st_wc68";
-		reg = <0x65>;
-
-		wc68,psy_name = "dc-mains";
-
-		wc68,float-voltage = <4300000>; /* 4.3V */
-
-		wc68,input-itopoff = <500000>; /* 500mA */
-
-		/* USBC thermal zone */
-		google,usb-port-tz-name = "usbc-therm-adc";
-
-		/* irdrop */
-		/* google,irdrop-limits = <105000 75000 0>; */
-
-		wc68,google_cpm = <&google_cpm>;
-		wc68,input-current-limit = <3000000>; /* 6A max */
-		status = "ok";
-	};
-
 	ln8411_dc: ln8411@6e {
 		compatible = "ln8411";
 		reg = <0x6e>;

@@ -491,9 +491,9 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 			EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0x6A,
 							IS_HBM_ON_IRC_OFF(mode) ? 0x01 : 0x21);
 		} else {
-			const u8 irc_mode[2][5] = {
-				{0x6B, 0x19, 0xE1, 0xFF, 0x94}, /* FGZ Mode */
+			static const u8 irc_mode[2][5] = {
 				{0x6B, 0x00, 0x00, 0xFF, 0x90}, /* Flat gamma */
+				{0x6B, 0x11, 0xDB, 0xFF, 0x94}, /* FGZ Mode */
 			};
 
 			/* Global para */
