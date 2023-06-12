@@ -4,3 +4,10 @@
 
 build:shusky --//private/google-modules/soc/gs:gs_kernel_build=//private/devices/google/shusky:zuma_shusky
 build:shusky --//private/google-modules/soc/gs:gs_soc_module=//private/devices/google/shusky:zuma_soc.shusky
+
+build:download_gki --//aosp:use_prebuilt_gki
+build:download_gki --action_env=KLEAF_DOWNLOAD_BUILD_NUMBER_MAP="gki_prebuilts=10305211"
+build:no_download_gki --no//aosp:use_prebuilt_gki
+
+# enable GKI prebuilts by default
+build --config=download_gki
