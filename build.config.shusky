@@ -9,10 +9,5 @@ KERNEL_DIR=${GKI_KERNEL_DIR:-"aosp"}
 GKI_FRAGMENT_DEFCONFIG=${DEVICE_DIR}/shusky_gki.fragment
 . ${ROOT_DIR}/${SOC_DIR}/build.config.zuma
 
-MAKE_GOALS="$MAKE_GOALS
-modules
-dtbs
-"
-
 DTC_INCLUDE=${ROOT_DIR}/${SOC_DIR}/include/dtc
 MKDTIMG_FLAGS="--page_size=4096 --id=/:board_id --rev=/:board_rev"

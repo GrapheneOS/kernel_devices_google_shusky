@@ -119,6 +119,11 @@ genrule(
     tools = ["//build/kernel:hermetic-tools/mv"],
 )
 
+_PIXEL_MAKE_GOALS = [
+    "modules",
+    "dtbs",
+]
+
 _SOC_REVS = [
     "a0-foplp",
     "a0-ipop",
@@ -248,6 +253,7 @@ kernel_build(
         "net/wireless/cfg80211.ko",
     ],
     strip_modules = True,
+    make_goals = _PIXEL_MAKE_GOALS,
 )
 
 kernel_abi(
@@ -336,6 +342,7 @@ lto_dependant_kernel_module(
         "drivers/soc/google/debug/exynos-adv-tracer.ko",
         "drivers/soc/google/debug/exynos-adv-tracer-s2d.ko",
         "drivers/soc/google/debug/exynos-coresight.ko",
+        "drivers/soc/google/debug/exynos-coresight-etm.ko",
         "drivers/soc/google/debug/exynos-debug-test.ko",
         "drivers/soc/google/debug/exynos-ecc-handler.ko",
         "drivers/soc/google/debug/itmon.ko",
