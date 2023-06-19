@@ -10,4 +10,4 @@ build:download_gki --action_env=KLEAF_DOWNLOAD_BUILD_NUMBER_MAP="gki_prebuilts=1
 build:no_download_gki --no//aosp:use_prebuilt_gki
 
 # enable GKI prebuilts by default
-build --config=download_gki
+#build --config=download_gki
