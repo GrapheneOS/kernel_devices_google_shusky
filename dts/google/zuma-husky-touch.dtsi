@@ -25,11 +25,11 @@
 	st,sensor_inverted_x;
 	st,sensor_inverted_y;
 
-	goog,vrr-enabled;
+	/*goog,vrr-enabled;
 	goog,vrr-display-rate = /bits/ 32 <60 120>;
 	goog,vrr-touch-rate = /bits/ 32 <120 240>;
 	goog,vrr-up-delay = <0>;
-	goog,vrr-down-delay = <2>;
+	goog,vrr-down-delay = <2>;*/
 
 	goog,v4l2-enabled;
 	goog,offload-enabled;

@@ -45,11 +45,11 @@
 	goog,test_limits_names = "goodix_test_limits_bigsurf.csv",
 			"goodix_test_limits_shoreline.csv";
 
-	goog,vrr-enabled;
+	/*goog,vrr-enabled;
 	goog,vrr-display-rate = /bits/ 32 <60 120>;
 	goog,vrr-touch-rate = /bits/ 32 <120 240>;
 	goog,vrr-up-delay = <0>;
-	goog,vrr-down-delay = <2>;
+	goog,vrr-down-delay = <2>;*/
 
 	goog,offload-enabled;
 	goog,v4l2-enabled;
