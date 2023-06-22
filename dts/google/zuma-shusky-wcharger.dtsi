@@ -75,6 +75,7 @@
 		google,power_mitigate_threshold = <90>;
 		google,has-sw-ramp;
 		google,align_check;
+		google,align_delta = <(-2000)>;
 
 		pinctrl-names = "default";
 		pinctrl-0 = <&wc_pdet_irq &wc_irq &wc_en>;
