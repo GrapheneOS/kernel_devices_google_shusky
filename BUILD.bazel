@@ -381,6 +381,7 @@ lto_dependant_kernel_module(
         "drivers/soc/google/pt/slc_pmon.ko",
         "drivers/soc/google/pt/slc_pt.ko",
         "drivers/soc/google/vh/kernel/cgroup/vh_cgroup.ko",
+        "drivers/soc/google/vh/kernel/fs/vh_fs.ko",
         "drivers/soc/google/vh/kernel/metrics/pixel_metrics.ko",
         "drivers/soc/google/vh/kernel/mm/vh_mm.ko",
         "drivers/soc/google/vh/kernel/pixel_em/pixel_em.ko",
