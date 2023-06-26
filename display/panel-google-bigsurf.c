@@ -169,6 +169,9 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 
 	/* CMD2, Page1 */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x01),
+	/* Adjust source output timing */
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x18),
+	EXYNOS_DSI_CMD_SEQ(0xD8, 0x38),
 	/* FFC Off */
 	EXYNOS_DSI_CMD_SEQ(0xC3, 0x00),
 	/* FFC setting (MIPI: 756Mbps) and FFC On */
