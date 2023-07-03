@@ -413,7 +413,9 @@ static void hk3_update_te2_internal(struct exynos_panel *ctx, bool lock)
 	if (!ctx)
 		return;
 
-	if (ctx->rrs_in_progress) {
+	/* skip TE2 update if going through RRS */
+	if (ctx->mode_in_progress == MODE_RES_IN_PROGRESS ||
+	    ctx->mode_in_progress == MODE_RES_AND_RR_IN_PROGRESS) {
 		dev_dbg(ctx->dev, "%s: RRS in progress, skip\n", __func__);
 		return;
 	}
@@ -836,9 +838,16 @@ static void hk3_update_refresh_mode(struct exynos_panel *ctx,
 	struct hk3_panel *spanel = to_spanel(ctx);
 	u32 vrefresh = drm_mode_vrefresh(&pmode->mode);
 
-	/* skip idle update if going through RRS */
-	if (ctx->rrs_in_progress)
+	/*
+	 * Skip idle update if going through RRS without refresh rate change. If
+	 * we're switching resolution and refresh rate in the same atomic commit
+	 * (MODE_RES_AND_RR_IN_PROGRESS), we shouldn't skip the update to
+	 * ensure the refresh rate will be set correctly to avoid problems.
+	 */
+	if (ctx->mode_in_progress == MODE_RES_IN_PROGRESS) {
+		dev_dbg(ctx->dev, "%s: RRS in progress without RR change, skip\n", __func__);
 		return;
+	}
 
 	dev_dbg(ctx->dev, "%s: mode: %s set idle_vrefresh: %u\n", __func__,
 		pmode->mode.name, idle_vrefresh);
@@ -1628,10 +1637,10 @@ static int hk3_disable(struct drm_panel *panel)
 
 	dev_info(ctx->dev, "%s\n", __func__);
 
-	/* skip disable sequence if going through modeset */
-	if (ctx->panel_state == PANEL_STATE_MODESET) {
-		/* for the case of resolution change only */
-		ctx->rrs_in_progress = true;
+	/* skip disable sequence if going through RRS */
+	if (ctx->mode_in_progress == MODE_RES_IN_PROGRESS ||
+	    ctx->mode_in_progress == MODE_RES_AND_RR_IN_PROGRESS) {
+		dev_dbg(ctx->dev, "%s: RRS in progress, skip\n", __func__);
 		return 0;
 	}
 
@@ -1716,8 +1725,11 @@ static void hk3_commit_done(struct exynos_panel *ctx)
 		return;
 
 	/* skip idle update if going through RRS */
-	if (ctx->rrs_in_progress)
+	if (ctx->mode_in_progress == MODE_RES_IN_PROGRESS ||
+	    ctx->mode_in_progress == MODE_RES_AND_RR_IN_PROGRESS) {
+		dev_dbg(ctx->dev, "%s: RRS in progress, skip\n", __func__);
 		return;
+	}
 
 	hk3_update_idle_state(ctx);
 

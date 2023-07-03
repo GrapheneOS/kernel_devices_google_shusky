@@ -391,7 +391,7 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 				EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x75);
 			}
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x00);
-			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x01);
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x00);
 		} else {
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
 			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
@@ -428,7 +428,8 @@ static void bigsurf_change_frequency(struct exynos_panel *ctx,
 
 	if (!IS_HBM_ON(ctx->hbm_mode)) {
 		if (vrefresh == 120) {
-			EXYNOS_DCS_WRITE_SEQ(ctx, 0x2F, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x00);
+			EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_SET_GAMMA_CURVE, 0x00);
 		} else {
 			EXYNOS_DCS_BUF_ADD(ctx, 0x2F, 0x30);
 			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
@@ -737,8 +738,16 @@ static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 	if (local_hbm_en) {
 		u16 level = exynos_panel_get_brightness(ctx);
 
-		if (IS_HBM_ON(ctx->hbm_mode))
+		if (IS_HBM_ON(ctx->hbm_mode)) {
 			bigsurf_update_irc(ctx, ctx->hbm_mode, vrefresh);
+		} else if (vrefresh == 120) {
+			EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+			EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x04);
+			EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xC0, 0x75);
+		} else {
+			dev_warn(ctx->dev, "enable LHBM at unexpected state (HBM: %d, vrefresh: %dhz)\n",
+				ctx->hbm_mode, vrefresh);
+		}
 		bigsurf_set_local_hbm_background_brightness(ctx, level);
 		bigsurf_set_local_hbm_brightness(ctx, true);
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0x87, 0x05);
