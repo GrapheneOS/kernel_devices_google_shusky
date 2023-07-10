@@ -629,8 +629,8 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 	const bool irc_update =
 		(IS_HBM_ON_IRC_OFF(exynos_panel->hbm_mode) != IS_HBM_ON_IRC_OFF(mode));
 	static const u8 cyc[2][6] = {
-		{0xBD, 0x01, 0x01, 0x03, 0x03, 0x03}, /* Normal EM CYC */
-		{0xBD, 0x01, 0x00, 0x01, 0x01, 0x01}, /* HBM EM CYC */
+		{0xBD, 0x01, 0x81, 0x01, 0x01, 0x01}, /* Normal EM CYC */
+		{0xBD, 0x01, 0x80, 0x00, 0x01, 0x01}, /* HBM EM CYC */
 	};
 
 	if (!hbm_update && !irc_update)
@@ -643,6 +643,8 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 	if (hbm_update) {
 		/* CYC Set */
 		EXYNOS_DCS_WRITE_TABLE(exynos_panel, cyc[IS_HBM_ON(mode)]);
+		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x2F, 0xBD);
+		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xBD, IS_HBM_ON(mode) ? 0x01: 0x02);
 		/* Update Key */
 		EXYNOS_DCS_WRITE_TABLE(exynos_panel, freq_update);
 	}
