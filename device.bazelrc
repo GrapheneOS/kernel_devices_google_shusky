@@ -4,14 +4,3 @@
 
 build:shusky --//private/google-modules/soc/gs:gs_kernel_build=//private/devices/google/shusky:zuma_shusky
 build:shusky --//private/google-modules/soc/gs:gs_soc_module=//private/devices/google/shusky:zuma_soc.shusky
-
-build:download_gki --use_prebuilt_gki
-build:download_gki --use_signed_prebuilts
-build:download_gki --action_env=KLEAF_DOWNLOAD_BUILD_NUMBER_MAP="gki_prebuilts=TBD"
-build:no_download_gki --use_prebuilt_gki=false
-
-# enable Pixel Staging Kernel (go/pixel-staging) by default
-build --config=aosp_staging
-
-# enable GKI prebuilts by default
-#build --config=download_gki
