@@ -78,7 +78,6 @@ static const struct drm_dsc_config pps_config = {
 
 #define SHORELINE_WRCTRLD_DIMMING_BIT    0x08
 #define SHORELINE_WRCTRLD_BCTRL_BIT      0x20
-#define SHORELINE_WRCTRLD_HBM_BIT        0xC0
 #define SHORELINE_WRCTRLD_LOCAL_HBM_BIT  0x10
 
 #define SHORELINE_TE2_RISING_EDGE_60HZ  0x12D0
@@ -454,9 +453,6 @@ static int shoreline_atomic_check(struct exynos_panel *ctx, struct drm_atomic_st
 static void shoreline_update_wrctrld(struct exynos_panel *ctx)
 {
 	u8 val = SHORELINE_WRCTRLD_BCTRL_BIT;
-
-	if (IS_HBM_ON(ctx->hbm_mode))
-		val |= SHORELINE_WRCTRLD_HBM_BIT;
 
 	if (ctx->hbm.local_hbm.enabled)
 		val |= SHORELINE_WRCTRLD_LOCAL_HBM_BIT;
