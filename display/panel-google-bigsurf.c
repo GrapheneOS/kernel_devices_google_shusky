@@ -1179,6 +1179,7 @@ struct exynos_panel_desc google_bigsurf = {
 	.exynos_panel_func = &bigsurf_exynos_funcs,
 	.lhbm_effective_delay_frames = 2,
 	.lhbm_post_cmd_delay_frames = 3,
+	.lhbm_on_delay_frames = 2,
 	.reset_timing_ms = {1, 1, 20},
 	.reg_ctrl_enable = {
 		{PANEL_REG_ID_VDDI, 0},
