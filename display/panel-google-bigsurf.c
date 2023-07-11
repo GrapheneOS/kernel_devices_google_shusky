@@ -76,7 +76,7 @@ struct bigsurf_panel {
 static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
 	/* Disable the Black insertion in AoD */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00),
-	EXYNOS_DSI_CMD_SEQ(0xC0, 0x44),
+	EXYNOS_DSI_CMD_SEQ(0xC0, 0x54),
 
 	/* disable dimming */
 	EXYNOS_DSI_CMD_SEQ(0x53, 0x20),
@@ -1192,6 +1192,7 @@ struct exynos_panel_desc google_bigsurf = {
 		{PANEL_REG_ID_VCI, 0},
 		{PANEL_REG_ID_VDDI, 0},
 	},
+	.refresh_on_lp = true,
 };
 
 static int bigsurf_panel_config(struct exynos_panel *ctx)
