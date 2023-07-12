@@ -531,7 +531,7 @@ static int shoreline_enable(struct drm_panel *panel)
 
 	exynos_panel_reset(ctx);
 
-	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 10, MIPI_DCS_EXIT_SLEEP_MODE);
+	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 5, MIPI_DCS_EXIT_SLEEP_MODE);
 
 	if (ctx->panel_rev < PANEL_REV_DVT1)
 		exynos_panel_send_cmd_set(ctx, &shoreline_vgh_init_cmd_set);
