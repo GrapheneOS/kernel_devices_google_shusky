@@ -531,6 +531,11 @@ static int shoreline_enable(struct drm_panel *panel)
 
 	exynos_panel_reset(ctx);
 
+	/* DSC related configuration */
+	drm_dsc_pps_payload_pack(&pps_payload, &pps_config);
+	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
+	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
+
 	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 5, MIPI_DCS_EXIT_SLEEP_MODE);
 
 	if (ctx->panel_rev < PANEL_REV_DVT1)
@@ -545,11 +550,6 @@ static int shoreline_enable(struct drm_panel *panel)
 	shoreline_change_frequency(ctx, drm_mode_vrefresh(mode));
 
 	shoreline_lhbm_gamma_write(ctx);
-
-	/* DSC related configuration */
-	drm_dsc_pps_payload_pack(&pps_payload, &pps_config);
-	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
-	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
 
 	shoreline_update_wrctrld(ctx); /* dimming and HBM */
 
