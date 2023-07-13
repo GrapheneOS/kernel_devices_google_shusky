@@ -662,7 +662,8 @@ static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 	}
 
 	/* Check for passing brightness threshold */
-	if ((old_brightness < LHBM_COMPENSATION_THRESHOLD) ^ (br < LHBM_COMPENSATION_THRESHOLD)) {
+	if ((ctx->panel_rev < PANEL_REV_MP) &&
+	    ((old_brightness < LHBM_COMPENSATION_THRESHOLD) ^ (br < LHBM_COMPENSATION_THRESHOLD))) {
 		low_to_high = old_brightness < LHBM_COMPENSATION_THRESHOLD;
 		bigsurf_wait_for_vsync_done(ctx);
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x08);
