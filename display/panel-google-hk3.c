@@ -130,8 +130,8 @@ struct hk3_panel {
 	bool force_changeable_te;
 	/** @force_changeable_te2: force changeable TE (instead of fixed) for monitoring refresh rate */
 	bool force_changeable_te2;
-	/** @hw_acl_enabled: whether automatic current limiting is enabled */
-	bool hw_acl_enabled;
+	/** @hw_acl_setting: automatic current limiting setting */
+	u8 hw_acl_setting;
 	/** @hw_dbv: indecate the current dbv */
 	u16 hw_dbv;
 	/** @hw_za_enabled: whether zonal attenuation is enabled */
@@ -1135,7 +1135,7 @@ static void hk3_update_za(struct exynos_panel *ctx)
 	bool enable_za = false;
 	u8 opr;
 
-	if (spanel->hw_acl_enabled && !spanel->force_za_off) {
+	if ((spanel->hw_acl_setting > 0) && !spanel->force_za_off) {
 		if (ctx->panel_rev != PANEL_REV_PROTO1) {
 			enable_za = true;
 		} else if (!hk3_get_opr(ctx, &opr)) {
@@ -1164,20 +1164,30 @@ static void hk3_update_za(struct exynos_panel *ctx)
 
 #define HK3_ACL_ZA_THRESHOLD_DBV_P1_0 3917
 #define HK3_ACL_ZA_THRESHOLD_DBV_P1_1 3781
-#define HK3_ACL_ZA_THRESHOLD_DBV 3865
+#define HK3_ACL_ENHANCED_THRESHOLD_DBV 3865
+#define HK3_ACL_NORMAL_THRESHOLD_DBV_1 3570
+#define HK3_ACL_NORMAL_THRESHOLD_DBV_2 3963
 
 /* updated za when acl mode changed */
-static void hk3_set_acl_mode(struct exynos_panel *ctx, bool on) {
+static void hk3_set_acl_mode(struct exynos_panel *ctx, enum exynos_acl_mode mode)
+{
 	struct hk3_panel *spanel = to_spanel(ctx);
-	u16 dbv_th;
-	u8 setting;
+	u16 dbv_th = 0;
+	u8 setting = 0;
 	bool enable_acl = false;
 	/*
-	 * ACL setting:
+	 * ACL mode and setting:
 	 *
-	 * P1.0 - 5% (0x01)
-	 * P1.1 - 7.5% (0x02)
-	 * EVT1 and later - 17% (0x03)
+	 * P1.0
+	 *    NORMAL/ENHANCED- 5% (0x01)
+	 * P1.1
+	 *    NORMAL/ENHANCED- 7.5% (0x02)
+	 *
+	 * EVT1 and later
+	 *    ENHANCED   - 17%  (0x03)
+	 *    NORMAL     - 12%  (0x02)
+	 *               - 7.5% (0x01)
+	 *
 	 * Set 0x00 to disable it
 	 */
 	if (ctx->panel_rev == PANEL_REV_PROTO1) {
@@ -1187,14 +1197,29 @@ static void hk3_set_acl_mode(struct exynos_panel *ctx, bool on) {
 		dbv_th = HK3_ACL_ZA_THRESHOLD_DBV_P1_1;
 		setting = 0x02;
 	} else {
-		dbv_th = HK3_ACL_ZA_THRESHOLD_DBV;
-		setting = 0x03;
+		if (mode == ACL_ENHANCED) {
+			dbv_th = HK3_ACL_ENHANCED_THRESHOLD_DBV;
+			setting = 0x03;
+		} else if (mode == ACL_NORMAL) {
+			if (spanel->hw_dbv >= HK3_ACL_NORMAL_THRESHOLD_DBV_1 &&
+				spanel->hw_dbv < HK3_ACL_NORMAL_THRESHOLD_DBV_2) {
+				dbv_th = HK3_ACL_NORMAL_THRESHOLD_DBV_1;
+				setting = 0x01;
+			} else if (spanel->hw_dbv >= HK3_ACL_NORMAL_THRESHOLD_DBV_2) {
+				dbv_th = HK3_ACL_NORMAL_THRESHOLD_DBV_2;
+				setting = 0x02;
+			}
+		}
 	}
-	enable_acl = (spanel->hw_dbv >= dbv_th && IS_HBM_ON(ctx->hbm_mode) && on);
-	if (spanel->hw_acl_enabled != enable_acl) {
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, enable_acl ? setting : 0);
-		spanel->hw_acl_enabled = enable_acl;
-		dev_info(ctx->dev, "%s: acl: %s\n", __func__, enable_acl ? "on" : "off");
+
+	enable_acl = (spanel->hw_dbv >= dbv_th && IS_HBM_ON(ctx->hbm_mode) && mode != ACL_OFF);
+	if (enable_acl == false)
+		setting = 0;
+
+	if (spanel->hw_acl_setting != setting) {
+		EXYNOS_DCS_WRITE_SEQ(ctx, 0x55, setting);
+		spanel->hw_acl_setting = setting;
+		dev_info(ctx->dev, "%s: %d\n", __func__, setting);
 		/* Keep ZA off after EVT1 */
 		if (ctx->panel_rev < PANEL_REV_EVT1)
 			hk3_update_za(ctx);
@@ -1660,7 +1685,7 @@ static int hk3_disable(struct drm_panel *panel)
 	bitmap_clear(spanel->hw_feat, 0, FEAT_MAX);
 	spanel->hw_vrefresh = 60;
 	spanel->hw_idle_vrefresh = 0;
-	spanel->hw_acl_enabled = false;
+	spanel->hw_acl_setting = 0;
 	spanel->hw_za_enabled = false;
 	spanel->hw_dbv = 0;
 
@@ -2417,8 +2442,8 @@ static void hk3_panel_init(struct exynos_panel *ctx)
 				&spanel->force_changeable_te2);
 	debugfs_create_bool("force_za_off", 0644, ctx->debugfs_entry,
 				&spanel->force_za_off);
-	debugfs_create_bool("hw_acl_enabled", 0644, ctx->debugfs_entry,
-				&spanel->hw_acl_enabled);
+	debugfs_create_u8("hw_acl_setting", 0644, ctx->debugfs_entry,
+				&spanel->hw_acl_setting);
 #endif
 
 #ifdef PANEL_FACTORY_BUILD
@@ -2453,7 +2478,7 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 
 	spanel->base.op_hz = 120;
 	spanel->hw_vrefresh = 60;
-	spanel->hw_acl_enabled = false;
+	spanel->hw_acl_setting = 0;
 	spanel->hw_za_enabled = false;
 	spanel->hw_dbv = 0;
 	/* ddic default temp */

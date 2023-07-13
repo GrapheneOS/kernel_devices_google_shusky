@@ -244,6 +244,7 @@
 					"ldo4",
 					"reset",
 					"mclk_on",
+					"tof-reset",
 					"ldo5",
 					"gpio4";
 				power-up-seq-types =
@@ -255,6 +256,7 @@
 					"regulator",
 					"gpio",
 					"pinctrl",
+					"gpio",
 					"regulator",
 					"regulator";
 				power-up-seq-delays-us =
@@ -266,6 +268,7 @@
 					 2000
 					 1000
 					 7000
+					 0
 					 1000
 					 1000>;
 
@@ -273,6 +276,7 @@
 				power-down-seqs =
 					"gpio4",
 					"ldo5",
+					"tof-reset",
 					"mclk_off",
 					"reset",
 					"ldo4",
@@ -284,6 +288,7 @@
 				power-down-seq-types =
 					"regulator",
 					"regulator",
+					"gpio",
 					"pinctrl",
 					"gpio",
 					"regulator",
@@ -295,6 +300,7 @@
 				power-down-seq-delays-us =
 					<1000
 					 1000
+					 0
 					 1000
 					 1000
 					 0
@@ -324,6 +330,8 @@
 				/* GPIOs */
 				/* RCAM_RST_L GPP2[2] */
 				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
+				/* XAPC_MCLK8: GPP15[0] */
+				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
@@ -346,8 +354,8 @@
 
 				/* MCLK Control */
 				pinctrl-names = "mclk_on", "mclk_off";
-				pinctrl-0 = <&sensor_mclk4_fn>;
-				pinctrl-1 = <&sensor_mclk4_out>;
+				pinctrl-0 = <&sensor_mclk4_fn &sensor_mclk8_out &ldaf_irq>;
+				pinctrl-1 = <&sensor_mclk4_out &sensor_mclk8_out &ldaf_irq>;
 
 				/* Power sequence */
 				power-seq = <&rear_camera_power_seq>;
@@ -673,6 +681,7 @@
 				/* GPIOs */
 				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
 				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
+				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
@@ -683,8 +692,8 @@
 				gpio4-supply = <&slg51002_gpio4>;
 				/* MCLK Control */
 				pinctrl-names = "mclk_on", "mclk_off";
-				pinctrl-0 = <&sensor_mclk4_fn>;
-				pinctrl-1 = <&sensor_mclk4_out>;
+				pinctrl-0 = <&sensor_mclk4_fn &sensor_mclk8_out &ldaf_irq>;
+				pinctrl-1 = <&sensor_mclk4_out &sensor_mclk8_out &ldaf_irq>;
 				/* Power sequence */
 				power-seq = <&rear_camera_power_seq>;
 			};
@@ -837,6 +846,7 @@
 				/* GPIOs */
 				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
 				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
+				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
@@ -847,8 +857,8 @@
 				gpio4-supply = <&slg51002_gpio4>;
 				/* MCLK Control */
 				pinctrl-names = "mclk_on", "mclk_off";
-				pinctrl-0 = <&sensor_mclk4_fn>;
-				pinctrl-1 = <&sensor_mclk4_out>;
+				pinctrl-0 = <&sensor_mclk4_fn &sensor_mclk8_out &ldaf_irq>;
+				pinctrl-1 = <&sensor_mclk4_out &sensor_mclk8_out &ldaf_irq>;
 				/* Power sequence */
 				power-seq = <&rear_camera_power_seq>;
 
@@ -979,6 +989,7 @@
 				/* GPIOs */
 				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
 				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
+				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
@@ -989,8 +1000,8 @@
 				gpio4-supply = <&slg51002_gpio4>;
 				/* MCLK Control */
 				pinctrl-names = "mclk_on", "mclk_off";
-				pinctrl-0 = <&sensor_mclk4_fn>;
-				pinctrl-1 = <&sensor_mclk4_out>;
+				pinctrl-0 = <&sensor_mclk4_fn &sensor_mclk8_out &ldaf_irq>;
+				pinctrl-1 = <&sensor_mclk4_out &sensor_mclk8_out &ldaf_irq>;
 				/* Power sequence */
 				power-seq = <&rear_camera_power_seq>;
 
@@ -1101,20 +1112,23 @@
 				reg-addr-bitwidth = <16>;
 				reg-value-bitwidth = <8>;
 
+				/* GPIOs */
+				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
+				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
+				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
-				/* VIO 1.8V */
-				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
-				/* VADD 3.3V */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
-
-				/* XAPC_MCLK8: GPP15[0] */
-				reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
+				ldo8-supply = <&slg51002_ldo8>;
+				ldo4-supply = <&slg51002_ldo4>;
+				ldo5-supply = <&slg51002_ldo5>;
+				gpio4-supply = <&slg51002_gpio4>;
 
 				/* MCLK and TOF IRQ Control*/
-				pinctrl-names = "mclk_on", "mclk_off", "default";
-				pinctrl-0 = <&sensor_mclk8_fn>;
-				pinctrl-1 = <&sensor_mclk8_out>;
-				pinctrl-2 = <&ldaf_irq>;
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk4_fn &sensor_mclk8_out &ldaf_irq>;
+				pinctrl-1 = <&sensor_mclk4_out &sensor_mclk8_out &ldaf_irq>;
 
 				/* XEINT_4: GPA5[4] */
 				irq-gpios = <&gpa5 4 GPIO_ACTIVE_LOW>;
@@ -1123,36 +1137,8 @@
 				/* IRQF_ONESHOT | IRQF_TRIGGER_FALLING */
 				irq-gpios-types = <0x2002>;
 
-				/* Power up sequence */
-				power-up-seqs =
-					"mclk_off",
-					"s2mpg15_ldo12",
-					"s2mpg15_ldo26",
-					"reset";
-				power-up-seq-types =
-					"pinctrl",
-					"regulator",
-					"regulator",
-					"gpio";
-				power-up-seq-delays-us =
-					<0
-					 0
-					 0
-					 1000>;
-
-				/* Power down sequence */
-				power-down-seqs =
-					"reset",
-					"s2mpg15_ldo26",
-					"s2mpg15_ldo12";
-				power-down-seq-types =
-					"gpio",
-					"regulator",
-					"regulator";
-				power-down-seq-delays-us =
-					<1000
-					 0
-					 0>;
+				/* Power sequence */
+				power-seq = <&rear_camera_power_seq>;
 
 				i2c-lock-group-id = <0>;
 				transaction-process-limit = <1>;

@@ -24,7 +24,7 @@
 #include "zuma-ripcurrent-touch.dtsi"
 #include "zuma-ripcurrent-usb.dtsi"
 #include "zuma-ripcurrent-usecases.dtsi"
-#include "zuma-ripcurrent-wcharger-ra9530.dtsi"
+#include "zuma-ripcurrent-wcharger.dtsi"
 #include "../google-dts-base/zuma-board-wlan.dtsi"
 #include "../google-dts-base/zuma-board-cp-s5300-sit.dtsi"
 #include "../google-dts-base/zuma-board-bluetooth.dtsi"
