@@ -243,7 +243,6 @@
 					"s2mpg15_ldo26",
 					"s2mpg15_ldo12",
 					"ldo4",
-					"reset",
 					"mclk_on",
 					"tof-reset",
 					"ldo5",
@@ -255,7 +254,6 @@
 					"regulator",
 					"regulator",
 					"regulator",
-					"gpio",
 					"pinctrl",
 					"gpio",
 					"regulator",
@@ -266,9 +264,8 @@
 					 750
 					 0
 					 0
-					 2000
 					 1000
-					 7000
+					 0
 					 0
 					 1000
 					 1000>;
@@ -279,7 +276,6 @@
 					"ldo5",
 					"tof-reset",
 					"mclk_off",
-					"reset",
 					"ldo4",
 					"s2mpg15_ldo12",
 					"s2mpg15_ldo26",
@@ -291,7 +287,6 @@
 					"regulator",
 					"gpio",
 					"pinctrl",
-					"gpio",
 					"regulator",
 					"regulator",
 					"regulator",
@@ -302,7 +297,6 @@
 					<1000
 					 1000
 					 0
-					 1000
 					 1000
 					 0
 					 0
@@ -321,6 +315,9 @@
 				/* I2C */
 				i2c-bus = <&hsi2c_1>;
 				i2c-addr = <0x3D>;
+
+				/* Power up mode */
+				lwis,power-up-to-suspend;
 
 				/* Registers */
 				reg-addr-bitwidth = <16>;
@@ -360,6 +357,16 @@
 
 				/* Power sequence */
 				power-seq = <&rear_camera_power_seq>;
+
+				/* resume sequence */
+				resume-seqs = "reset";
+				resume-seq-types = "gpio";
+				resume-seq-delays-us = <9000>;
+
+				/* suspend sequence */
+				suspend-seqs = "reset";
+				suspend-seq-types = "gpio";
+				suspend-seq-delays-us = <0>;
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
@@ -723,7 +730,6 @@
 				reg-value-bitwidth = <32>;
 				/* GPIOs */
 				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
-				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
 				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
@@ -888,7 +894,6 @@
 
 				/* GPIOs */
 				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
-				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
 				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
@@ -1059,7 +1064,6 @@
 
 				/* GPIOs */
 				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
-				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
 				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
@@ -1199,7 +1203,6 @@
 
 				/* GPIOs */
 				enable-gpios = <&s2mpg15_gpio 2 GPIO_ACTIVE_HIGH>;
-				reset-gpios = <&gpp2 2 GPIO_ACTIVE_HIGH>;
 				tof-reset-gpios = <&gpp15 0 GPIO_ACTIVE_HIGH>;
 				/* Power supplies */
 				s2mpg15_ldo26-supply = <&s_ldo26_reg>;
