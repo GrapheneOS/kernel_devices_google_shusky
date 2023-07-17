@@ -117,9 +117,9 @@ static const struct exynos_binned_lp shoreline_binned_lp[] = {
 static const struct exynos_dsi_cmd shoreline_vgh_init_cmds[] = {
 	/* VGH/VLIN1 Setting (P1.0~EVT1.1 only) */
 	EXYNOS_DSI_CMD0(test_key_on_f0),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x0A , 0xB5), /* global para */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x0A, 0xB5), /* global para */
 	EXYNOS_DSI_CMD_SEQ(0xB5, 0x08), /* NBM/HBM VLIN 7.9V */
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x0E , 0xB5), /* global para */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x0E, 0xB5), /* global para */
 	EXYNOS_DSI_CMD_SEQ(0xB5, 0x00), /* AOD VLIN 7.9V */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x0F, 0xF4), /* global para */
 	EXYNOS_DSI_CMD_SEQ(0xF4, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18), /* VGH 7.4V */
@@ -130,9 +130,9 @@ static const struct exynos_dsi_cmd shoreline_vgh_init_cmds[] = {
  static const struct exynos_dsi_cmd shoreline_vreg_init_cmds[] = {
 	/* VREG 4.5V Set */
 	EXYNOS_DSI_CMD0(test_key_on_f0),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x60 , 0xF4), /* global para */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x60, 0xF4), /* global para */
 	EXYNOS_DSI_CMD_SEQ(0xF4, 0x50), /* AMP Type Change */
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x3A , 0xF4), /* global para */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x3A, 0xF4), /* global para */
 	EXYNOS_DSI_CMD_SEQ(0xF4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), /* VREG 4.5V */
 	EXYNOS_DSI_CMD0(test_key_off_f0),
  };
@@ -322,10 +322,14 @@ static void shoreline_display_on(struct exynos_panel *ctx)
 	if (spanel->vreg_cmd[0]) {
 		EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_on_f0);
 		EXYNOS_DCS_BUF_ADD_SET(ctx, sync_begin);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x12, 0xF8); /* global para */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF8, 0x3F); /* auto power saving off */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x60, 0xF4); /* global para */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xF4, 0x70); /* AMP type Return */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x3A, 0xF4);/* global para */
 		EXYNOS_DCS_BUF_ADD_SET(ctx, spanel->vreg_cmd); /* VREG OTP Value */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x12, 0xF8); /* global para */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF8, 0x00); /* auto power saving on */
 		EXYNOS_DCS_BUF_ADD_SET(ctx, sync_end);
 		EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_off_f0);
 	}
@@ -341,11 +345,15 @@ static void shoreline_display_off(struct exynos_panel *ctx)
 	if (spanel->vreg_cmd[0]) {
 		EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_on_f0);
 		EXYNOS_DCS_BUF_ADD_SET(ctx, sync_begin);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x12, 0xF8); /* global para */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF8, 0x3F); /* auto power saving off */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x60, 0xF4); /* global para */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xF4, 0x50);		 /* AMP Type Change */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x3A, 0xF4); /* global para */
 		EXYNOS_DCS_BUF_ADD(ctx, 0xF4, 0x00, 0x00, 0x00,  /* VREG 4.5V */
 					0x00, 0x00, 0x00, 0x00);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x12, 0xF8); /* global para */
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF8, 0x00); /* auto power saving on */
 		EXYNOS_DCS_BUF_ADD_SET(ctx, sync_end);
 		EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_off_f0);
 	}
