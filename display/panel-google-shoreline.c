@@ -78,13 +78,11 @@ static const struct drm_dsc_config pps_config = {
 
 #define SHORELINE_WRCTRLD_DIMMING_BIT    0x08
 #define SHORELINE_WRCTRLD_BCTRL_BIT      0x20
-#define SHORELINE_WRCTRLD_HBM_BIT        0xC0
 #define SHORELINE_WRCTRLD_LOCAL_HBM_BIT  0x10
 
-#define SHORELINE_TE2_RISING_EDGE_60HZ  	0x0F0
-#define SHORELINE_TE2_FALLING_EDGE_60HZ 	0x3F
-#define SHORELINE_TE2_RISING_EDGE_120HZ		0x960
-#define SHORELINE_TE2_FALLING_EDGE_120HZ	0x40
+#define SHORELINE_TE2_RISING_EDGE_60HZ  0x12D0
+#define SHORELINE_TE2_RISING_EDGE_120HZ 0x960
+#define SHORELINE_TE2_FALLING_EDGE      0x30
 
 #define WIDTH_MM 64
 #define HEIGHT_MM 143
@@ -110,9 +108,9 @@ static const struct exynos_dsi_cmd shoreline_lp_high_cmds[] = {
 static const struct exynos_binned_lp shoreline_binned_lp[] = {
 	/* low threshold 40 nits */
 	BINNED_LP_MODE_TIMING("low", 819, shoreline_lp_low_cmds,
-			      SHORELINE_TE2_RISING_EDGE_120HZ, SHORELINE_TE2_FALLING_EDGE_120HZ),
+			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),
 	BINNED_LP_MODE_TIMING("high", 4095, shoreline_lp_high_cmds,
-			      SHORELINE_TE2_RISING_EDGE_120HZ, SHORELINE_TE2_FALLING_EDGE_120HZ),
+			      SHORELINE_TE2_RISING_EDGE_60HZ, SHORELINE_TE2_FALLING_EDGE),
 };
 
 
@@ -141,28 +139,14 @@ static const struct exynos_dsi_cmd shoreline_vgh_init_cmds[] = {
  static DEFINE_EXYNOS_CMD_SET(shoreline_vreg_init);
 
 static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
-	/* GPO DC Settings */
-	EXYNOS_DSI_CMD0(test_key_on_f0),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x0B, 0xF2),
-	EXYNOS_DSI_CMD_SEQ(0xF2, 0x0C, 0x00, 0x04),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x1F, 0xCB),
-	EXYNOS_DSI_CMD_SEQ(0xCB, 0xFF),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x22, 0xCB),
-	EXYNOS_DSI_CMD_SEQ(0xCB, 0xC2),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x8C, 0xCB),
-	EXYNOS_DSI_CMD_SEQ(0xCB, 0xBA),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x01, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x81, 0x01),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x2F, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x02),
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x82, 0xBD),
-	EXYNOS_DSI_CMD_SEQ(0xBD, 0x02),
-	EXYNOS_DSI_CMD(freq_update, 110),
-
 	/* Common Settings */
+	EXYNOS_DSI_CMD0(test_key_on_f0),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_TEAR_ON),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_COLUMN_ADDRESS, 0x00, 0x00, 0x04, 0x37),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_PAGE_ADDRESS, 0x00, 0x00, 0x09, 0x5F),
+
+	/* TE Settings */
+	EXYNOS_DSI_CMD_SEQ(0xB9, 0x31, 0x31), /* TE and TE2 Select for HS mode */
 
 	/* LHBM Location */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x09, 0x6D), /* global para */
@@ -370,20 +354,6 @@ static void shoreline_display_off(struct exynos_panel *ctx)
 	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x00);
 };
 
-static void shoreline_update_te(struct exynos_panel *ctx, const unsigned int vrefresh)
-{
-	static const u8 te_setting[2][5] = {
-		{0xB9, 0x09, 0x74, 0x00, 0x0C}, /* HS 60Hz */
-		{0xB9, 0x00, 0x44, 0x00, 0x0C}, /* HS 120Hz */
-	};
-
-	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB9, (vrefresh == 60) ? 0x11 : 0x31); /* TE SELECT */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x10, 0xB9); /* global para */
-	EXYNOS_DCS_WRITE_TABLE(ctx, te_setting[(vrefresh == 60) ? 0 : 1]); /* TE Width */
-	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
-}
-
 /**
  * TODO: Revise the calculation of TE2 timing
  *
@@ -397,15 +367,9 @@ static void shoreline_update_te(struct exynos_panel *ctx, const unsigned int vre
  */
 static void shoreline_update_te2(struct exynos_panel *ctx)
 {
-	const struct exynos_panel_mode *pmode = ctx->current_mode;
-	static const u8 te2_setting[2][4] = {
-		{0xB0, 0x00, 0x1A, 0xB9}, /* HS 60Hz */
-		{0xB0, 0x00, 0x26, 0xB9}, /* HS 120Hz */
-	};
-	unsigned int vrefresh = drm_mode_vrefresh(&pmode->mode);
 	struct exynos_panel_te2_timing timing = {
 		.rising_edge = SHORELINE_TE2_RISING_EDGE_60HZ,
-		.falling_edge = SHORELINE_TE2_FALLING_EDGE_60HZ,
+		.falling_edge = SHORELINE_TE2_FALLING_EDGE,
 	};
 	u32 rising, falling;
 	int ret;
@@ -428,9 +392,7 @@ static void shoreline_update_te2(struct exynos_panel *ctx)
 	dev_dbg(ctx->dev, "TE2 updated: rising=0x%X falling=0x%X\n", rising, falling);
 
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x01, 0xB9); /* global para */
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB9, (vrefresh == 60) ? 0x04 : 0x31); /* TE2 SELECT */
-	EXYNOS_DCS_WRITE_TABLE(ctx, te2_setting[(vrefresh == 60) ? 0 : 1]); /* global para */
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x26, 0xB9); /* global para */
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB9, (rising >> 8) & 0xFF, rising & 0xFF,
 			     (falling >> 8) & 0xFF, falling & 0xFF); /* TE2 Width */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
@@ -439,15 +401,20 @@ static void shoreline_update_te2(struct exynos_panel *ctx)
 static void shoreline_change_frequency(struct exynos_panel *ctx,
 				       const unsigned int vrefresh)
 {
+	static const u8 te_setting[2][5] = {
+		{0xB9, 0x09, 0x74, 0x00, 0x0C}, /* HS 60Hz */
+		{0xB9, 0x00, 0x44, 0x00, 0x0C}, /* HS 120Hz */
+	};
+
 	if (!ctx || (vrefresh != 60 && vrefresh != 120))
 		return;
 
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	EXYNOS_DCS_WRITE_SEQ(ctx, 0x60, (vrefresh == 120) ? 0x00 : 0x08, 0x00);
 	EXYNOS_DCS_WRITE_TABLE(ctx, freq_update);
+	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x00, 0x10, 0xB9); /* global para */
+	EXYNOS_DCS_WRITE_TABLE(ctx, te_setting[(vrefresh == 60) ? 0 : 1]); /* TE Width */
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
-
-	shoreline_update_te(ctx, vrefresh);
 
 	dev_dbg(ctx->dev, "frequency changed to %uhz\n", vrefresh);
 }
@@ -487,9 +454,6 @@ static void shoreline_update_wrctrld(struct exynos_panel *ctx)
 {
 	u8 val = SHORELINE_WRCTRLD_BCTRL_BIT;
 
-	if (IS_HBM_ON(ctx->hbm_mode))
-		val |= SHORELINE_WRCTRLD_HBM_BIT;
-
 	if (ctx->hbm.local_hbm.enabled)
 		val |= SHORELINE_WRCTRLD_LOCAL_HBM_BIT;
 
@@ -510,19 +474,22 @@ static void shoreline_update_wrctrld(struct exynos_panel *ctx)
 static void shoreline_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_mode *pmode)
 {
 	const u16 brightness = exynos_panel_get_brightness(ctx);
-	int vrefresh = drm_mode_vrefresh(&pmode->mode);
-
 	shoreline_wait_for_vsync_done(ctx);
 	shoreline_display_off(ctx);
 
-	shoreline_update_te(ctx, vrefresh);
-	shoreline_update_te2(ctx);
+	/* Update TE settings for LP Mode */
+	EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_on_f0);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x10, 0xB9); /* global para */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB9, 0x00, 0x44, 0x00, 0x0C); /* TE Width*/
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x00, 0x26, 0xB9); /* global para */
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB9, 0x09, 0x60, 0x00, 0x40); /* TE2 Width */
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, test_key_off_f0);
 
 	shoreline_wait_for_vsync_done(ctx);
 	exynos_panel_set_binned_lp(ctx, brightness);
 	shoreline_display_on(ctx);
 
-	dev_info(ctx->dev, "enter %dhz LP mode\n", vrefresh);
+	dev_info(ctx->dev, "enter %dhz LP mode\n", drm_mode_vrefresh(&pmode->mode));
 }
 
 static void shoreline_set_nolp_mode(struct exynos_panel *ctx,
@@ -564,7 +531,12 @@ static int shoreline_enable(struct drm_panel *panel)
 
 	exynos_panel_reset(ctx);
 
-	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 10, MIPI_DCS_EXIT_SLEEP_MODE);
+	/* DSC related configuration */
+	drm_dsc_pps_payload_pack(&pps_payload, &pps_config);
+	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
+	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
+
+	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 5, MIPI_DCS_EXIT_SLEEP_MODE);
 
 	if (ctx->panel_rev < PANEL_REV_DVT1)
 		exynos_panel_send_cmd_set(ctx, &shoreline_vgh_init_cmd_set);
@@ -572,16 +544,12 @@ static int shoreline_enable(struct drm_panel *panel)
 	if (spanel->vreg_cmd[0])
 		exynos_panel_send_cmd_set(ctx, &shoreline_vreg_init_cmd_set);
 
+	exynos_panel_msleep(110);
 	exynos_panel_send_cmd_set(ctx, &shoreline_init_cmd_set);
 
 	shoreline_change_frequency(ctx, drm_mode_vrefresh(mode));
 
 	shoreline_lhbm_gamma_write(ctx);
-
-	/* DSC related configuration */
-	drm_dsc_pps_payload_pack(&pps_payload, &pps_config);
-	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
-	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
 
 	shoreline_update_wrctrld(ctx); /* dimming and HBM */
 
@@ -629,8 +597,8 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 	const bool irc_update =
 		(IS_HBM_ON_IRC_OFF(exynos_panel->hbm_mode) != IS_HBM_ON_IRC_OFF(mode));
 	static const u8 cyc[2][6] = {
-		{0xBD, 0x01, 0x81, 0x01, 0x01, 0x01}, /* Normal EM CYC */
-		{0xBD, 0x01, 0x80, 0x00, 0x01, 0x01}, /* HBM EM CYC */
+		{0xBD, 0x01, 0x01, 0x03, 0x03, 0x03}, /* Normal EM CYC */
+		{0xBD, 0x01, 0x00, 0x01, 0x01, 0x01}, /* HBM EM CYC */
 	};
 
 	if (!hbm_update && !irc_update)
@@ -643,8 +611,6 @@ static void shoreline_set_hbm_mode(struct exynos_panel *exynos_panel,
 	if (hbm_update) {
 		/* CYC Set */
 		EXYNOS_DCS_WRITE_TABLE(exynos_panel, cyc[IS_HBM_ON(mode)]);
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xB0, 0x00, 0x2F, 0xBD);
-		EXYNOS_DCS_WRITE_SEQ(exynos_panel, 0xBD, IS_HBM_ON(mode) ? 0x01: 0x02);
 		/* Update Key */
 		EXYNOS_DCS_WRITE_TABLE(exynos_panel, freq_update);
 	}
@@ -971,7 +937,7 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 		},
 		.te2_timing = {
 			.rising_edge = SHORELINE_TE2_RISING_EDGE_60HZ,
-			.falling_edge = SHORELINE_TE2_FALLING_EDGE_60HZ,
+			.falling_edge = SHORELINE_TE2_FALLING_EDGE,
 		},
 	},
 	{
@@ -1000,7 +966,7 @@ static const struct exynos_panel_mode shoreline_modes[] = {
 		},
 		.te2_timing = {
 			.rising_edge = SHORELINE_TE2_RISING_EDGE_120HZ,
-			.falling_edge = SHORELINE_TE2_FALLING_EDGE_120HZ,
+			.falling_edge = SHORELINE_TE2_FALLING_EDGE,
 		},
 	},
 };
@@ -1030,11 +996,7 @@ static const struct exynos_panel_mode shoreline_lp_mode = {
 		.dsc = GOOGLE_SHORELINE_DSC,
 		.underrun_param = &underrun_param,
 		.is_lp_mode = true,
-	},
-	.te2_timing = {
-			.rising_edge = SHORELINE_TE2_RISING_EDGE_120HZ,
-			.falling_edge = SHORELINE_TE2_FALLING_EDGE_120HZ,
-		},
+	}
 };
 
 static const struct drm_panel_funcs shoreline_drm_funcs = {
