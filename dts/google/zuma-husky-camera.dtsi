@@ -614,7 +614,7 @@
 				ldo5-supply = <&slg51002_ldo5>;
 				ldo7-supply = <&slg51002_ldo7>;
 				ldo8-supply = <&slg51002_ldo8>;
-				gpio4-supply = <&slg51002_gpio4>;
+				gpio1-supply = <&slg51002_gpio1>;
 
 				clocks =
 					<&clock CIS_CLK2>,
@@ -639,7 +639,7 @@
 					"ldo7",
 					"ldo3",
 					"ldo5",
-					"gpio4",
+					"gpio1",
 					"mclk_on",
 					"reset";
 				power-up-seq-types =
@@ -667,7 +667,7 @@
 				power-down-seqs =
 					"reset",
 					"mclk_off",
-					"gpio4",
+					"gpio1",
 					"ldo5",
 					"ldo7",
 					"s2mpg15_ldo12",
