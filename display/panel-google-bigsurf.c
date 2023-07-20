@@ -245,6 +245,11 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0x6F, 0x12),
 	EXYNOS_DSI_CMD_SEQ(0xFE, 0x41),
 
+	/* CMD2, Page0 */
+	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0xA8),
+	EXYNOS_DSI_CMD_SEQ(0xBA, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00),
+
 	/* CMD, Disable */
 	EXYNOS_DSI_CMD_SEQ(0xFF, 0xAA, 0x55, 0xA5, 0x00),
 
@@ -283,6 +288,7 @@ static const struct exynos_dsi_cmd bigsurf_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x11),
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB2, 0x01, 0x01, 0x43,
 				0x01, 0x03, 0x00, 0x00),
+	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0x6F, 0x2E),
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_LT(PANEL_REV_MP), 0xB4, 0x00, 0x92, 0x00,
 				0x92, 0x01, 0xA9, 0x01, 0xA9, 0x01, 0xE6, 0x01,
 				0xE6, 0x02, 0xF2, 0x02, 0xF2, 0x03, 0xCC, 0x03,
@@ -1173,6 +1179,7 @@ struct exynos_panel_desc google_bigsurf = {
 	.exynos_panel_func = &bigsurf_exynos_funcs,
 	.lhbm_effective_delay_frames = 2,
 	.lhbm_post_cmd_delay_frames = 3,
+	.lhbm_on_delay_frames = 2,
 	.reset_timing_ms = {1, 1, 20},
 	.reg_ctrl_enable = {
 		{PANEL_REG_ID_VDDI, 0},
@@ -1180,7 +1187,7 @@ struct exynos_panel_desc google_bigsurf = {
 		{PANEL_REG_ID_VDDD, 10},
 	},
 	.reg_ctrl_disable = {
-		{PANEL_REG_ID_VDDD, 0},
+		{PANEL_REG_ID_VDDD, 1},
 		{PANEL_REG_ID_VCI, 0},
 		{PANEL_REG_ID_VDDI, 0},
 	},

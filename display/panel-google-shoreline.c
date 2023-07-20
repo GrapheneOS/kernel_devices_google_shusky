@@ -78,7 +78,6 @@ static const struct drm_dsc_config pps_config = {
 
 #define SHORELINE_WRCTRLD_DIMMING_BIT    0x08
 #define SHORELINE_WRCTRLD_BCTRL_BIT      0x20
-#define SHORELINE_WRCTRLD_HBM_BIT        0xC0
 #define SHORELINE_WRCTRLD_LOCAL_HBM_BIT  0x10
 
 #define SHORELINE_TE2_RISING_EDGE_60HZ  0x12D0
@@ -455,9 +454,6 @@ static void shoreline_update_wrctrld(struct exynos_panel *ctx)
 {
 	u8 val = SHORELINE_WRCTRLD_BCTRL_BIT;
 
-	if (IS_HBM_ON(ctx->hbm_mode))
-		val |= SHORELINE_WRCTRLD_HBM_BIT;
-
 	if (ctx->hbm.local_hbm.enabled)
 		val |= SHORELINE_WRCTRLD_LOCAL_HBM_BIT;
 
@@ -535,7 +531,12 @@ static int shoreline_enable(struct drm_panel *panel)
 
 	exynos_panel_reset(ctx);
 
-	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 10, MIPI_DCS_EXIT_SLEEP_MODE);
+	/* DSC related configuration */
+	drm_dsc_pps_payload_pack(&pps_payload, &pps_config);
+	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
+	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
+
+	EXYNOS_DCS_WRITE_SEQ_DELAY(ctx, 5, MIPI_DCS_EXIT_SLEEP_MODE);
 
 	if (ctx->panel_rev < PANEL_REV_DVT1)
 		exynos_panel_send_cmd_set(ctx, &shoreline_vgh_init_cmd_set);
@@ -549,11 +550,6 @@ static int shoreline_enable(struct drm_panel *panel)
 	shoreline_change_frequency(ctx, drm_mode_vrefresh(mode));
 
 	shoreline_lhbm_gamma_write(ctx);
-
-	/* DSC related configuration */
-	drm_dsc_pps_payload_pack(&pps_payload, &pps_config);
-	exynos_dcs_compression_mode(ctx, 0x1); /* DSC_DEC_ON */
-	EXYNOS_PPS_WRITE_BUF(ctx, &pps_payload);
 
 	shoreline_update_wrctrld(ctx); /* dimming and HBM */
 
