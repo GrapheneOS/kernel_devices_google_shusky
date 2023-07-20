@@ -482,8 +482,6 @@ static void shoreline_update_wrctrld(struct exynos_panel *ctx)
 static void shoreline_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_mode *pmode)
 {
 	const u16 brightness = exynos_panel_get_brightness(ctx);
-	shoreline_wait_for_vsync_done(ctx);
-	shoreline_display_off(ctx);
 
 	/* Update TE settings for LP Mode */
 	EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_on_f0);
@@ -493,9 +491,7 @@ static void shoreline_set_lp_mode(struct exynos_panel *ctx, const struct exynos_
 	EXYNOS_DCS_BUF_ADD(ctx, 0xB9, 0x09, 0x60, 0x00, 0x40); /* TE2 Width */
 	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, test_key_off_f0);
 
-	shoreline_wait_for_vsync_done(ctx);
 	exynos_panel_set_binned_lp(ctx, brightness);
-	shoreline_display_on(ctx);
 
 	dev_info(ctx->dev, "enter %dhz LP mode\n", drm_mode_vrefresh(&pmode->mode));
 }
@@ -508,15 +504,12 @@ static void shoreline_set_nolp_mode(struct exynos_panel *ctx,
 	if (!ctx->enabled)
 		return;
 
-	shoreline_wait_for_vsync_done(ctx);
-	shoreline_display_off(ctx);
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
 	/* backlight control and dimming */
 	shoreline_update_wrctrld(ctx);
 	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
 	shoreline_change_frequency(ctx, vrefresh);
 	shoreline_wait_for_vsync_done(ctx);
-	shoreline_display_on(ctx);
 
 	dev_info(ctx->dev, "exit LP mode\n");
 }
@@ -565,10 +558,8 @@ static int shoreline_enable(struct drm_panel *panel)
 
 	if (pmode->exynos_mode.is_lp_mode)
 		shoreline_set_lp_mode(ctx, pmode);
-	else {
-		shoreline_wait_for_vsync_done(ctx);
-		shoreline_display_on(ctx);
-	}
+	shoreline_wait_for_vsync_done(ctx);
+	shoreline_display_on(ctx);
 
 	spanel->lhbm_ctl.hist_roi_configured = false;
 
