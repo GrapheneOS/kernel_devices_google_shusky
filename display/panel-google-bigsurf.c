@@ -76,7 +76,7 @@ struct bigsurf_panel {
 static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
 	/* Disable the Black insertion in AoD */
 	EXYNOS_DSI_CMD_SEQ(0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00),
-	EXYNOS_DSI_CMD_SEQ(0xC0, 0x44),
+	EXYNOS_DSI_CMD_SEQ(0xC0, 0x54),
 
 	/* disable dimming */
 	EXYNOS_DSI_CMD_SEQ(0x53, 0x20),
@@ -662,7 +662,8 @@ static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 	}
 
 	/* Check for passing brightness threshold */
-	if ((old_brightness < LHBM_COMPENSATION_THRESHOLD) ^ (br < LHBM_COMPENSATION_THRESHOLD)) {
+	if ((ctx->panel_rev < PANEL_REV_MP) &&
+	    ((old_brightness < LHBM_COMPENSATION_THRESHOLD) ^ (br < LHBM_COMPENSATION_THRESHOLD))) {
 		low_to_high = old_brightness < LHBM_COMPENSATION_THRESHOLD;
 		bigsurf_wait_for_vsync_done(ctx);
 		EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x08);
@@ -1179,6 +1180,7 @@ struct exynos_panel_desc google_bigsurf = {
 	.exynos_panel_func = &bigsurf_exynos_funcs,
 	.lhbm_effective_delay_frames = 2,
 	.lhbm_post_cmd_delay_frames = 3,
+	.lhbm_on_delay_frames = 2,
 	.reset_timing_ms = {1, 1, 20},
 	.reg_ctrl_enable = {
 		{PANEL_REG_ID_VDDI, 0},
@@ -1186,10 +1188,11 @@ struct exynos_panel_desc google_bigsurf = {
 		{PANEL_REG_ID_VDDD, 10},
 	},
 	.reg_ctrl_disable = {
-		{PANEL_REG_ID_VDDD, 0},
+		{PANEL_REG_ID_VDDD, 1},
 		{PANEL_REG_ID_VCI, 0},
 		{PANEL_REG_ID_VDDI, 0},
 	},
+	.refresh_on_lp = true,
 };
 
 static int bigsurf_panel_config(struct exynos_panel *ctx)
