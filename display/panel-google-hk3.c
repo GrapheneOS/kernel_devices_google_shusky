@@ -1792,7 +1792,7 @@ static void hk3_commit_done(struct exynos_panel *ctx)
 {
 	struct hk3_panel *spanel = to_spanel(ctx);
 
-	if (!ctx->current_mode)
+	if (ctx->current_mode->exynos_mode.is_lp_mode)
 		return;
 
 	/* skip idle update if going through RRS */
