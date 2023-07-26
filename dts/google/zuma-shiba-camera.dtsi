@@ -512,6 +512,8 @@
 					"regulator",
 					"regulator",
 					"regulator",
+					"regulator",
+					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<1000
@@ -767,12 +769,18 @@
 				/* Power down sequence */
 				power-down-seqs =
 					"ldo4",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"ldo1",
+					"ldo8";
 				power-down-seq-types =
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<0
+					 500
+					 500
 					 0>;
 
 				/* Thread priority */
@@ -831,6 +839,8 @@
 					"ldo8",
 					"ldo1";
 				power-down-seq-types =
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator",
 					"regulator";
