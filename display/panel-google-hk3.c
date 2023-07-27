@@ -1987,18 +1987,6 @@ static int hk3_set_op_hz(struct exynos_panel *ctx, unsigned int hz)
 	dev_info(ctx->dev, "%s op_hz at %d\n",
 		is_panel_active(ctx) ? "set" : "cache", hz);
 
-	if (hz == 120) {
-		/*
-		 * We may transfer the frame for the first TE after switching from
-		 * NS to HS mode. The DDIC read speed will change from 60Hz to 120Hz,
-		 * but the DPU write speed will remain the same. In this case,
-		 * underruns would happen. Waiting for an extra vblank here so that
-		 * the frame can be postponed to the next TE to avoid the noises.
-		 */
-		dev_dbg(ctx->dev, "wait one vblank after NS to HS\n");
-		hk3_wait_one_vblank(ctx);
-	}
-
 	DPU_ATRACE_END(__func__);
 
 	return 0;
