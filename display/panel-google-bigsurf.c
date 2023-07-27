@@ -581,6 +581,14 @@ static int bigsurf_atomic_check(struct exynos_panel *ctx, struct drm_atomic_stat
 	if (!old_crtc_state || !new_crtc_state || !new_crtc_state->active)
 		return 0;
 
+	/* don't skip update when switching from AoD to normal mode */
+	if (ctx->current_mode->exynos_mode.is_lp_mode) {
+		const struct exynos_panel_mode *pmode =
+			exynos_panel_get_mode(ctx, &new_crtc_state->mode);
+		if (pmode && !pmode->exynos_mode.is_lp_mode)
+			new_crtc_state->color_mgmt_changed = true;
+	}
+
 	if (!drm_atomic_crtc_effectively_active(old_crtc_state) ||
 	    (ctx->current_mode->exynos_mode.is_lp_mode && drm_mode_vrefresh(&new_crtc_state->mode) == 60)) {
 		struct drm_display_mode *mode = &new_crtc_state->adjusted_mode;
