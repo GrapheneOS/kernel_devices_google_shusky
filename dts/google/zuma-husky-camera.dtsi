@@ -166,6 +166,7 @@
 	clock-frequency = <950000>;
 	samsung,reset-before-trans;
 	samsung,hybrid-polling-mode;
+	samsung,trailing-count = <0x20000>;
 
 	pinctrl-names = "default","on_i2c","off_i2c";
 	pinctrl-0 = <&hsi2c1_bus_in>;
