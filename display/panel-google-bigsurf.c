@@ -93,14 +93,14 @@ static const struct exynos_dsi_cmd bigsurf_lp_off_cmds[] = {
 
 static const struct exynos_dsi_cmd bigsurf_lp_low_cmds[] = {
 	/* 10 nit */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
-					0x00, 0x00, 0x00, 0x00, 0x03, 0x33),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x04),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x03, 0x33),
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 	/* 50 nit */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
-					0x00, 0x00, 0x00, 0x00, 0x0F, 0xFE),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x04),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x0F, 0xFE),
 };
 
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
