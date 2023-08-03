@@ -6,14 +6,14 @@
  *
  */
 
-&faceauth_tpu_dma_heap {
-	compatible = "google,dma-heap-gcma";
-};
-
 &faceauth_tpu {
 	size = <0x00A00000>; /* 10MB */
 };
 
 &farawimg {
 	size = <0x0CE00000>; /* 206MB */
+};
+
+&faprev {
+	size = <0x01800000>; /* 24MB */
 };
