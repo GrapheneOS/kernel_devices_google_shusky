@@ -392,6 +392,9 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 			EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0xB0);
 			EXYNOS_DCS_BUF_ADD(ctx, 0xBA, 0x44);
 		}
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+		EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x03);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x32);
 	} else {
 		EXYNOS_DCS_BUF_ADD(ctx, 0x5F, 0x00);
 		if (vrefresh == 120) {
@@ -408,6 +411,9 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 			EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0xB0);
 			EXYNOS_DCS_BUF_ADD(ctx, 0xBA, 0x41);
 		}
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00);
+		EXYNOS_DCS_BUF_ADD(ctx, 0x6F, 0x03);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xC0, 0x30);
 		if (ctx->panel_rev >= PANEL_REV_EVT1) {
 			const u8 val1 = level >> 8;
 			const u8 val2 = level & 0xff;
