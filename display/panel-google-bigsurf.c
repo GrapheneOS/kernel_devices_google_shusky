@@ -428,6 +428,19 @@ static void bigsurf_update_irc(struct exynos_panel *ctx,
 	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0x00);
 }
 
+static bool bigsurf_rr_need_te_high(struct exynos_panel *ctx,
+				    const struct exynos_panel_mode *pmode)
+{
+	if (!ctx->current_mode || !pmode)
+		return false;
+
+	if (drm_mode_vrefresh(&ctx->current_mode->mode) == 60 &&
+			drm_mode_vrefresh(&pmode->mode) == 120)
+		return true;
+
+	return false;
+}
+
 static void bigsurf_change_frequency(struct exynos_panel *ctx,
 				    const struct exynos_panel_mode *pmode)
 {
@@ -1128,6 +1141,7 @@ static const struct exynos_panel_funcs bigsurf_exynos_funcs = {
 	.atomic_check = bigsurf_atomic_check,
 	.pre_update_ffc = bigsurf_pre_update_ffc,
 	.update_ffc = bigsurf_update_ffc,
+	.rr_need_te_high = bigsurf_rr_need_te_high,
 };
 
 static const struct exynos_brightness_configuration bigsurf_btr_configs[] = {
