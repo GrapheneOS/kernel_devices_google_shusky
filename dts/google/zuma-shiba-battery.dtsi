@@ -16,6 +16,11 @@
                 50   50    0   0
                 30    0    0   0
 	>;
+	google,batt-id-1-atl {
+		google,batt-id = <1>;
+		google,aacr-ref-cycles = <200 300 400 500 600 700 800>;
+		google,aacr-ref-fade10 = < 15  24  32  40  49  58  66>;
+	};
 };
 
 &max77759_fg {
