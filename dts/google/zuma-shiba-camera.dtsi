@@ -287,9 +287,9 @@
 					"gpio",
 					"pinctrl";
 				power-up-seq-delays-us =
-					<10
+					<500
 					 10
-					 10
+					 750
 					 0
 					 2000
 					 1000
@@ -316,9 +316,9 @@
 					<1000
 					 1000
 					 0
+					 500
 					 0
-					 0
-					 0
+					 500
 					 0>;
 
 				/* Thread priority */
@@ -347,8 +347,10 @@
 
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
 				ldo3-supply = <&slg51002_ldo3>;
 				ldo7-supply = <&slg51002_ldo7>;
+				ldo8-supply = <&slg51002_ldo8>;
 
 				clocks =
 					<&clock CIS_CLK1>,
@@ -367,6 +369,8 @@
 
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
+					"ldo8",
 					"s2mpg15_ldo12",
 					"ldo3",
 					"ldo7",
@@ -376,10 +380,14 @@
 					"regulator",
 					"regulator",
 					"regulator",
+					"regulator",
+					"regulator",
 					"pinctrl",
 					"gpio";
 				power-up-seq-delays-us =
-					<0
+					<500
+					 750
+					 0
 					 0
 					 1000
 					 1000
@@ -391,10 +399,14 @@
 					"mclk_off",
 					"ldo7",
 					"ldo3",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"ldo8",
+					"ldo1";
 				power-down-seq-types =
 					"gpio",
 					"pinctrl",
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator",
 					"regulator";
@@ -403,7 +415,9 @@
 					 1000
 					 0
 					 0
-					 1000>;
+					 500
+					 500
+					 0>;
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
@@ -432,9 +446,11 @@
 
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
 				ldo2-supply = <&slg51002_ldo2>;
 				ldo4-supply = <&slg51002_ldo4>;
 				ldo6-supply = <&slg51002_ldo6>;
+				ldo8-supply = <&slg51002_ldo8>;
 
 				clocks =
 					<&clock CIS_CLK0>,
@@ -453,6 +469,8 @@
 
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
+					"ldo8",
 					"s2mpg15_ldo12",
 					"ldo6",
 					"ldo4",
@@ -464,10 +482,14 @@
 					"regulator",
 					"regulator",
 					"regulator",
+					"regulator",
+					"regulator",
 					"pinctrl",
 					"gpio";
 				power-up-seq-delays-us =
-					<0
+					<500
+					 750
+					 0
 					 0
 					 0
 					 100
@@ -481,10 +503,14 @@
 					"ldo2",
 					"ldo4",
 					"ldo6",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"ldo8",
+					"ldo1";
 				power-down-seq-types =
 					"gpio",
 					"pinctrl",
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator",
 					"regulator",
@@ -495,7 +521,9 @@
 					 0
 					 0
 					 0
-					 1000>;
+					 500
+					 500
+					 0>;
 
 				/* resume sequence */
 				resume-seqs = "reset";
@@ -526,27 +554,41 @@
 				reg-value-bitwidth = <32>;
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
 				ldo5-supply = <&slg51002_ldo5>;
+				ldo8-supply = <&slg51002_ldo8>;
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
+					"ldo8",
 					"s2mpg15_ldo12",
 					"ldo5";
 				power-up-seq-types =
 					"regulator",
+					"regulator",
+					"regulator",
 					"regulator";
 				power-up-seq-delays-us =
-					<1000
+					<500
+					 750
+					 1000
 					 1000>;
 				/* Power down sequence */
 				power-down-seqs =
 					"ldo5",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"ldo8",
+					"ldo1";
 				power-down-seq-types =
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<1000
-					 1000>;
+					 500
+					 500
+					 0>;
 
 				i2c-lock-group-id = <0>;
 			};
@@ -642,28 +684,42 @@
 
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
 				ldo4-supply = <&slg51002_ldo4>;
+				ldo8-supply = <&slg51002_ldo8>;
 
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
+					"ldo8",
 					"s2mpg15_ldo12",
 					"ldo4";
 				power-up-seq-types =
 					"regulator",
+					"regulator",
+					"regulator",
 					"regulator";
 				power-up-seq-delays-us =
-					<0
+					<500
+					 750
+					 0
 					 0>;
 
 				/* Power down sequence */
 				power-down-seqs =
 					"ldo4",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"ldo8",
+					"ldo1";
 				power-down-seq-types =
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<0
+					 500
+					 500
 					 0>;
 
 				/* Thread priority */
@@ -689,28 +745,42 @@
 
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
 				ldo4-supply = <&slg51002_ldo4>;
+				ldo8-supply = <&slg51002_ldo8>;
 
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
+					"ldo8",
 					"s2mpg15_ldo12",
 					"ldo4";
 				power-up-seq-types =
 					"regulator",
+					"regulator",
+					"regulator",
 					"regulator";
 				power-up-seq-delays-us =
-					<0
+					<500
+					 750
+					 0
 					 0>;
 
 				/* Power down sequence */
 				power-down-seqs =
 					"ldo4",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"ldo1",
+					"ldo8";
 				power-down-seq-types =
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<0
+					 500
+					 500
 					 0>;
 
 				/* Thread priority */
@@ -736,20 +806,28 @@
 
 				/* Power supplies */
 				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo1-supply = <&slg51002_ldo1>;
 				ldo5-supply = <&slg51002_ldo5>;
+				ldo8-supply = <&slg51002_ldo8>;
 				gpio4-supply = <&slg51002_gpio4>;
 
 				/* Power up sequence */
 				power-up-seqs =
+					"ldo1",
+					"ldo8",
 					"s2mpg15_ldo12",
 					"ldo5",
 					"gpio4";
 				power-up-seq-types =
 					"regulator",
 					"regulator",
+					"regulator",
+					"regulator",
 					"regulator";
 				power-up-seq-delays-us =
-					<1000
+					<500
+					 750
+					 1000
 					 1000
 					 1000>;
 
@@ -757,14 +835,20 @@
 				power-down-seqs =
 					"gpio4",
 					"ldo5",
-					"s2mpg15_ldo12";
+					"s2mpg15_ldo12",
+					"ldo8",
+					"ldo1";
 				power-down-seq-types =
+					"regulator",
+					"regulator",
 					"regulator",
 					"regulator",
 					"regulator";
 				power-down-seq-delays-us =
 					<5000
 					 4000
+					 500
+					 500
 					 0>;
 
 				/* Thread priority */

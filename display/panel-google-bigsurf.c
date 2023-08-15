@@ -93,14 +93,14 @@ static const struct exynos_dsi_cmd bigsurf_lp_off_cmds[] = {
 
 static const struct exynos_dsi_cmd bigsurf_lp_low_cmds[] = {
 	/* 10 nit */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
-					0x00, 0x00, 0x00, 0x00, 0x03, 0x33),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x04),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x03, 0x33),
 };
 
 static const struct exynos_dsi_cmd bigsurf_lp_high_cmds[] = {
 	/* 50 nit */
-	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
-					0x00, 0x00, 0x00, 0x00, 0x0F, 0xFE),
+	EXYNOS_DSI_CMD_SEQ(0x6F, 0x04),
+	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x0F, 0xFE),
 };
 
 static const struct exynos_binned_lp bigsurf_binned_lp[] = {
@@ -580,6 +580,14 @@ static int bigsurf_atomic_check(struct exynos_panel *ctx, struct drm_atomic_stat
 	old_crtc_state = drm_atomic_get_old_crtc_state(state, new_conn_state->crtc);
 	if (!old_crtc_state || !new_crtc_state || !new_crtc_state->active)
 		return 0;
+
+	/* don't skip update when switching from AoD to normal mode */
+	if (ctx->current_mode->exynos_mode.is_lp_mode) {
+		const struct exynos_panel_mode *pmode =
+			exynos_panel_get_mode(ctx, &new_crtc_state->mode);
+		if (pmode && !pmode->exynos_mode.is_lp_mode)
+			new_crtc_state->color_mgmt_changed = true;
+	}
 
 	if (!drm_atomic_crtc_effectively_active(old_crtc_state) ||
 	    (ctx->current_mode->exynos_mode.is_lp_mode && drm_mode_vrefresh(&new_crtc_state->mode) == 60)) {
