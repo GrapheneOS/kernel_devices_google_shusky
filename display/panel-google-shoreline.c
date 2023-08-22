@@ -286,18 +286,17 @@ static void shoreline_lhbm_gamma_read(struct exynos_panel *ctx)
 static void shoreline_lhbm_gamma_write(struct exynos_panel *ctx)
 {
 	struct shoreline_panel *spanel = to_spanel(ctx);
-	u8 *lhbm_gamma = spanel->lhbm_gamma;
 
-	if (!lhbm_gamma[0]) {
+	if (!spanel->lhbm_gamma[0]) {
 		dev_err(ctx->dev, "%s: no lhbm gamma!\n", __func__);
 		return;
 	}
 
 	dev_dbg(ctx->dev, "%s\n", __func__);
-	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_on_f0);
-	EXYNOS_DCS_WRITE_SEQ(ctx, 0xB0, 0x03, 0xD7, 0x66); /* global para */
-	exynos_dcs_write(ctx, lhbm_gamma, LHBM_GAMMA_CMD_SIZE); /* write gamma */
-	EXYNOS_DCS_WRITE_TABLE(ctx, test_key_off_f0);
+	EXYNOS_DCS_BUF_ADD_SET(ctx, test_key_on_f0);
+	EXYNOS_DCS_BUF_ADD(ctx, 0xB0, 0x03, 0xD7, 0x66); /* global para */
+	EXYNOS_DCS_BUF_ADD_SET(ctx, spanel->lhbm_gamma); /* write gamma */
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, test_key_off_f0);
 }
 
 static void shoreline_wait_for_vsync_done(struct exynos_panel *ctx)
