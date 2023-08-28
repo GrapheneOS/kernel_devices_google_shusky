@@ -88,6 +88,9 @@ static const struct drm_dsc_config pps_config = {
 #define MIPI_DSI_FREQ_DEFAULT 756
 #define MIPI_DSI_FREQ_ALTERNATIVE 776
 
+#define MIPI_DSI_FREQ_DEFAULT 756
+#define MIPI_DSI_FREQ_ALTERNATIVE 776
+
 #define WIDTH_MM 64
 #define HEIGHT_MM 143
 
