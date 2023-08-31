@@ -323,17 +323,6 @@ static DEFINE_EXYNOS_CMD_SET(bigsurf_init);
 static void bigsurf_set_local_hbm_mode(struct exynos_panel *ctx,
 				       bool local_hbm_en);
 
-static void bigsurf_wait_for_vsync_done(struct exynos_panel *ctx) {
-	const struct exynos_panel_mode *pmode = ctx->current_mode;
-	int vrefresh = drm_mode_vrefresh(&pmode->mode);
-
-	DPU_ATRACE_BEGIN(__func__);
-	exynos_panel_wait_for_vsync_done(
-		ctx, pmode->exynos_mode.te_usec,
-		EXYNOS_VREFRESH_TO_PERIOD_USEC(vrefresh));
-	DPU_ATRACE_END(__func__);
-}
-
 static void bigsurf_update_te2(struct exynos_panel *ctx)
 {
 	struct exynos_panel_te2_timing timing;
@@ -713,8 +702,6 @@ static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 {
 	struct bigsurf_panel *spanel = to_spanel(ctx);
 	u16 old_brightness = spanel->panel_brightness;
-	u16 brightness;
-	int ret;
 	bool low_to_high;
 
 	if (ctx->current_mode->exynos_mode.is_lp_mode) {
@@ -726,41 +713,34 @@ static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 		return 0;
 	}
 
-	if (!br) {
-		// turn off panel and set brightness directly.
-		ret = exynos_dcs_set_brightness(ctx, 0);
-	} else {
+	if (br) {
 		if (ctx->hbm.local_hbm.enabled)
 			bigsurf_set_local_hbm_background_brightness(ctx, br);
 
-		brightness = (br & 0xff) << 8 | br >> 8;
-
 		if (spanel->idle_exit_dimming_delay_ts &&
 			(ktime_sub(spanel->idle_exit_dimming_delay_ts, ktime_get()) <= 0)) {
-			EXYNOS_DCS_WRITE_SEQ(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
+			EXYNOS_DCS_BUF_ADD(ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY,
 						ctx->dimming_on ? 0x28 : 0x20);
 			spanel->idle_exit_dimming_delay_ts = 0;
 		}
-
-		ret = exynos_dcs_set_brightness(ctx, brightness);
 	}
 
 	/* Check for passing brightness threshold */
 	if ((ctx->panel_rev < PANEL_REV_MP) &&
 	    ((old_brightness < LHBM_COMPENSATION_THRESHOLD) ^ (br < LHBM_COMPENSATION_THRESHOLD))) {
 		low_to_high = old_brightness < LHBM_COMPENSATION_THRESHOLD;
-		bigsurf_wait_for_vsync_done(ctx);
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x08);
-		EXYNOS_DCS_WRITE_SEQ(ctx, 0xD0, 0x44, 0x00, 0x00, 0x44, 0x00,
-						0x00, 0x44, 0x00, 0x00, 0x04,
-						0x00, low_to_high ? 0x46: 0x4A,
-						0x00, 0x00, 0x44, 0x00, 0x00,
-						low_to_high ? 0x41 : 0x40, 0x00,
-						0x00);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xF0, 0x55, 0xAA, 0x52, 0x08, 0x08);
+		EXYNOS_DCS_BUF_ADD(ctx, 0xD0, 0x44, 0x00, 0x00, 0x44, 0x00,
+					0x00, 0x44, 0x00, 0x00, 0x04,
+					0x00, low_to_high ? 0x46: 0x4A,
+					0x00, 0x00, 0x44, 0x00, 0x00,
+					low_to_high ? 0x41 : 0x40,
+					low_to_high ? 0x00 : 0xAA,
+					0x00);
 	}
-
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, br >> 8, br & 0xff);
 	spanel->panel_brightness = br;
-	return ret;
+	return 0;
 }
 
 static void bigsurf_set_hbm_mode(struct exynos_panel *ctx,
