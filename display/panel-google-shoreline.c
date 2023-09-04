@@ -171,10 +171,6 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_COLUMN_ADDRESS, 0x00, 0x00, 0x04, 0x37),
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_SET_PAGE_ADDRESS, 0x00, 0x00, 0x09, 0x5F),
 
-	/* LHBM Location */
-	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x09, 0x6D), /* global para */
-	EXYNOS_DSI_CMD_SEQ(0x6D, 0xC6, 0xE3, 0x65), /* Size and Location */
-
 	/* FFC Settings (off, OSC: 180 MHz, MIPI: 756 Mbps) */
 	EXYNOS_DSI_CMD0(test_key_on_fc), /* Test Key Enable */
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x36, 0xC5), /* Global Para */
@@ -192,6 +188,10 @@ static const struct exynos_dsi_cmd shoreline_init_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ_REV(PANEL_REV_EVT1, 0x6C, 0xEC, 0xFD, 0x0D, 0x1D, 0x2D, /* Voltage Set */
 						0x39, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8,
 						0x39, 0x39, 0x39, 0x00, 0x00),
+
+	/* LHBM Location */
+	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x09, 0x6D), /* global para */
+	EXYNOS_DSI_CMD_SEQ(0x6D, 0xC6, 0xE3, 0x65), /* Size and Location */
 	EXYNOS_DSI_CMD0(test_key_off_f0),
 };
 static DEFINE_EXYNOS_CMD_SET(shoreline_init);
