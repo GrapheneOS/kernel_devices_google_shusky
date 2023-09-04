@@ -12,8 +12,6 @@
 
 &pcie_1 {
         support-msi64-addressing = "true";
-	use-cache-coherency = "true";
-	dma-coherent;
 	use-sysmmu = "true";
 };
 
