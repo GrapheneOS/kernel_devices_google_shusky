@@ -45,12 +45,12 @@
 
 	repeater_tune2 {
 		tune_name = "u_tx_adjust_port1";
-		tune_value = <0x70 0x73 0x0 0xff>;
+		tune_value = <0x70 0x76 0x0 0xff>;
 	};
 
 	repeater_tune3 {
 		tune_name = "u_hs_rx_pre_emphasus_p1";
-		tune_value = <0x71 0x38 0x0 0xff>;
+		tune_value = <0x71 0x2c 0x0 0xff>;
 	};
 
 	repeater_tune4 {
