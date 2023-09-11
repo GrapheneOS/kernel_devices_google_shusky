@@ -104,6 +104,15 @@ struct hk3_lhbm_ctl {
 };
 
 /**
+ * Expect to have five values for the Vreg parameters:
+ * EVT1.1 and earlier: 0x1B
+ * DVT1 and later: 0x1A
+ */
+#define HK3_VREG_STR_SIZE 11
+#define HK3_VREG_PARAM_NUM 5
+#define HK3_VREG_STR(ctx) (((ctx)->panel_rev >= PANEL_REV_DVT1) ? "1a1a1a1a1a" : "1b1b1b1b1b")
+
+/**
  * struct hk3_panel - panel specific info
  *
  * This struct maintains hk3 panel specific info. The variables with the prefix hw_ keep
@@ -155,6 +164,14 @@ struct hk3_panel {
 	 *		  panel can recover to normal mode after entering pixel-off state.
 	 */
 	bool is_pixel_off;
+	/** @hw_vreg: the Vreg setting after calling hk3_read_back_vreg() */
+	char hw_vreg[HK3_VREG_STR_SIZE];
+	/**
+	 * @read_vreg: whether need to read back Vreg setting after self_refresh. The Vreg cannot
+	 *	       be read right after it's set, so we have to wait for taking effect, but
+	 *	       cannot block the main thread.
+	 */
+	bool read_vreg;
 };
 
 #define to_spanel(ctx) container_of(ctx, struct hk3_panel, base)
@@ -963,6 +980,32 @@ static void hk3_wait_one_vblank(struct exynos_panel *ctx)
 	DPU_ATRACE_END(__func__);
 }
 
+static void hk3_read_back_vreg(struct exynos_panel *ctx)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+	struct mipi_dsi_device *dsi = to_mipi_dsi_device(ctx->dev);
+	char buf[HK3_VREG_PARAM_NUM] = {0};
+	int ret;
+
+	EXYNOS_DCS_BUF_ADD_SET(ctx, unlock_cmd_f0);
+	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, 0xB0, 0x00, 0x31, 0xF4);
+	ret = mipi_dsi_dcs_read(dsi, 0xF4, buf, HK3_VREG_PARAM_NUM);
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, lock_cmd_f0);
+	if (ret != HK3_VREG_PARAM_NUM) {
+		dev_warn(ctx->dev, "unable to read vreg setting (%d)\n", ret);
+	} else {
+		exynos_bin2hex(buf, HK3_VREG_PARAM_NUM,
+			       spanel->hw_vreg, sizeof(spanel->hw_vreg));
+		if (!strcmp(spanel->hw_vreg, HK3_VREG_STR(ctx)))
+			dev_dbg(ctx->dev, "normal vreg: %s\n", spanel->hw_vreg);
+		else
+			dev_warn(ctx->dev, "abnormal vreg: %s (expect %s)\n",
+				 spanel->hw_vreg, HK3_VREG_STR(ctx));
+	}
+
+	spanel->read_vreg = false;
+}
+
 static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 {
 	const struct exynos_panel_mode *pmode = ctx->current_mode;
@@ -973,6 +1016,9 @@ static bool hk3_set_self_refresh(struct exynos_panel *ctx, bool enable)
 
 	if (unlikely(!pmode))
 		return false;
+
+	if (enable && spanel->read_vreg)
+		hk3_read_back_vreg(ctx);
 
 	/* self refresh is not supported in lp mode since that always makes use of early exit */
 	if (pmode->exynos_mode.is_lp_mode) {
@@ -1453,6 +1499,7 @@ static void hk3_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_
 	exynos_panel_send_cmd_set(ctx, &hk3_display_on_cmd_set);
 
 	spanel->hw_vrefresh = 30;
+	spanel->read_vreg = true;
 
 	DPU_ATRACE_END(__func__);
 
@@ -1503,6 +1550,7 @@ static void hk3_set_nolp_mode(struct exynos_panel *ctx,
 	hk3_write_display_mode(ctx, &pmode->mode);
 	hk3_change_frequency(ctx, pmode);
 	exynos_panel_send_cmd_set(ctx, &hk3_display_on_cmd_set);
+	spanel->read_vreg = true;
 
 	DPU_ATRACE_END(__func__);
 
@@ -1698,6 +1746,7 @@ static int hk3_enable(struct drm_panel *panel)
 		if (needs_reset || (ctx->panel_state == PANEL_STATE_BLANK)) {
 			hk3_wait_for_vsync_done(ctx, needs_reset ? 60 : vrefresh, is_ns);
 			exynos_panel_send_cmd_set(ctx, &hk3_display_on_cmd_set);
+			spanel->read_vreg = true;
 		}
 	}
 
@@ -2593,6 +2642,7 @@ static int hk3_panel_probe(struct mipi_dsi_device *dsi)
 	spanel->hw_temp = 25;
 	spanel->pending_temp_update = false;
 	spanel->is_pixel_off = false;
+	spanel->read_vreg = false;
 
 	return exynos_panel_common_init(dsi, &spanel->base);
 }
