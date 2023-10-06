@@ -45,7 +45,7 @@
 
 	repeater_tune2 {
 		tune_name = "u_tx_adjust_port1";
-		tune_value = <0x70 0x76 0x0 0xff>;
+		tune_value = <0x70 0x3c 0x0 0xff>;
 	};
 
 	repeater_tune3 {
@@ -60,7 +60,7 @@
 
 	repeater_tune5 {
 		tune_name = "u_disconnect_squelch_port1";
-		tune_value = <0x73 0x04 0x0 0xff>;
+		tune_value = <0x73 0x83 0x0 0xff>;
 	};
 
 	repeater_tune6 {
