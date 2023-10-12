@@ -2170,6 +2170,13 @@ static void hk3_update_ffc(struct exynos_panel *ctx, unsigned int hs_clk)
 	DPU_ATRACE_END(__func__);
 }
 
+static void hk3_get_pwr_vreg(struct exynos_panel *ctx, char *buf, size_t len)
+{
+	struct hk3_panel *spanel = to_spanel(ctx);
+
+	strlcpy(buf, spanel->hw_vreg, len);
+}
+
 static const struct exynos_display_underrun_param underrun_param = {
 	.te_idle_us = 350,
 	.te_var = 1,
@@ -2694,6 +2701,7 @@ static const struct exynos_panel_funcs hk3_exynos_funcs = {
 	.run_normal_mode_work = hk3_normal_mode_work,
 	.pre_update_ffc = hk3_pre_update_ffc,
 	.update_ffc = hk3_update_ffc,
+	.get_pwr_vreg = hk3_get_pwr_vreg,
 };
 
 const struct brightness_capability hk3_brightness_capability = {
