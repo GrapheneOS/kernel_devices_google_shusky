@@ -897,8 +897,13 @@ static void hk3_update_refresh_mode(struct exynos_panel *ctx,
 	 */
 	ctx->panel_idle_vrefresh = idle_vrefresh;
 	hk3_update_panel_feat(ctx, vrefresh, false);
-	te2_state_changed(ctx->bl);
-	backlight_state_changed(ctx->bl);
+
+	/* TODO: (b/303738012) perform notifications asyncly for P24*/
+	/* Prevent sysfs_notify from resolution switch */
+	if (ctx->mode_in_progress == MODE_RES_AND_RR_IN_PROGRESS)
+		schedule_work(&ctx->state_notify);
+	else
+		backlight_state_changed(ctx->bl);
 
 	dev_dbg(ctx->dev, "%s: display state is notified\n", __func__);
 }
@@ -2693,6 +2698,7 @@ const struct exynos_panel_desc google_hk3 = {
 	.num_binned_lp = ARRAY_SIZE(hk3_binned_lp),
 	.is_panel_idle_supported = true,
 	.no_lhbm_rr_constraints = true,
+	.use_async_notify = true,
 	.panel_func = &hk3_drm_funcs,
 	.exynos_panel_func = &hk3_exynos_funcs,
 	.lhbm_effective_delay_frames = 1,
