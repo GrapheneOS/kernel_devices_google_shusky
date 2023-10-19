@@ -21,6 +21,11 @@
 		google,aacr-ref-cycles = <200 300 400 500 600 700 800>;
 		google,aacr-ref-fade10 = < 15  24  32  40  49  58  66>;
 	};
+	google,batt-id-2-cos {
+		google,batt-id = <2>;
+		google,aacr-ref-cycles = <100 200 300 400 500 600 700 800>;
+		google,aacr-ref-fade10 = <  6  19  29  39  47  54  62  69>;
+	};
 };
 
 &max77759_fg {
