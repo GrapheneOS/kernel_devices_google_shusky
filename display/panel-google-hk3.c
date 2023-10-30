@@ -141,7 +141,7 @@ struct hk3_panel {
 	bool force_changeable_te2;
 	/** @hw_acl_setting: automatic current limiting setting */
 	u8 hw_acl_setting;
-	/** @hw_dbv: indicate the current dbv */
+	/** @hw_dbv: indicate the current dbv, will be zero after sleep in/out */
 	u16 hw_dbv;
 	/** @hw_za_enabled: whether zonal attenuation is enabled */
 	bool hw_za_enabled;
@@ -336,7 +336,8 @@ static const u8 sync_begin[] = { 0xE4, 0x00, 0x2C, 0x2C, 0xA2, 0x00, 0x00 };
 static const u8 sync_end[] = { 0xE4, 0x00, 0x2C, 0x2C, 0x82, 0x00, 0x00 };
 static const u8 aod_on[] = { MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x24 };
 static const u8 aod_off[] = { MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x20 };
-static const u8 min_dbv[] = { MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x00, 0x04 };
+/* 50 nits */
+static const u8 aod_dbv[] = { MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x03, 0x55 };
 
 static const struct exynos_dsi_cmd hk3_lp_low_cmds[] = {
 	EXYNOS_DSI_CMD0(unlock_cmd_f0),
@@ -344,7 +345,6 @@ static const struct exynos_dsi_cmd hk3_lp_low_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x52, 0x94),
 	EXYNOS_DSI_CMD_SEQ(0x94, 0x01, 0x07, 0x6A, 0x02),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
-	EXYNOS_DSI_CMD0(min_dbv),
 };
 
 static const struct exynos_dsi_cmd hk3_lp_high_cmds[] = {
@@ -353,7 +353,6 @@ static const struct exynos_dsi_cmd hk3_lp_high_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0xB0, 0x00, 0x52, 0x94),
 	EXYNOS_DSI_CMD_SEQ(0x94, 0x00, 0x07, 0x6A, 0x02),
 	EXYNOS_DSI_CMD0(lock_cmd_f0),
-	EXYNOS_DSI_CMD0(min_dbv),
 };
 
 static const struct exynos_binned_lp hk3_binned_lp[] = {
@@ -1463,7 +1462,7 @@ static void hk3_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_
 	DPU_ATRACE_BEGIN(__func__);
 
 	hk3_disable_panel_feat(ctx, vrefresh);
-	if (panel_enabled)  {
+	if (panel_enabled) {
 		/* init sequence has sent display-off command already */
 		if (!hk3_is_peak_vrefresh(vrefresh, is_ns) && is_changeable_te)
 			hk3_wait_for_vsync_done_changeable(ctx, vrefresh, is_ns);
@@ -1471,6 +1470,8 @@ static void hk3_set_lp_mode(struct exynos_panel *ctx, const struct exynos_panel_
 			hk3_wait_for_vsync_done(ctx, vrefresh, is_ns);
 		exynos_panel_send_cmd_set(ctx, &hk3_display_off_cmd_set);
 	}
+	/* display should be off here, set dbv before entering lp mode */
+	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, aod_dbv);
 	hk3_wait_for_vsync_done(ctx, vrefresh, false);
 
 	EXYNOS_DCS_BUF_ADD_SET_AND_FLUSH(ctx, aod_on);
