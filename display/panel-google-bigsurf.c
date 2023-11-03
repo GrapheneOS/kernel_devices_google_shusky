@@ -85,7 +85,7 @@ static const struct exynos_dsi_cmd bigsurf_lp_cmds[] = {
 	EXYNOS_DSI_CMD_SEQ(0x53, 0x20),
 	/* enter AOD */
 	EXYNOS_DSI_CMD_SEQ(MIPI_DCS_ENTER_IDLE_MODE),
-	EXYNOS_DSI_CMD_SEQ(0x5A, 0x00),
+	EXYNOS_DSI_CMD_SEQ(0x5A, 0x04),
 };
 static DEFINE_EXYNOS_CMD_SET(bigsurf_lp);
 
