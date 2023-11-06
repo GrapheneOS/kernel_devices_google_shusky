@@ -12,17 +12,17 @@
 
 /* DP audio */
 &aoc_dp_nohost_drv {
-	status = "disabled";
+	status = "okay";
 };
 
 /* DP audio */
 &dai_fe_dp_dma_nohost_rx {
-	status = "disabled";
+	status = "okay";
 };
 
 /* DP audio */
 &dai_be_dp_rx {
-	status = "disabled";
+	status = "okay";
 	codec {
 		sound-dai = <&drmdp_adma_pb>;
 	};
@@ -30,18 +30,18 @@
 
 /* DP audio */
 &dpado_mem {
-	status = "disabled";
+	status = "okay";
 };
 
 /* DP audio */
 &drmdp_adma {
-	status = "disabled";
+	status = "okay";
 	memory-region = <&dpado_mem>;
 };
 
 /* DP audio */
 &drmdp_adma_pb {
-	status = "disabled";
+	status = "okay";
 };
 
 &dai_be_tdm0_rx {

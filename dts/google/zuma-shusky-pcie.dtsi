@@ -12,5 +12,22 @@
 
 &pcie_1 {
         support-msi64-addressing = "true";
+	use-cache-coherency = "true";
+	dma-coherent;
+	use-sysmmu = "true";
 };
+
+&sysmmu_hsi2 {
+	use-map-once = "false";
+	status = "okay";
+	num_pmmu = <1>;
+	pmmu0,default_stream = <STR_CFG(STR_SPTLB(0x00, 0x00), S2_EN, BL1, PREF_PRED, STLB_NONE, PTLB_NONE)>;
+	pmmu0,stream_property =
+		<1 STR_CFG(STR_SPTLB(0x00, 0x00), S2_EN, BL1, PREF_PRED, STLB_NONE, PTLB_NONE) DIR_RW STR_ID(0x00) STR_MASK(0x7B)>,
+		<2 STR_CFG(STR_SPTLB(0x00, 0x00), S2_EN, BL1, PREF_PRED, STLB_NONE, PTLB_NONE) DIR_RW STR_ID(0x09) STR_MASK(0x7B)>,
+		<3 STR_CFG(STR_SPTLB(0x00, 0x00), S2_EN, BL1, PREF_PRED, STLB_NONE, PTLB_NONE) DIR_RW STR_ID(0x01) STR_MASK(0x7B)>,
+		<4 STR_CFG(STR_SPTLB(0x00, 0x00), S2_EN, BL1, PREF_PRED, STLB_NONE, PTLB_NONE) DIR_RW STR_ID(0x02) STR_MASK(0x03)>,
+		<5 STR_CFG(STR_SPTLB(0x00, 0x00), S2_EN, BL1, PREF_PRED, STLB_NONE, PTLB_NONE) DIR_RW STR_ID(0x03) STR_MASK(0x03)>;
+};
+
 

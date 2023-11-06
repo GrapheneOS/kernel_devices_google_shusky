@@ -261,6 +261,144 @@
 	fragment@lwiscamera {
 		target-path = "/";
 		__overlay__ {
+			/* Power sequence for FRONT CAMERA TAOTIE combo */
+			front_camera_taotie_power_seq: module_power_seq@0 {
+				/* Power supplies will be defined on each module. */
+				/* Power up sequence */
+				power-up-seqs =
+					/* Sensor power seq */
+					/* VDIG(EN_BUCK_CAM) already up from PMIC */
+					"s2mpg15_ldo12",
+					"reset",
+					"mclk_on",
+					/* Actuator power seq */
+					"gpio1";
+				power-up-seq-types =
+					"regulator",
+					"gpio",
+					"pinctrl",
+					"regulator";
+				power-up-seq-delays-us =
+					<1000
+					 0
+					 2000
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"gpio1",
+					"mclk_off",
+					"reset",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"regulator",
+					"pinctrl",
+					"gpio",
+					"regulator";
+				power-down-seq-delays-us =
+					<1000
+					 0
+					 0
+					 0>;
+			};
+
+			/* Power sequence for REAR ULTRA WIDE TAOTIE combo */
+			rear_uw_camera_taotie_power_seq: module_power_seq@1 {
+				/* Power supplies will be defined on each module. */
+				/* Power up sequence */
+				power-up-seqs =
+					/* Sensor power seq */
+					/* VDIG,VIO(EN_BUCK_CAM) already up from PMIC */
+					"ldo2",
+					/* Actuator also up by i2c power pin*/
+					"s2mpg15_ldo12",
+					"reset",
+					"mclk_on";
+
+				power-up-seq-types =
+					"regulator",
+					"regulator",
+					"gpio",
+					"pinctrl";
+				power-up-seq-delays-us =
+					<1000
+					 0
+					 0
+					 2000>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"mclk_off",
+					"reset",
+					"s2mpg15_ldo12",
+					"ldo2";
+				power-down-seq-types =
+					"pinctrl",
+					"gpio",
+					"regulator",
+					"regulator";
+				power-down-seq-delays-us =
+					<0
+					 1000
+					 0
+					 0>;
+			};
+
+			/* Power sequence for REAR Folded Tele Camera TAOTIE combo */
+			rear_tele_camera_taotie_power_seq: module_power_seq@2 {
+				/* Power supplies will be defined on each module. */
+				/* Power up sequence */
+				power-up-seqs =
+					/* Sensor power seq */
+					/* VDIG(EN_BUCK_CAM) already up from PMIC */
+					"s2mpg15_ldo12",
+					"reset",
+					"mclk_on",
+					/* AFOIS power seq */
+					/* VDDIO already up by i2c power */
+					"ldo5",
+					"gpio1",
+					"reset_afois";
+				power-up-seq-types =
+					"regulator",
+					"gpio",
+					"pinctrl",
+					"regulator",
+					"regulator",
+					"gpio";
+				power-up-seq-delays-us =
+					<1000
+					 0
+					 /* 2000us mclk_on delay shadowed by following wait times */
+					 0
+					 1000
+					 1000
+					 0>;
+
+				/* Power down sequence */
+				power-down-seqs =
+					"reset_afois",
+					"gpio1",
+					"ldo5",
+					"mclk_off",
+					"reset",
+					"s2mpg15_ldo12";
+				power-down-seq-types =
+					"gpio",
+					"regulator",
+					"regulator",
+					"pinctrl",
+					"gpio",
+					"regulator";
+				power-down-seq-delays-us =
+					<1000
+					 1000
+					 1000
+					 1000
+					 0
+					 0>;
+			};
+
 			/* REAR CAMERA NAGUAL */
 			sensor0: sensor@0 {
 				compatible = "google,lwis-i2c-device";
@@ -1102,6 +1240,151 @@
 				i2c-lock-group-id = <2>;
 			};
 
+			/* FRONT CAMERA TAOTIE */
+			sensor9: sensor@9 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "sensor-taotie-front";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0x1A>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				/* RTCAM_RST_L GPP6[2] */
+				reset-gpios = <&gpp6 2 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				gpio1-supply = <&slg51002_gpio1>;
+
+				clocks =
+					<&clock CIS_CLK2>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK2>;
+				clock-names =
+					"CIS_CLK2",
+					"GATE_DFTMUX_CMU_CIS_CLK2";
+				clock-rates =
+					<24000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk3_fn>;
+				pinctrl-1 = <&sensor_mclk3_out>;
+
+				/* Power sequence */
+				power-seq = <&front_camera_taotie_power_seq>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
+			};
+
+			/* REAR ULTRA WIDE CAMERA TAOTIE */
+			sensor10: sensor@10 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "sensor-taotie-uw";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_6>;
+				i2c-addr = <0x1A>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				reset-gpios = <&gpp2 3 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo2-supply = <&slg51002_ldo2>;
+
+				clocks =
+					<&clock CIS_CLK4>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK4>;
+				clock-names =
+					"CIS_CLK4",
+					"GATE_DFTMUX_CMU_CIS_CLK4";
+				clock-rates =
+					<24000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk5_fn>;
+				pinctrl-1 = <&sensor_mclk5_out>;
+
+				/* Power sequence */
+				power-seq = <&rear_uw_camera_taotie_power_seq>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
+			};
+
+			/* REAR Folded Tele Camera TAOTIE */
+			sensor11: sensor@11 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "sensor-taotie-tele";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0x33>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				/* RTCAM_RST_L GPP6[2] */
+				reset-gpios = <&gpp6 2 GPIO_ACTIVE_HIGH>;
+				reset_afois-gpios = <&gpp24 2 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo5-supply = <&slg51002_ldo5>;
+				gpio1-supply = <&slg51002_gpio1>;
+
+				clocks =
+					<&clock CIS_CLK2>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK2>;
+				clock-names =
+					"CIS_CLK2",
+					"GATE_DFTMUX_CMU_CIS_CLK2";
+				clock-rates =
+					<24000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk3_fn>;
+				pinctrl-1 = <&sensor_mclk3_out>;
+
+				/* Power sequence */
+				power-seq = <&rear_tele_camera_taotie_power_seq>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
+			};
+
 			/* EEPROM GARGOYLE for NAGUAL*/
 			eeprom0: eeprom@0 {
 				compatible = "google,lwis-i2c-device";
@@ -1478,6 +1761,123 @@
 					<1000>;
 
 				i2c-lock-group-id = <2>;
+			};
+
+			/* EEPROM SMAUG for Front TAOTIE (Nautilus) */
+			eeprom9: eeprom@9 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "eeprom-smaug-taotie-front";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0x50>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				/* RTCAM_RST_L GPP6[2] */
+				reset-gpios = <&gpp6 2 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				gpio1-supply = <&slg51002_gpio1>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk3_fn>;
+				pinctrl-1 = <&sensor_mclk3_out>;
+
+				/* Power sequence */
+				power-seq = <&front_camera_taotie_power_seq>;
+			};
+
+			/* EEPROM SMAUG for OKSOKO Nautilus */
+			eeprom10: eeprom@10 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "eeprom-smaug-taotie-uw";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_6>;
+				i2c-addr = <0x50>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				reset-gpios = <&gpp2 3 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo2-supply = <&slg51002_ldo2>;
+
+				clocks =
+					<&clock CIS_CLK4>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK4>;
+				clock-names =
+					"CIS_CLK4",
+					"GATE_DFTMUX_CMU_CIS_CLK4";
+				clock-rates =
+					<24000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk5_fn>;
+				pinctrl-1 = <&sensor_mclk5_out>;
+
+				/* Power sequence */
+				power-seq = <&rear_uw_camera_taotie_power_seq>;
+
+				i2c-lock-group-id = <2>;
+			};
+
+			/* EEPROM HUMBABA for Rear Folded Tele Camera TAOTIE */
+			eeprom11: eeprom@11 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "eeprom-humbaba-taotie";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0x61>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				/* RTCAM_RST_L GPP6[2] */
+				reset-gpios = <&gpp6 2 GPIO_ACTIVE_HIGH>;
+				reset_afois-gpios = <&gpp24 2 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo5-supply = <&slg51002_ldo5>;
+				gpio1-supply = <&slg51002_gpio1>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk3_fn>;
+				pinctrl-1 = <&sensor_mclk3_out>;
+
+				/* Power sequence */
+				power-seq = <&rear_tele_camera_taotie_power_seq>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
 			};
 
 			/* Actuator SLENDERMAN for NAGUAL*/
@@ -1867,7 +2267,6 @@
 				i2c-lock-group-id = <1>;
 			};
 
-
 			/* Actuator CORNERFOLK for OKSOKO Nautilus */
 			actuator8: actuator@8 {
 				compatible = "google,lwis-i2c-device";
@@ -1908,6 +2307,89 @@
 				power-down-seq-delays-us =
 					<0
 					 0>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <2>;
+			};
+
+			/* Actuator CORNERFOLK for TAOTIE front (Nautilus) */
+			actuator9: actuator@9 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-taotie-front";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0xC>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				/* RTCAM_RST_L GPP6[2] */
+				reset-gpios = <&gpp6 2 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				gpio1-supply = <&slg51002_gpio1>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk3_fn>;
+				pinctrl-1 = <&sensor_mclk3_out>;
+
+				/* Power sequence */
+				power-seq = <&front_camera_taotie_power_seq>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+			};
+
+			/* Actuator CORNERFOLK for REAR ULTRA WIDE TAOTIE */
+			actuator10: actuator@10 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "act-cornerfolk-taotie-uw";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_6>;
+				i2c-addr = <0xF>;
+
+				/* Registers */
+				reg-addr-bitwidth = <8>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				reset-gpios = <&gpp2 3 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo2-supply = <&slg51002_ldo2>;
+
+				clocks =
+					<&clock CIS_CLK4>,
+					<&clock GATE_DFTMUX_CMU_CIS_CLK4>;
+				clock-names =
+					"CIS_CLK4",
+					"GATE_DFTMUX_CMU_CIS_CLK4";
+				clock-rates =
+					<24000000>,
+					<0>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk5_fn>;
+				pinctrl-1 = <&sensor_mclk5_out>;
+
+				/* Power sequence */
+				power-seq = <&rear_uw_camera_taotie_power_seq>;
 
 				/* Thread priority */
 				transaction-thread-priority = <99>;
@@ -2193,6 +2675,46 @@
 				transaction-thread-priority = <99>;
 
 				i2c-lock-group-id = <0>;
+			};
+
+			/* OIS HUMBABA for Folded Tele Camera TAOTIE */
+			ois5: ois@5 {
+				compatible = "google,lwis-i2c-device";
+
+				/* Device node name */
+				node-name = "ois-humbaba-taotie";
+
+				/* I2C */
+				i2c-bus = <&hsi2c_4>;
+				i2c-addr = <0x61>;
+
+				/* Registers */
+				reg-addr-bitwidth = <16>;
+				reg-value-bitwidth = <8>;
+
+				/* GPIOs */
+				/* RTCAM_RST_L GPP6[2] */
+				reset-gpios = <&gpp6 2 GPIO_ACTIVE_HIGH>;
+				reset_afois-gpios = <&gpp24 2 GPIO_ACTIVE_HIGH>;
+				/* EN_BUCK_CAM already up from PMIC */
+
+				/* Power supplies */
+				s2mpg15_ldo12-supply = <&s_ldo12_reg>;
+				ldo5-supply = <&slg51002_ldo5>;
+				gpio1-supply = <&slg51002_gpio1>;
+
+				/* MCLK Control */
+				pinctrl-names = "mclk_on", "mclk_off";
+				pinctrl-0 = <&sensor_mclk3_fn>;
+				pinctrl-1 = <&sensor_mclk3_out>;
+
+				/* Power sequence */
+				power-seq = <&rear_tele_camera_taotie_power_seq>;
+
+				/* Thread priority */
+				transaction-thread-priority = <99>;
+
+				i2c-lock-group-id = <3>;
 			};
 
 			flash0: flash@0 {
