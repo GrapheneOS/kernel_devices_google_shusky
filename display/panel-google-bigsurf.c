@@ -743,7 +743,14 @@ static int bigsurf_set_brightness(struct exynos_panel *ctx, u16 br)
 					low_to_high ? 0x00 : 0xAA,
 					0x00);
 	}
-	EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, br >> 8, br & 0xff);
+	if (IS_HBM_ON_IRC_OFF(ctx->hbm_mode) && ctx->panel_rev >= PANEL_REV_EVT1 &&
+	    br == ctx->desc->brt_capability->hbm.level.max) {
+		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, 0x0F, 0xFF);
+		dev_dbg(ctx->dev, " apply max DBV when reach hbm max with irc off\n");
+	} else {
+		EXYNOS_DCS_BUF_ADD_AND_FLUSH(ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS, br >> 8,
+						br & 0xff);
+	}
 	spanel->panel_brightness = br;
 	return 0;
 }
