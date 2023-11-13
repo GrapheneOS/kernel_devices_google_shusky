@@ -399,6 +399,9 @@ static void shoreline_update_te(struct exynos_panel *ctx, const unsigned int vre
 }
 
 /**
+ * shoreline_update_te2 - update the TE2 for shoreline panels
+ * @ctx: panel struct
+ *
  * Current definition of the B9h command parameter:
  *
  * TE2 rising at 120Hz:

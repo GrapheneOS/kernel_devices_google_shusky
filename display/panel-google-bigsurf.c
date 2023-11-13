@@ -69,8 +69,11 @@ static const u8 bigsurf_lhbm_brightness_reg = 0xD0;
 struct bigsurf_panel {
 	/** @base: base panel struct */
 	struct exynos_panel base;
+	/** @lhbm_ctl: LHBM control parameters */
 	struct bigsurf_lhbm_ctl lhbm_ctl;
+	/** @idle_exit_dimming_delay_ts: the delay time to exit dimming */
 	ktime_t idle_exit_dimming_delay_ts;
+	/** @panel_brightness: the brightness of the panel */
 	u16 panel_brightness;
 };
 

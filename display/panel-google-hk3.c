@@ -103,13 +103,17 @@ struct hk3_lhbm_ctl {
 	bool hist_roi_configured;
 };
 
+#define HK3_VREG_STR_SIZE 11
+#define HK3_VREG_PARAM_NUM 5
+
 /**
+ * HK3_VREG_STR
+ * @ctx: exynos_panel struct
+ *
  * Expect to have five values for the Vreg parameters:
  * EVT1.1 and earlier: 0x1B
  * DVT1 and later: 0x1A
  */
-#define HK3_VREG_STR_SIZE 11
-#define HK3_VREG_PARAM_NUM 5
 #define HK3_VREG_STR(ctx) (((ctx)->panel_rev >= PANEL_REV_DVT1) ? "1a1a1a1a1a" : "1b1b1b1b1b")
 
 /**
@@ -155,8 +159,9 @@ struct hk3_panel {
 	struct thermal_zone_device *tz;
 	/** @hw_temp: the temperature applied into panel */
 	u32 hw_temp;
-	/** @pending_temp_update: whether there is pending temperature update. It will be
-	 *			  handled in the commit_done function.
+	/**
+	 * @pending_temp_update: whether there is pending temperature update. It will be
+	 *                       handled in the commit_done function.
 	 */
 	bool pending_temp_update;
 	/**
@@ -1419,6 +1424,7 @@ static void hk3_wait_for_vsync_done(struct exynos_panel *ctx, u32 vrefresh, bool
  * fake TE at transition from fixed TE to changeable TE.
  * @ctx: panel struct
  * @vrefresh: current refresh rate
+ * @is_ns: whether it is normal speed or not
  */
 static void hk3_wait_for_vsync_done_changeable(struct exynos_panel *ctx, u32 vrefresh, bool is_ns)
 {
