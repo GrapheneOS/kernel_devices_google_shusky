@@ -13,6 +13,16 @@
 	extcon = <&max77759tcpc>;
 };
 
+&pinctrl_12 {
+	eusb_init_state: eusb_init_state {
+		samsung,pins = "gpp21-3";
+		samsung,pin-function = <EXYNOS_PIN_FUNC_INPUT>;
+		samsung,pin-pud = <EXYNOS_PIN_PULL_NONE>;
+		samsung,pin-con-pdn = <EXYNOS_PIN_PDN_PREV>;
+		samsung,pin-pud-pdn = <EXYNOS_PIN_PULL_NONE>;
+	};
+};
+
 &eusb_repeater_tune {
 	status = "okay";
 	repeater_tune_cnt = <5>;
@@ -53,6 +63,8 @@
                compatible = "samsung,eusb-repeater";
                reg = <0x3E>;
                status = "okay";
+               pinctrl-names = "init_state";
+               pinctrl-0 = <&eusb_init_state>;
                repeater_tune_param = <&eusb_repeater_tune>;
        };
 };
