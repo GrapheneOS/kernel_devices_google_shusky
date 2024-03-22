@@ -37,4 +37,11 @@ if [ "${#}" = "0" ]; then
   fi
 fi
 
-exec tools/bazel run ${parameters} --config=stamp --config=shusky --config=fast //private/devices/google/shusky:zuma_shusky_dist "$@"
+tools/bazel run ${parameters} --config=stamp --config=shusky --config=fast //private/devices/google/shusky:zuma_shusky_dist "$@"
+sign_file=$(mktemp)
+trap '{ rm -f -- "$sign_file"; }' EXIT
+prebuilts/clang/host/linux-x86/clang-r487747c/bin/clang aosp/scripts/sign-file.c -lssl -lcrypto -o ${sign_file}
+find out/shusky/dist -type f -name "*.ko" \
+  -exec ${sign_file} sha256 \
+  $(find out/cache -type f -name "signing_key.pem") \
+  $(find out/cache -type f -name "signing_key.x509") {} \;
